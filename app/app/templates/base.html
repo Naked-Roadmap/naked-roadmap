@@ -37,9 +37,15 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
+            {% if current_user.is_anonymous %}
             <li class="nav-item active">
               <a class="nav-link" href="{{ url_for('login') }}">Login</a>
             </li>
+            {% else %}
+            <li class="nav-item active">
+              <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </li>
+            {% endif %}
             <li class="nav-item active">
                 <a class="nav-link" href="#">About</a>
             </li>
@@ -54,14 +60,12 @@
         {% if messages %}
         <ul>
             {% for message in messages %}
-            <li>{{ message }}</li>
+            <div class="alert alert-danger">{{ message }}</div>
             {% endfor %}
         </ul>
         {% endif %}
         {% endwith %}  
-      {% for message in get_flashed_messages() %}
-            <div class="alert alert-danger">{{ message }}</div>
-        {% endfor %}
+        
         {% block content %} {% endblock %}
     </div>
 
