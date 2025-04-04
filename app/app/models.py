@@ -38,15 +38,15 @@ class Post(db.Model):
 
 class Project(db.Model):
     __tablename__ = "project"
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    name = db.Column(db.String(256))
-    created = db.Column(db.DateTime, default=datetime.utcnow)
-    dri = db.Column(db.String(256))
-    team = db.Column(db.String(256))
-    context = db.Column(db.Text)
-    why = db.Column(db.Text)
-    requirements = db.Column(db.Text)
-    launch = db.Column(db.Text)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    dri: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    team: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    context: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    why: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    requirements: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
 
     def __repr__(self):
         return (

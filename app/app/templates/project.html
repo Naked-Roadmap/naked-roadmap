@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% for detail in project %}
+    <h2>{{ detail['name'] }}</h2>
+    <span class="badge badge-primary">{{ detail['created'] }}</span>
+    <p><strong>DRI:</strong>{{ detail['dri'] }}</p>
+    <p><strong>Team:</strong>{{ detail['team'] }}</p>
+    <p><strong>Context and Background:</strong>{{ detail['context'] }}</p>
+    <p><strong>Reason for Prioritization:</strong>{{ detail['why'] }}</p>
+    <p><strong>Requirements:</strong>{{ detail['requirements'] }}</p>
+    <p><strong>Launch Plan:</strong>{{ detail['launch'] }}</p>
+    {% endfor %}
+{% endblock %}

@@ -1,23 +1,47 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% block title %} Create a New Post {% endblock %}</h1>
+<h1>{% block title %} Create a New Project {% endblock %}</h1>
 
 <form method="post">
+
     <div class="form-group">
-        <label for="title">Title</label>
-        <input type="text" name="title"
-               placeholder="Post title" class="form-control"
-               value="{{ request.form['title'] }}"></input>
+        {{ form.name.label }}<br>
+        {{ form.name(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.dri.label }}<br>
+        {{ form.dri(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.team.label }}<br>
+        {{ form.team(size=32) }}
     </div>
 
     <div class="form-group">
-        <label for="content">Content</label>
-        <textarea name="content" placeholder="Post content"
-                  class="form-control">{{ request.form['content'] }}</textarea>
+        {{ form.context.label }}<br>
+        {{ form.context(size=32) }}
     </div>
+
     <div class="form-group">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        {{ form.why.label }}<br>
+        {{ form.why(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.requirements.label }}<br>
+        {{ form.requirements(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.launch.label }}<br>
+        {{ form.launch(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.submit() }}
     </div>
 </form>
 {% endblock %}

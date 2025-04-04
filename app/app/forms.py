@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
-from app.models import User
+from app.models import User, Project
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -30,3 +30,13 @@ class RegistrationForm(FlaskForm):
             User.email == email.data))
         if user is not None:
             raise ValidationError('Please use a different email address.')
+            
+class CreateProject(FlaskForm):
+    name = StringField('Project Name', validators=[DataRequired()])
+    dri = StringField('Directly Responsible Individual', validators=[DataRequired()])
+    team = StringField('Assigned Team', validators=[DataRequired()])
+    context = TextAreaField('Context and Background Information')
+    why = TextAreaField('Reason for Prioritization')
+    requirements = TextAreaField('Requirements')
+    launch = TextAreaField('Launch Plan')
+    submit = SubmitField('submit')

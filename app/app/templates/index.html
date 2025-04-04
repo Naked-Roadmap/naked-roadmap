@@ -2,12 +2,12 @@
 
 {% block content %}
     <h1>{% block title %}Hi {{ current_user.username }}, Welcome to Your Active Roadmap{% endblock %}</h1>
-    {% for post in posts %}
-        <a href="{{ url_for('post', post_id=post['id']) }}">
-            <h2>{{ post['title'] }}</h2>
+    {% for project in projects %}
+        <a href="{{ url_for('project', project_id=project['id']) }}">
+            <h2>{{ project['name'] }}</h2>
         </a>
-        <span class="badge badge-primary">{{ post['created'] }}</span>
-        <a href="{{ url_for('edit', id=post['id']) }}">
+        <span class="badge badge-primary">{{ project['created'] }}</span>
+        <a href="{{ url_for('edit', id=project['id']) }}">
             <span class="badge badge-warning">Edit</span>
         </a>
         <hr>

@@ -1,58 +1,69 @@
 from app import app, db, login
-from app.forms import LoginForm, RegistrationForm
-from app.models import User
+from app.forms import LoginForm, RegistrationForm, CreateProject
+from app.models import User, Project
 import sqlalchemy as sa
-import sqlite3
+# import sqlite3
 from flask import Flask, render_template, request, url_for, flash, redirect
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
 from urllib.parse import urlsplit
 
-def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def get_post(post_id):
-    conn = get_db_connection()
-    post = conn.execute('SELECT * FROM posts WHERE id = ?',
-                        (post_id,)).fetchone()
-    conn.close()
-    if post is None:
-        abort(404)
-    return post
+# def get_db_connection():
+#     conn = sqlite3.connect('database.db')
+#     conn.row_factory = sqlite3.Row
+#     return conn
+# 
+# def get_post(post_id):
+#     conn = get_db_connection()
+#     post = conn.execute('SELECT * FROM posts WHERE id = ?',
+#                         (post_id,)).fetchone()
+#     conn.close()
+#     if post is None:
+#         abort(404)
+#     return post
 
 @app.route('/')
 @app.route('/index')
 @login_required # If you want to toggle someone forced to log in to see roadmap, you can use this. 
 def index():
-    conn = get_db_connection()
-    posts = conn.execute('SELECT * FROM posts').fetchall()
-    conn.close()
-    return render_template('index.html', title='Home', posts=posts)
+    # if not current_user.is_verified:
+    #     return redirect(url_for("auth.verify"))
+    projects = (
+        Project.query
+        .order_by(Project.created.desc())
+        .all()
+    )
+    return render_template('index.html', title='Home', projects=projects)
 
-@app.route('/<int:post_id>')
-def post(post_id):
-    post = get_post(post_id)
-    return render_template('post.html', post=post)
-
-@app.route('/create', methods=('GET', 'POST'))
+@app.route('/<int:project_id>')
+def project(project_id):
+    project = (
+        Project.query
+        .filter_by(id=project_id)
+    )
+    return render_template('project.html', project=project)
+    
+@app.route('/create', methods=['GET', 'POST'])
 def create():
+    form = CreateProject()
     if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content']
+        projectDetails = Project(
+            name=form.name.data,
+            dri=form.dri.data,
+            team=form.team.data,
+            context=form.context.data,
+            why=form.why.data,
+            requirements=form.requirements.data,
+            launch=form.launch.data, 
+        )
 
-        if not title:
-            flash('Title is required!')
-        else:
-            conn = get_db_connection()
-            conn.execute('INSERT INTO posts (title, content) VALUES (?, ?)',
-                         (title, content))
-            conn.commit()
-            conn.close()
-            return redirect(url_for('index'))
-
-    return render_template('create.html')
+        db.session.add(projectDetails)
+        db.session.commit()
+        
+        flash('Congratulations, project created!')
+        return redirect(url_for('index'))
+        
+    return render_template('create.html', form=form)
 
 @app.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
