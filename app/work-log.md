@@ -23,3 +23,7 @@ TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
 
 
 source env/bin/activate
+
+To freeze and install requirements:
+pipreqs . 
+pip install -r requirements.txt
