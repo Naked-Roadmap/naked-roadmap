@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, url_for, flash, redirect
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
 from urllib.parse import urlsplit
+from config import Config
 
 @app.route('/')
 @app.route('/index')
@@ -18,7 +19,7 @@ def index():
         .order_by(Project.created.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects)
+    return render_template('index.html', title='Home', projects=projects, config=Config)
 
 @app.route('/<int:project_id>')
 def project(project_id):

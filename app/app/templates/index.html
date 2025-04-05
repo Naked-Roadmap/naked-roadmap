@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %}Hi {{ current_user.username }}, Welcome to Your Active Roadmap{% endblock %}</h1>
+    <h1>{% block title %}Hi {{ current_user.username }}, Welcome to Your {{ config.company_name }} Roadmap{% endblock %}</h1>
     
     <div class="table_projects" role="region" tabindex="0">
         <table>
