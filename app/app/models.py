@@ -61,5 +61,15 @@ class Project(db.Model):
             + f"Launch Plan: {self.launch}"
         )
         
+class Request(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    title: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    requested_by: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    details: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
+    
+    def __repr__(self):
+        return '<Request {}>'.format(self.body)
 # Notes:
 # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database

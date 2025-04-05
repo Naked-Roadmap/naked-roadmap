@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Submit a new request {% endblock %}</h1>
+
+<form method="post">
+
+    <div class="form-group">
+        {{ form.title.label }}<br>
+        {{ form.title(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.details.label }}<br>
+        {{ form.details(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.requested_by.label }}<br>
+        {{ form.requested_by(size=32) }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.submit() }}
+    </div>
+</form>
+{% endblock %}
