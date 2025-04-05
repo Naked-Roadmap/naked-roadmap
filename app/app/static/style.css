@@ -1,0 +1,43 @@
+h1 {
+    border: 2px #eee solid;
+    color: brown;
+    text-align: center;
+    padding: 10px;
+}
+
+/* **************************
+/* Tables
+/* ************************** */
+.table_projects {
+    overflow: auto;
+    width: 100%;
+}
+
+.table_projects table {
+    border: 1px solid #dededf;
+    height: 100%;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 1px;
+    text-align: left;
+}
+
+.table_projects caption {
+    caption-side: top;
+    text-align: left;
+}
+
+.table_projects th {
+    border: 1px solid #dededf;
+    background-color: #cce8b5;
+    color: #000000;
+    padding: 5px;
+}
+
+.table_projects td {
+    border: 1px solid #dededf;
+    background-color: #ffffff;
+    color: #000000;
+    padding: 5px;
+}

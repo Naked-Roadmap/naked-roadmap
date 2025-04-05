@@ -40,6 +40,7 @@ def project(project_id):
     project = (
         Project.query
         .filter_by(id=project_id)
+        .first()
     )
     return render_template('project.html', project=project)
     
@@ -65,35 +66,51 @@ def create():
         
     return render_template('create.html', form=form)
 
-@app.route('/<int:id>/edit', methods=('GET', 'POST'))
-def edit(id):
-    post = get_post(id)
-
+@app.route('/<int:project_id>/edit', methods=('GET', 'POST'))
+def edit(project_id):
+    project = (
+        Project.query
+        .filter_by(id=project_id)
+        .first()
+    )
+    form = CreateProject()
     if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content']
+        Project.query.filter_by(id=project_id).update(dict( 
+            name=form.name.data,
+            dri=form.dri.data,
+            team=form.team.data,
+            context=form.context.data,
+            why=form.why.data,
+            requirements=form.requirements.data,
+            launch=form.launch.data
+        )
+        )
 
-        if not title:
-            flash('Title is required!')
-        else:
-            conn = get_db_connection()
-            conn.execute('UPDATE posts SET title = ?, content = ?'
-                         ' WHERE id = ?',
-                         (title, content, id))
-            conn.commit()
-            conn.close()
-            return redirect(url_for('index'))
+        # projectDetails = Project(
+        #     name=form.name.data,
+        #     dri=form.dri.data,
+        #     team=form.team.data,
+        #     context=form.context.data,
+        #     why=form.why.data,
+        #     requirements=form.requirements.data,
+        #     launch=form.launch.data, 
+        # )
+        # db.session.update(projectDetails)
+        db.session.commit()
+        
+        flash('Congratulations, project edited!')
+        return redirect(url_for('index'))
 
-    return render_template('edit.html', post=post)
+    return render_template('edit.html', project=project, form=form)
 
-@app.route('/<int:id>/delete', methods=('POST',))
-def delete(id):
-    post = get_post(id)
-    conn = get_db_connection()
-    conn.execute('DELETE FROM posts WHERE id = ?', (id,))
-    conn.commit()
-    conn.close()
-    flash('"{}" was successfully deleted!'.format(post['title']))
+@app.route('/<int:project_id>/delete', methods=('POST',))
+def delete(project_id):
+    # project = (
+    #     Project.query
+    #     .filter_by(id=project_id)
+    # )
+    db.session.delete(Project.query.filter_by(id=project_id))
+    flash('"{}" was successfully deleted!'.format(project['name']))
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])

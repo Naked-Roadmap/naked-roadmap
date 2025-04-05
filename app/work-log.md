@@ -20,3 +20,6 @@ TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
 <class 'app.models.User'>
 >>> Post
 <class 'app.models.Post'>
+
+
+source env/bin/activate
