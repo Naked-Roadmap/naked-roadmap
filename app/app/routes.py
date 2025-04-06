@@ -19,7 +19,12 @@ def index():
         .order_by(Project.created.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects, config=Config)
+    submittedrequests = (
+        Request.query
+        .order_by(Request.created.desc())
+        .all()
+    )
+    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config)
 
 @app.route('/<int:project_id>')
 def project(project_id):

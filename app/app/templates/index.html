@@ -3,6 +3,17 @@
 {% block content %}
     <h1>{% block title %}Hi {{ current_user.username }}, Welcome to Your {{ config.company_name }} Roadmap{% endblock %}</h1>
     
+    <h2>For Discussion</h2>
+    
+    <ul>
+        {% for request in requests %}
+        <li><strong>{{request.title}}</strong> ({{request.requested_by}}, <span class="badge badge-primary">{{ request.created }}</span> )<br>
+        {{request.details}}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Projects and Planned Work</h2>
+    
     <div class="table_projects" role="region" tabindex="0">
         <table>
             <thead>
