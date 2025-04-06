@@ -84,8 +84,11 @@ def delete(project_id):
     #     Project.query
     #     .filter_by(id=project_id)
     # )
-    db.session.delete(Project.query.filter_by(id=project_id))
-    flash('"{}" was successfully deleted!'.format(project['name']))
+    deleteProject = db.session.query(Project).filter(Project.id==project_id).first()
+    db.session.delete(deleteProject)
+    db.session.commit()
+    # db.session.scalar(Project.query.filter_by(id=project_id).delete())
+    flash('Project was successfully deleted!')
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
