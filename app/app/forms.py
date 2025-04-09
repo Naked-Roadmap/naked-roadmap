@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
-from app.models import User, Project, Request
+from app.models import User, Project, Request, Sprint
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -45,4 +45,10 @@ class CreateRequest(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     details = TextAreaField('Additional Details and Context', validators=[DataRequired()])
     requested_by = StringField('Requested by')
+    submit = SubmitField('submit')
+    
+class CreateSprint(FlaskForm):
+    title = StringField('Sprint Name', validators=[DataRequired()])
+    date_start = DateField('Start of Sprint', format='%Y-%m-%d', validators=[DataRequired()] )
+    date_end = DateField('End of Sprint', format='%Y-%m-%d', validators=[DataRequired()] )
     submit = SubmitField('submit')

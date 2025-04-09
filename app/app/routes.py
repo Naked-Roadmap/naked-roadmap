@@ -1,6 +1,6 @@
 from app import app, db, login
-from app.forms import LoginForm, RegistrationForm, CreateProject, CreateRequest
-from app.models import User, Project, Request
+from app.forms import LoginForm, RegistrationForm, CreateProject, CreateRequest, CreateSprint
+from app.models import User, Project, Request, Sprint
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect
 from flask_login import current_user, login_user, logout_user, login_required
@@ -24,7 +24,12 @@ def index():
         .order_by(Request.created.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config)
+    sprints = (
+        Sprint.query
+        .order_by(Sprint.date_start.desc())
+        .all()
+    )
+    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config, sprints=sprints)
 
 @app.route('/<int:project_id>')
 def project(project_id):
@@ -136,9 +141,9 @@ def register():
     
     
     
-############################
+########################################################
 ### Managing Requests
-############################
+########################################################
 
 @app.route('/request', methods=['GET', 'POST'])
 def submitrequest():
@@ -158,3 +163,30 @@ def submitrequest():
         return redirect(url_for('index'))
         
     return render_template('request.html', form=form)
+    
+    
+########################################################
+### Managing Sprints
+########################################################
+
+@app.route('/sprint', methods=['GET', 'POST'])
+def createSprint():
+    form = CreateSprint()
+    
+    try:
+        if request.method == 'POST':
+            sprintDetails = Sprint(
+                title=form.title.data,
+                date_start=form.date_start.data,
+                date_end=form.date_end.data
+            )
+    
+            db.session.add(sprintDetails)
+            db.session.commit()
+            
+            flash('Congratulations, sprint created!')
+            return redirect(url_for('index'))
+    except TypeError as e:
+        print(f"Error: {e}")
+        
+    return render_template('sprint.html', form=form)

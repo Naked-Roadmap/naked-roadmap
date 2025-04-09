@@ -1,4 +1,5 @@
-
+##
+TODO: Create initialization to run on first time setup to create a backlog sprint, undeletable.
 
 ## 2025.04.03
 TODO: Different types of users:

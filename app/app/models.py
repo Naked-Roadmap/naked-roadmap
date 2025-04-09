@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -71,5 +71,19 @@ class Request(db.Model):
     
     def __repr__(self):
         return '<Request {}>'.format(self.body)
+
+class Sprint(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    title: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    date_start: so.Mapped[date] = so.mapped_column(index=True)
+    date_end: so.Mapped[date] = so.mapped_column(index=True)
+    goals: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    
+    def __repr__(self):
+        return '<Sprint {}>'.format(self.body)
+
+
 # Notes:
 # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database
