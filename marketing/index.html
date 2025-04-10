@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sigil Health</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1a202c;
+    }
+
+    header {
+      background: linear-gradient(135deg, #ebf8ff, #dbeafe);
+      padding: 4rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: #4a5568;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .hero-button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .hero-button:hover {
+      background: #2563eb;
+    }
+
+    .globe-container {
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 400px;
+      z-index: 0;
+      opacity: 0.2;
+    }
+
+    section {
+      padding: 4rem 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: #4a5568;
+      margin-bottom: 1rem;
+    }
+
+    .link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid #e2e8f0;
+      color: #718096;
+    }
+
+    /* Animation */
+    .globe svg circle {
+      animation: pulse 4s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        r: 2;
+        opacity: 1;
+      }
+      50% {
+        r: 6;
+        opacity: 0.4;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="globe-container">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="60" r="2" fill="#3b82f6" />
+      <circle cx="100" cy="40" r="2" fill="#3b82f6" />
+      <circle cx="150" cy="70" r="2" fill="#3b82f6" />
+      <circle cx="90" cy="120" r="2" fill="#3b82f6" />
+      <circle cx="130" cy="110" r="2" fill="#3b82f6" />
+      <line x1="50" y1="60" x2="100" y2="40" stroke="#60a5fa" stroke-width="0.5"/>
+      <line x1="100" y1="40" x2="150" y2="70" stroke="#60a5fa" stroke-width="0.5"/>
+      <line x1="90" y1="120" x2="130" y2="110" stroke="#60a5fa" stroke-width="0.5"/>
+      <line x1="50" y1="60" x2="90" y2="120" stroke="#60a5fa" stroke-width="0.5"/>
+    </svg>
+  </div>
+  <h1 class="hero-title">Sigil Health</h1>
+  <p class="hero-subtitle">
+    Sigil Health Turns Data Into Results. Empowering healthcare teams with fast, actionable insights—no code required.
+  </p>
+  <button class="hero-button">Get Started</button>
+</header>
+
+<section>
+  <div class="cards">
+    <div class="card">
+      <h2>Cohort Builder</h2>
+      <p>
+        Quickly spin up and manage stratified cohorts. Segment populations and run dedicated analytics—all without writing code.
+      </p>
+      <a href="#" class="link">Learn More →</a>
+    </div>
+    <div class="card">
+      <h2>Data Annotation & Augmentation</h2>
+      <p>
+        Annotate and enrich your data seamlessly. Layer in 3rd party health data without engineering bottlenecks.
+      </p>
+      <a href="#" class="link">Learn More →</a>
+    </div>
+    <div class="card">
+      <h2>Pipeline</h2>
+      <p>
+        Pipe cohorts and annotations into your applications for rapid experimentation and deployment—no delays, no dependencies.
+      </p>
+      <a href="#" class="link">Learn More →</a>
+    </div>
+  </div>
+</section>
+
+<section style="text-align: center;">
+  <h2 style="font-size: 2rem; font-weight: 600; margin-bottom: 1rem;">Why Sigil Health?</h2>
+  <p style="color: #4a5568; max-width: 700px; margin: 0 auto 2rem;">
+    Data teams are overworked, and executives are left flying blind. Sigil Health bridges the gap
+    between raw data and actionable insights—cutting costs, speeding up experimentation,
+    and delivering real business outcomes.
+  </p>
+  <button class="hero-button">Request a Demo</button>
+</section>
+
+<footer>
+  © 2025 Sigil Health. All rights reserved.
+</footer>
+
+</body>
+</html>

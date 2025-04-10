@@ -35,7 +35,7 @@
                         <span class="badge badge-primary">{{ project.created }}</span>
                     </td>
                     <td>
-                        <a href="{{ url_for('edit', project_id=project.id) }}"><span class="badge badge-warning">Edit</span></a> <a href="{{url_for('add_to_cycle', project_id=project.id, sprint_id=2) }}">Add to Cycle</a>
+                        <a href="{{ url_for('edit', project_id=project.id) }}"><span class="badge badge-warning">Edit</span></a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -51,36 +51,5 @@
         </li>
         {% endfor %}
     </ul>
-    
-    <h2>Projects Backlog</h2>
-    
-    <div class="table_projects" role="region" tabindex="0">
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Led by</th>
-                    <th>Status</th>
-                    <th>Update</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for project in backlog %}
-                <tr>
-                    <td>
-                        <a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a>
-                    </td>
-                    <td>{{ project.dri }} ({{ project.team }})</td>
-                    <td>
-                        <span class="badge badge-primary">{{ project.created }}</span>
-                    </td>
-                    <td>
-                        <a href="{{ url_for('edit', project_id=project.id) }}"><span class="badge badge-warning">Edit</span></a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
     
 {% endblock %}

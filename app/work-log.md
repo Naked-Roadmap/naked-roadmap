@@ -26,5 +26,11 @@ TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
 source env/bin/activate
 
 To freeze and install requirements:
-pipreqs . 
-pip install -r requirements.txt
+$ pipreqs . 
+$ pip install -r requirements.txt
+
+
+Fixing migrations:
+$ flask db stamp head
+$ flask db migrate
+$ flask db upgrade

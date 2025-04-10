@@ -1,6 +1,6 @@
 from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateRequest, CreateSprint
-from app.models import User, Project, Request, Sprint
+from app.models import User, Project, Request, Sprint, SprintProjectMap
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect
 from flask_login import current_user, login_user, logout_user, login_required
@@ -16,6 +16,13 @@ def index():
     #     return redirect(url_for("auth.verify"))
     projects = (
         Project.query
+        .filter(Project.discussion == True)
+        .order_by(Project.created.desc())
+        .all()
+    )
+    backlog = (
+        Project.query
+        .filter(Project.backlog == True)
         .order_by(Project.created.desc())
         .all()
     )
@@ -29,7 +36,7 @@ def index():
         .order_by(Sprint.date_start.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config, sprints=sprints)
+    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config, sprints=sprints, backlog=backlog)
 
 @app.route('/<int:project_id>')
 def project(project_id):
@@ -190,3 +197,19 @@ def createSprint():
         print(f"Error: {e}")
         
     return render_template('sprint.html', form=form)
+    
+@app.route('/add-to-cycle/<int:project_id>/<int:sprint_id>/', methods=['GET','POST'])
+def add_to_cycle(project_id, sprint_id):
+    if request.method == 'GET':
+        addToSprint = SprintProjectMap(
+            sprint_id=sprint_id,
+            project_id=project_id
+        )
+
+        db.session.add(addToSprint)
+        db.session.commit()
+        
+        flash('Congratulations, added to cycle!')
+        return redirect(url_for('index'))
+    return redirect(url_for('index'))
+    

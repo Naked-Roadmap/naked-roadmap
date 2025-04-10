@@ -47,6 +47,8 @@ class Project(db.Model):
     why: so.Mapped[str] = so.mapped_column(sa.TEXT())
     requirements: so.Mapped[str] = so.mapped_column(sa.TEXT())
     launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
+    backlog: so.Mapped[bool] = so.mapped_column(unique=False, default=False, nullable=True)
+    discussion: so.Mapped[bool] = so.mapped_column(unique=False, default=True, nullable=True)
 
     def __repr__(self):
         return (
@@ -59,6 +61,8 @@ class Project(db.Model):
             + f"Reason for Prioritization: {self.why} | "
             + f"Requirements: {self.requirements} | "
             + f"Launch Plan: {self.launch}"
+            + f"Backlogged? {self.backlog}"
+            + f"Under Discussion? {self.discussion}"
         )
         
 class Request(db.Model):
@@ -84,6 +88,16 @@ class Sprint(db.Model):
     def __repr__(self):
         return '<Sprint {}>'.format(self.body)
 
+class SprintProjectMap(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    added: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    sprint_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Sprint.id), index=True)
+    project_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Project.id), index=True)
+    goal: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="Committed")
+    
+    def __repr__(self):
+        return '<Sprint/Project Map {}>'.format(self.body)
 
 # Notes:
 # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database
