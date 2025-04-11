@@ -3,7 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextA
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
-from app.models import User, Project, Request, Sprint
+from app.models import User, Project, Goal, Sprint
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -41,7 +41,7 @@ class CreateProject(FlaskForm):
     launch = TextAreaField('Launch Plan')
     submit = SubmitField('submit')
     
-class CreateRequest(FlaskForm):
+class CreateGoal(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     details = TextAreaField('Additional Details and Context', validators=[DataRequired()])
     requested_by = StringField('Requested by')

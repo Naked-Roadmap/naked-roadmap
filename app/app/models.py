@@ -47,14 +47,12 @@ class Project(db.Model):
     why: so.Mapped[str] = so.mapped_column(sa.TEXT())
     requirements: so.Mapped[str] = so.mapped_column(sa.TEXT())
     launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
-    backlog: so.Mapped[bool] = so.mapped_column(unique=False, default=False, nullable=True)
-    discussion: so.Mapped[bool] = so.mapped_column(unique=False, default=True, nullable=True)
     location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
 
     def __repr__(self):
         return '<Project {}>'.format(self.body)
         
-class Request(db.Model):
+class Goal(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
     title: so.Mapped[str] = so.mapped_column(sa.TEXT())

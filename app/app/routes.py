@@ -1,6 +1,6 @@
 from app import app, db, login
-from app.forms import LoginForm, RegistrationForm, CreateProject, CreateRequest, CreateSprint
-from app.models import User, Project, Request, Sprint, SprintProjectMap
+from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint
+from app.models import User, Project, Goal, Sprint, SprintProjectMap
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect
 from flask_login import current_user, login_user, logout_user, login_required
@@ -16,19 +16,12 @@ def index():
     #     return redirect(url_for("auth.verify"))
     projects = (
         Project.query
-        .filter(Project.discussion == True)
         .order_by(Project.created.desc())
         .all()
     )
-    backlog = (
-        Project.query
-        .filter(Project.backlog == True)
-        .order_by(Project.created.desc())
-        .all()
-    )
-    submittedrequests = (
-        Request.query
-        .order_by(Request.created.desc())
+    submittedGoals = (
+        Goal.query
+        .order_by(Goal.created.desc())
         .all()
     )
     sprints = (
@@ -36,7 +29,7 @@ def index():
         .order_by(Sprint.date_start.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects, requests=submittedrequests, config=Config, sprints=sprints, backlog=backlog)
+    return render_template('index.html', title='Home', projects=projects, goals=submittedGoals, config=Config, sprints=sprints)
 
 @app.route('/<int:project_id>')
 def project(project_id):
@@ -146,17 +139,33 @@ def register():
     return render_template('register.html', title='Register', form=form)
     
     
-    
-    
+
 ########################################################
-### Managing Requests
+### Managing Projects
 ########################################################
 
-@app.route('/request', methods=['GET', 'POST'])
-def submitrequest():
-    form = CreateRequest()
+@app.route('/projects')
+@login_required # If you want to toggle someone forced to log in to see roadmap, you can use this. 
+def projectspage():
+    # if not current_user.is_verified:
+    #     return redirect(url_for("auth.verify"))
+    projects = (
+        Project.query
+        .order_by(Project.created.desc())
+        .all()
+    )
+    return render_template('projects.html', title='Projects', projects=projects)
+    
+    
+########################################################
+### Managing Goals
+########################################################
+
+@app.route('/goals', methods=['GET', 'POST'])
+def submitGoal():
+    form = CreateGoal()
     if request.method == 'POST':
-        requestDetails = Request(
+        requestDetails = Goal(
             title=form.title.data,
             details=form.details.data,
             requested_by=form.requested_by.data,
@@ -169,7 +178,7 @@ def submitrequest():
         flash('Congratulations, request captured!')
         return redirect(url_for('index'))
         
-    return render_template('request.html', form=form)
+    return render_template('goals.html', form=form)
     
     
 ########################################################

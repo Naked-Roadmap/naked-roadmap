@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %}Hi {{ current_user.username }}, Welcome to Your {{ config.company_name }} Roadmap{% endblock %}</h1>
+    
+    <h2>For Discussion <a href="{{url_for('submitrequest')}}">➕</a></h2>
+    
+    <ul>
+        {% for request in requests %}
+        <li><strong>{{request.title}}</strong> ({{request.requested_by}}, <span class="badge badge-primary">{{ request.created.strftime('%Y-%m-%d') }}</span> )<br>
+        <span style="font-family:'consolas', monospace; color:grey; font-size:0.8em;">{{request.details}}</span></li>
+        {% endfor %}
+    </ul>
+    <div style="border: 1px solid #000; border-radius: 5px; padding:20px;">
+    <h2>Current Sprint Cycle</h2>
+    
+    <div class="table_projects" role="region" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Led by</th>
+                    <th>Status</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects|selectattr('location', '==', "sprint") %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a>
+                    </td>
+                    <td>{{ project.dri }} ({{ project.team }})</td>
+                    <td>
+                        <span class="badge badge-primary">{{ project.created.strftime('%Y-%m-%d')}}</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit', project_id=project.id) }}"><span class="badge badge-warning">Edit</span></a> <a href="{{url_for('add_to_cycle', project_id=project.id, sprint_id=2) }}">Add to Sprint Cycle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+    
+    <div style="border: 1px solid #000; border-radius: 5px; padding:20px;">
+        <h2>Goals</h2>
+        <p>ASDF</p>
+    </div>
+    
+    <h2>Sprints <a href="{{url_for('createSprint')}}">➕</a></h2>
+    
+    <ul>
+        {% for sprint in sprints %}
+        <li><strong>{{sprint.title}}</strong>: {{sprint.date_start}} - {{ sprint.date_end }}<br>
+        </li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Projects Backlog</h2>
+    
+    <div class="table_projects" role="region" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Led by</th>
+                    <th>Status</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in backlog %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a>
+                    </td>
+                    <td>{{ project.dri }} ({{ project.team }})</td>
+                    <td>
+                        <span class="badge badge-primary">{{ project.created }}</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit', project_id=project.id) }}"><span class="badge badge-warning">Edit</span></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+{% endblock %}
