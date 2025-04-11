@@ -49,21 +49,10 @@ class Project(db.Model):
     launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
     backlog: so.Mapped[bool] = so.mapped_column(unique=False, default=False, nullable=True)
     discussion: so.Mapped[bool] = so.mapped_column(unique=False, default=True, nullable=True)
+    location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
 
     def __repr__(self):
-        return (
-            f"ID: {self.id} | "
-            + f"Project Name: {self.name} | "
-            + f"Created on (UTC): {self.created} | "
-            + f"Directly Responsible Individual: {self.dri} | "
-            + f"Team: {self.team} | "
-            + f"Context: {self.context} | "
-            + f"Reason for Prioritization: {self.why} | "
-            + f"Requirements: {self.requirements} | "
-            + f"Launch Plan: {self.launch}"
-            + f"Backlogged? {self.backlog}"
-            + f"Under Discussion? {self.discussion}"
-        )
+        return '<Project {}>'.format(self.body)
         
 class Request(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
