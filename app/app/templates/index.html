@@ -31,33 +31,33 @@
   
   <div class="discussion-list" id="discussion-list">
     {% for project in projects|selectattr('location', '==', "discussion") %}
-    <div class="discussion-item">
-      <p><strong>{{ project.name }}</strong><br>
-      <span class="discussion-details">{{ project.context }}</span></p>
-      <div class="discussion-actions">
-          <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%Y.%m.%d') }}</span>
+    <div class="discussion-item" data-project-id="{{ project.id }}">
+    <p><strong>{{ project.name }}</strong><br>
+    <span class="discussion-details">{{ project.context }}</span></p>
+    <div class="discussion-actions">
+        <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%Y.%m.%d') }}</span>
         <button class="btn-text">Discuss</button>
         <button class="btn-text">Edit</button>
         <button class="btn-text">Move to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
-      </div>
+    </div>
     </div>
     {% endfor %}
     
     {% for goal in goals %}
-    <div class="discussion-item">
-      <div class="discussion-meta">
+    <div class="discussion-item" data-project-id="{{ goal.id }}">
+    <div class="discussion-meta">
         
         
-      </div>
-      <h4>{{ goal.title }}</h4>
-      <p class="discussion-details">{{ goal.details }}</p>
-      <div class="discussion-actions">
-          <span class="requester date-badge">{{ goal.requested_by }}</span> <span class="date-badge">{{ goal.created.strftime('%Y.%m.%d') }}</span>
+    </div>
+    <h4>{{ goal.title }}</h4>
+    <p class="discussion-details">{{ goal.details }}</p>
+    <div class="discussion-actions">
+        <span class="requester date-badge">{{ goal.requested_by }}</span> <span class="date-badge">{{ goal.created.strftime('%Y.%m.%d') }}</span>
         <button class="btn-text">Discuss</button>
         <button class="btn-text">Move to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
-      </div>
+    </div>
     </div>
     {% endfor %}
   </div>
@@ -367,56 +367,314 @@
 </style>
 
 <script>
-  // Tabs functionality
   document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // Remove active class from all buttons and contents
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabContents.forEach(content => content.classList.remove('active'));
-        
-        // Add active class to clicked button and corresponding content
-        button.classList.add('active');
-        const tabId = button.getAttribute('data-tab');
-        document.getElementById(`${tabId}-tab`).classList.add('active');
-      });
+  // Existing tab functionality
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons and contents
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+      
+      // Add active class to clicked button and corresponding content
+      button.classList.add('active');
+      const tabId = button.getAttribute('data-tab');
+      document.getElementById(`${tabId}-tab`).classList.add('active');
     });
-    
-    // Initialize dark mode from localStorage
-    if (localStorage.getItem('darkMode') === 'enabled') {
-      document.body.classList.add('dark-mode');
+  });
+  
+  // Initialize dark mode from localStorage
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    document.body.classList.add('dark-mode');
+  }
+  
+  // Modal functionality
+  const modal = document.getElementById('projectModal');
+  const closeModalBtn = document.querySelector('.close-modal');
+  const discussButtons = document.querySelectorAll('.discussion-actions .btn-text');
+  
+  // Set up event listeners for discuss buttons
+  discussButtons.forEach(button => {
+    if (button.textContent.trim() === 'Discuss') {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const projectItem = this.closest('.discussion-item');
+        const projectId = projectItem.dataset.projectId;
+        openProjectModal(projectId);
+      });
     }
   });
   
-  // Toggle discussion section
-  function toggleDiscussionSection() {
-    const header = document.querySelector('.discussion-section .section-header');
-    const content = document.getElementById('discussion-list');
-    
-    header.classList.toggle('collapsed');
-    
-    if (header.classList.contains('collapsed')) {
-      content.style.display = 'none';
-    } else {
-      content.style.display = 'block';
-    }
-  }
+  // Close modal when clicking the × button
+  closeModalBtn.addEventListener('click', function() {
+    closeModal();
+  });
   
-  // Toggle dark mode
-  function toggleDarkMode() {
-    const body = document.body;
-    
-    body.classList.toggle('dark-mode');
-    
-    // Save preference to localStorage
-    if (body.classList.contains('dark-mode')) {
-      localStorage.setItem('darkMode', 'enabled');
-    } else {
-      localStorage.setItem('darkMode', 'disabled');
+  // Close modal when clicking outside the modal
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      closeModal();
     }
+  });
+  
+  // Handle "Move to Sprint" button
+  const moveToSprintBtn = document.getElementById('btn-move-sprint');
+  const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
+  const cancelBtn = document.getElementById('btn-cancel');
+  const sprintGoalContainer = document.getElementById('sprint-goal-container');
+  
+  moveToSprintBtn.addEventListener('click', function() {
+    // Show sprint goal input and confirm/cancel buttons
+    sprintGoalContainer.style.display = 'block';
+    confirmSprintBtn.style.display = 'inline-block';
+    cancelBtn.style.display = 'inline-block';
+    // Hide action buttons
+    moveToSprintBtn.style.display = 'none';
+    document.getElementById('btn-edit').style.display = 'none';
+    document.getElementById('btn-move-backlog').style.display = 'none';
+  });
+  
+  cancelBtn.addEventListener('click', function() {
+    // Reset modal to normal state
+    resetModalButtons();
+  });
+  
+  confirmSprintBtn.addEventListener('click', function() {
+    const projectId = modal.dataset.projectId;
+    const sprintGoal = document.getElementById('sprint-goal').value;
+    
+    if (!sprintGoal.trim()) {
+      alert('Please enter a sprint goal before confirming.');
+      return;
+    }
+    
+    // Submit the data to move the project to sprint
+    moveProjectToSprint(projectId, sprintGoal);
+  });
+  
+  // Set up event listeners for other action buttons
+  document.getElementById('btn-edit').addEventListener('click', function() {
+    const projectId = modal.dataset.projectId;
+    window.location.href = `/edit/${projectId}`;
+  });
+  
+  document.getElementById('btn-move-backlog').addEventListener('click', function() {
+    const projectId = modal.dataset.projectId;
+    moveProjectToBacklog(projectId);
+  });
+});
+
+// Function to open the modal and load project details
+function openProjectModal(projectId) {
+  const modal = document.getElementById('projectModal');
+  modal.dataset.projectId = projectId;
+  
+  // Show the modal
+  modal.style.display = 'block';
+  
+  // Fetch project details via AJAX
+  fetchProjectDetails(projectId);
+}
+
+// Function to close the modal
+function closeModal() {
+  const modal = document.getElementById('projectModal');
+  modal.style.display = 'none';
+  resetModalButtons();
+  
+  // Clear the sprint goal input
+  document.getElementById('sprint-goal').value = '';
+}
+
+// Reset modal buttons to their default state
+function resetModalButtons() {
+  document.getElementById('sprint-goal-container').style.display = 'none';
+  document.getElementById('btn-confirm-sprint').style.display = 'none';
+  document.getElementById('btn-cancel').style.display = 'none';
+  
+  document.getElementById('btn-move-sprint').style.display = 'inline-block';
+  document.getElementById('btn-edit').style.display = 'inline-block';
+  document.getElementById('btn-move-backlog').style.display = 'inline-block';
+}
+
+// Function to fetch project details from server
+function fetchProjectDetails(projectId) {
+  fetch(`/api/project/${projectId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(project => {
+      // Populate modal with project details
+      document.getElementById('modal-title').textContent = "Project Details";
+      document.getElementById('modal-project-title').textContent = project.name;
+      document.getElementById('modal-project-details').textContent = project.details || 'No details provided';
+      document.getElementById('modal-project-context').textContent = project.context || 'No context provided';
+      document.getElementById('modal-project-requirements').textContent = project.requirements || 'No requirements specified';
+      document.getElementById('modal-project-dri').textContent = project.dri || 'Unassigned';
+      document.getElementById('modal-project-created').textContent = project.created || '';
+    })
+    .catch(error => {
+      console.error('Error fetching project details:', error);
+      alert('Failed to load project details. Please try again.');
+      closeModal();
+    });
+}
+
+// Function to move project to sprint
+function moveProjectToSprint(projectId, sprintGoal) {
+  const data = {
+    projectId: projectId,
+    sprintGoal: sprintGoal,
+    location: 'sprint'
+  };
+  
+  fetch('/api/project/move', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(result => {
+    if (result.success) {
+      // Close the modal and refresh the page to show updated data
+      closeModal();
+      window.location.reload();
+    } else {
+      alert(result.message || 'Failed to move project to sprint.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred while processing your request.');
+  });
+}
+
+// Function to move project to backlog
+function moveProjectToBacklog(projectId) {
+  const data = {
+    projectId: projectId,
+    location: 'backlog'
+  };
+  
+  fetch('/api/project/move', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(result => {
+    if (result.success) {
+      // Close the modal and refresh the page to show updated data
+      closeModal();
+      window.location.reload();
+    } else {
+      alert(result.message || 'Failed to move project to backlog.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred while processing your request.');
+  });
+}
+
+// Toggle discussion section
+function toggleDiscussionSection() {
+  const header = document.querySelector('.discussion-section .section-header');
+  const content = document.getElementById('discussion-list');
+  
+  header.classList.toggle('collapsed');
+  
+  if (header.classList.contains('collapsed')) {
+    content.style.display = 'none';
+  } else {
+    content.style.display = 'block';
   }
+}
+
+// Toggle dark mode
+function toggleDarkMode() {
+  const body = document.body;
+  
+  body.classList.toggle('dark-mode');
+  
+  // Save preference to localStorage
+  if (body.classList.contains('dark-mode')) {
+    localStorage.setItem('darkMode', 'enabled');
+  } else {
+    localStorage.setItem('darkMode', 'disabled');
+  }
+}
 </script>
+
+<!-- Project Details Modal -->
+<div id="projectModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Project Details</h3>
+      <span class="close-modal">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="project-info">
+        <div class="info-group">
+          <label>Title:</label>
+          <p id="modal-project-title"></p>
+        </div>
+        <div class="info-group">
+          <label>Details:</label>
+          <p id="modal-project-details"></p>
+        </div>
+        <div class="info-group">
+          <label>Context:</label>
+          <p id="modal-project-context"></p>
+        </div>
+        <div class="info-group">
+          <label>Requirements:</label>
+          <p id="modal-project-requirements"></p>
+        </div>
+        <div class="info-group">
+          <label>DRI:</label>
+          <p id="modal-project-dri"></p>
+        </div>
+        <div class="info-group">
+          <label>Created:</label>
+          <p id="modal-project-created"></p>
+        </div>
+      </div>
+      
+      <!-- Sprint Goal Input (hidden by default) -->
+      <div id="sprint-goal-container" class="sprint-goal-container" style="display: none;">
+        <label for="sprint-goal">Sprint Goal:</label>
+        <textarea id="sprint-goal" class="form-control" rows="3" placeholder="Define the sprint goal for this project"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="btn-edit" class="btn btn-secondary">Edit</button>
+      <button id="btn-move-backlog" class="btn btn-secondary">Move to Backlog</button>
+      <button id="btn-move-sprint" class="btn btn-primary">Move to Sprint</button>
+      <button id="btn-confirm-sprint" class="btn btn-success" style="display: none;">Confirm</button>
+      <button id="btn-cancel" class="btn btn-text" style="display: none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}

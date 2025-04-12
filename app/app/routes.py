@@ -2,7 +2,7 @@ from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint
 from app.models import User, Project, Goal, Sprint, SprintProjectMap
 import sqlalchemy as sa
-from flask import Flask, render_template, request, url_for, flash, redirect
+from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
 from urllib.parse import urlsplit
@@ -222,3 +222,70 @@ def add_to_cycle(project_id, sprint_id):
         return redirect(url_for('index'))
     return redirect(url_for('index'))
     
+    
+    
+# Add these routes to your Flask application
+
+@app.route('/api/project/<int:project_id>', methods=['GET'])
+def api_get_project(project_id):
+    project = (
+        Project.query
+        .filter_by(id=project_id)
+        .first()
+    )
+    
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+    
+    # Convert SQLAlchemy model to dictionary
+    project_data = {
+        'id': project.id,
+        'name': project.name,
+        'why': project.why,
+        'context': project.context,
+        'launch': project.launch,
+        'requirements': project.requirements,
+        'dri': project.dri,
+        'created': project.created.strftime('%Y-%m-%d') if project.created else None,
+        'team': project.team,
+        # 'status': project.status,
+        # 'priority': project.priority,
+        'location': project.location
+    }
+    
+    # Return the project data as JSON
+    return jsonify(project_data)
+
+@app.route('/api/project/move', methods=['POST'])
+def api_move_project():
+    """
+    API endpoint to move a project to sprint or backlog
+    """
+    data = request.json
+    project_id = data.get('projectId')
+    new_location = data.get('location')
+    sprint_goal = data.get('sprintGoal', '')
+    
+    # Validate the required fields
+    if not project_id or not new_location:
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+    
+    # In a real application, you would update your database
+    # This is a simplified example
+    project = next((p for p in projects if p['id'] == int(project_id)), None)
+    
+    if project is None:
+        return jsonify({"success": False, "message": "Project not found"}), 404
+    
+    # Update the project location
+    project['location'] = new_location
+    
+    # If moving to sprint, also update the sprint goal
+    if new_location == 'sprint' and sprint_goal:
+        project['sprint_goal'] = sprint_goal
+    
+    # Return success response
+    return jsonify({
+        "success": True,
+        "message": f"Project moved to {new_location} successfully"
+    })

@@ -1,6 +1,8 @@
 ##
 TODO: Create initialization to run on first time setup to create a backlog sprint, undeletable.
 
+TODO: Create community disqus as part of implementation of marketing site to allow modding, feature requests, support, etc. 
+
 ## 2025.04.03
 TODO: Different types of users:
     - Viewer
