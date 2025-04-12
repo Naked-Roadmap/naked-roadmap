@@ -41,7 +41,7 @@ def project(project_id):
     return render_template('project.html', project=project)
     
 @app.route('/create', methods=['GET', 'POST'])
-def create():
+def createProject():
     form = CreateProject()
     if request.method == 'POST':
         projectDetails = Project(

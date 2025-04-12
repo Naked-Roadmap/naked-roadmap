@@ -12,17 +12,24 @@
 
 <!-- Discussion List -->
 <section class="section discussion-section">
-  <div class="section-header">
+  <div class="section-header collapsible-header" onclick="toggleDiscussionSection()">
     <h3>For Discussion</h3>
-    <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-    </a>
+    <div class="header-actions">
+      <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add new Goal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </a>
+      <span class="collapse-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </span>
+    </div>
   </div>
   
-  <div class="discussion-list">
+  <div class="discussion-list" id="discussion-list">
     {% for project in projects|selectattr('location', '==', "discussion") %}
     <div class="discussion-item">
       <p><strong>{{ project.name }}</strong><br>
@@ -30,6 +37,7 @@
       <div class="discussion-actions">
           <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%Y.%m.%d') }}</span>
         <button class="btn-text">Discuss</button>
+        <button class="btn-text">Edit</button>
         <button class="btn-text">Move to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
       </div>
@@ -125,7 +133,13 @@
   
   <div class="column-narrow">
     <div class="section-header">
-      <h3>Evergreen Goals</h3>
+      <h3>Goals</h3>
+      <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </a>
     </div>
     
     <div class="goals-list">
@@ -263,6 +277,95 @@
   </div>
 </section>
 
+<style>
+  /* Styles for collapsible section */
+  .collapsible-header {
+    cursor: pointer;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+  
+  .collapse-icon {
+    transition: transform 0.3s ease;
+  }
+  
+  .collapsed .collapse-icon {
+    transform: rotate(-90deg);
+  }
+  
+  /* Dark mode styles */
+  body.dark-mode {
+    background-color: var(--color-gray-900);
+    color: var(--color-gray-200);
+  }
+  
+  body.dark-mode .section,
+  body.dark-mode .top-bar {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .section-header {
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .discussion-item,
+  body.dark-mode .project-item,
+  body.dark-mode .goal-item,
+  body.dark-mode .table td {
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .table th {
+    color: var(--color-gray-300);
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .date-badge {
+    background-color: var(--color-gray-700);
+    color: var(--color-gray-300);
+  }
+  
+  body.dark-mode a {
+    color: var(--color-info);
+  }
+  
+  body.dark-mode a:hover {
+    color: var(--color-primary);
+  }
+  
+  body.dark-mode .welcome-banner {
+    background-color: #645A0A;
+    color: var(--color-white);
+  }
+  
+  body.dark-mode .app-footer {
+    border-color: var(--color-gray-700);
+    color: var(--color-gray-400);
+  }
+
+  /* Toggle icons */
+  .dark-mode-toggle svg.sun {
+    display: none;
+  }
+  
+  .dark-mode-toggle svg.moon {
+    display: block;
+  }
+  
+  body.dark-mode .dark-mode-toggle svg.sun {
+    display: block;
+  }
+  
+  body.dark-mode .dark-mode-toggle svg.moon {
+    display: none;
+  }
+</style>
+
 <script>
   // Tabs functionality
   document.addEventListener('DOMContentLoaded', function() {
@@ -281,6 +384,39 @@
         document.getElementById(`${tabId}-tab`).classList.add('active');
       });
     });
+    
+    // Initialize dark mode from localStorage
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
+    }
   });
+  
+  // Toggle discussion section
+  function toggleDiscussionSection() {
+    const header = document.querySelector('.discussion-section .section-header');
+    const content = document.getElementById('discussion-list');
+    
+    header.classList.toggle('collapsed');
+    
+    if (header.classList.contains('collapsed')) {
+      content.style.display = 'none';
+    } else {
+      content.style.display = 'block';
+    }
+  }
+  
+  // Toggle dark mode
+  function toggleDarkMode() {
+    const body = document.body;
+    
+    body.classList.toggle('dark-mode');
+    
+    // Save preference to localStorage
+    if (body.classList.contains('dark-mode')) {
+      localStorage.setItem('darkMode', 'enabled');
+    } else {
+      localStorage.setItem('darkMode', 'disabled');
+    }
+  }
 </script>
 {% endblock %}

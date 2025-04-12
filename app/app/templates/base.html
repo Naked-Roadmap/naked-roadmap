@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -11,6 +11,132 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="static/fonts/Mulish/Mulish-VariableFont_wght.ttf" rel="stylesheet">
     <title>{% block title %} {% endblock %}</title>
+    
+    <style>
+      /* Dark Mode Styles */
+      [data-theme="dark"] {
+        --color-background: #121212;
+        --color-white: #1e1e1e;
+        --color-black: #f6f8fa;
+        --color-gray-100: #333333;
+        --color-gray-200: #424242;
+        --color-gray-300: #616161;
+        --color-gray-400: #757575;
+        --color-gray-500: #9e9e9e;
+        --color-gray-600: #bdbdbd;
+        --color-gray-700: #e0e0e0;
+        --color-gray-800: #eeeeee;
+        --color-gray-900: #f5f5f5;
+        --color-primary: #5c85ee;
+        --color-primary-dark: #7393e6;
+      }
+
+      [data-theme="dark"] body {
+        color: var(--color-gray-700);
+        background-color: var(--color-background);
+      }
+
+      [data-theme="dark"] .sidebar {
+        background-color: #0a0a0a;
+      }
+
+      [data-theme="dark"] .section,
+      [data-theme="dark"] .top-bar {
+        background-color: var(--color-white);
+      }
+
+      [data-theme="dark"] .section-header,
+      [data-theme="dark"] .app-footer {
+        border-color: var(--color-gray-100);
+      }
+
+      [data-theme="dark"] .table th,
+      [data-theme="dark"] .table td {
+        border-color: var(--color-gray-100);
+      }
+
+      /* Dark Mode Toggle */
+      .theme-switch {
+        display: flex;
+        align-items: center;
+        margin-top: var(--spacing-3);
+        margin-bottom: var(--spacing-3);
+        padding: var(--spacing-2) var(--spacing-3);
+        border-radius: var(--border-radius-md);
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .theme-switch:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .theme-switch-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: var(--spacing-2);
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        margin-left: auto;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--color-gray-700);
+        border-radius: 10px;
+        transition: .4s;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        border-radius: 50%;
+        transition: .4s;
+      }
+
+      input:checked + .toggle-slider {
+        background-color: var(--color-primary);
+      }
+
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      @media (max-width: 768px) {
+        .theme-switch-text {
+          display: none;
+        }
+        
+        .theme-switch {
+          justify-content: center;
+        }
+        
+        .theme-switch-icon {
+          margin-right: 0;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="app-container">
@@ -18,17 +144,7 @@
       <div class="sidebar">
         <div class="sidebar-header">
           <a href="{{ url_for('index')}}" class="logo">
-            <svg width="30" height="30" viewBox="0 0 48 43.15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g clip-path="url(#clip0_2221_14)">
-              <path d="M48 9.84V10.59L41.84 16.85L41.16 16.82L38.25 14.34V42.61C38.25 42.76 37.79 43.24 37.55 43.13L10.22 43.08C10.15 43.02 9.84 42.73 9.84 42.71V14.34L6.98 16.78C6.81 16.9 6.6 16.99 6.39 16.91L0 10.5V9.84C2.81 7.36 5.51 4.72 8.41 2.36C11.09 1.33 13.97 0.8 16.74 0C20.69 1.75 24.94 2.53 29.09 0.92C29.64 0.71 30.78 -0.01 31.25 0.01C34.15 1 37.54 1.23 40.17 2.82L48 9.85V9.84Z" fill="#ffffff"/>
-              <path d="M11.2501 12.47C11.0801 12.08 10.6501 11.86 10.2401 12.07L6.80012 15.1C6.72012 15.18 6.64012 15.2 6.53012 15.18C6.02012 15.06 2.78011 11.05 1.96011 10.55C1.86011 10.44 1.85011 10.33 1.88011 10.19C1.90011 10.11 2.96011 9.08001 3.12011 8.94001C4.68011 7.49001 6.48012 5.82001 8.09012 4.44001C9.61012 3.14001 10.9401 3.09001 12.7501 2.58001C13.9401 2.24001 15.1301 1.92001 16.3001 1.53001L16.6901 1.64001L23.4801 10.13C24.4901 10.85 24.7901 9.60001 25.2501 9.03001C26.9301 6.99001 28.7401 4.97001 30.2201 2.75001L31.3801 1.51001L38.7101 3.52001L46.3101 10.26L41.5601 15.17C41.3201 15.21 38.2901 12.34 37.8101 12.01C37.4701 11.78 37.2001 11.98 36.9301 12.19C36.9301 12.1 36.9101 12.02 36.8401 11.95C36.2301 11.63 34.8001 9.75001 34.1801 9.86001C33.8501 9.92001 33.5801 10.32 33.5601 10.65V41.72C26.2501 41.75 18.9501 41.69 11.6501 41.72L11.3301 41.62V12.79C11.3801 12.64 11.2801 12.56 11.2401 12.47H11.2501Z" fill="#9AB6CB"/>
-              </g>
-              <defs>
-              <clipPath id="clip0_2221_14">
-              <rect width="48" height="43.15" fill="white"/>
-              </clipPath>
-              </defs>
-            </svg>
+            <img src="{{ url_for('static', filename='fig-icon.svg')}}"  style="max-height:40px; margin-right:10px;">
             <span>Naked Roadmap</span>
           </a>
         </div>
@@ -63,19 +179,17 @@
             <li>
               <a href="{{ url_for('createSprint') }}">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_2314_37)">
-<path d="M3.67236 16.1288C5.75633 18.3664 9.09472 19.0199 11.9678 17.9209C12.4331 17.7426 12.8782 17.4159 13.2829 17.2674C14.1529 16.9308 14.8711 18.0397 13.9809 18.6436C11.9678 20.0397 8.81146 20.3268 6.4847 19.6436C4.5626 19.0793 3.45992 18.1585 2.10433 16.7921C2.06386 16.7426 2.04363 16.703 1.9627 16.7228C1.85142 17.1684 1.78061 17.703 1.62886 18.1288C1.2849 19.0694 0.0102463 18.812 0.0709443 17.9011C0.4149 16.9011 0.556529 15.6832 0.940949 14.7129C1.26467 13.8912 1.98293 14.307 2.56968 14.4357C3.15643 14.5644 3.79376 14.6337 4.39062 14.7822C4.98748 14.9308 5.94854 15.1684 5.4933 16.0199C5.10888 16.7525 4.24899 16.208 3.67236 16.109V16.1288Z" fill="#9CA3AF"/>
-<path d="M17.5418 14.3663L19.2312 13.9703C19.99 14.0297 20.3036 14.9505 19.646 15.3861L16.2874 16.2772C15.8423 16.3168 15.5792 16.0891 15.387 15.7228L14.517 12.4653C14.598 11.8614 15.296 11.5248 15.7917 11.9505C16.0547 12.1683 16.1559 12.8614 16.2672 13.2079C16.2874 13.2772 16.2368 13.2871 16.3582 13.2772C16.4189 12.8317 16.5808 12.396 16.6415 11.9505C16.9854 9.24753 15.6501 6.53466 13.4143 4.9703C13.1412 4.78218 12.4128 4.43565 12.2914 4.21782C12.0183 3.75248 12.3724 3.08911 12.9288 3.08911C13.2221 3.08911 14.0719 3.64357 14.3349 3.83169C17.7138 6.15842 19.1705 10.604 17.5418 14.3861V14.3663Z" fill="#9CA3AF"/>
-<path d="M9.41842 1.93076C9.68144 2.21788 10.167 2.48521 10.167 2.94066C10.167 3.3961 9.67132 3.74264 9.37795 4.02977C8.77097 4.62383 8.15387 5.20798 7.57724 5.83175C7.15235 6.16838 6.43409 5.80204 6.38351 5.29709C6.32282 4.71293 7.04108 4.30699 7.37491 3.91095C7.01073 3.93076 6.58584 4.09907 6.24188 4.23769C3.75327 5.24759 1.92221 7.58422 1.6086 10.2179C1.55802 10.6733 1.6086 11.1684 1.55802 11.604C1.45686 12.5446 0.161966 12.4951 0.050686 11.6931C-0.0605938 10.8912 0.131617 9.61392 0.34406 8.84165C1.2343 5.50501 4.25908 2.79214 7.75934 2.31689C7.44573 1.84165 6.46444 1.31689 6.47456 0.722835C6.48468 0.158479 7.13212 -0.178155 7.62782 0.108974C7.90096 0.26739 8.76085 1.18818 9.03399 1.46541C9.17562 1.60402 9.29702 1.79214 9.42853 1.94066L9.41842 1.93076Z" fill="#9CA3AF"/>
-</g>
-<defs>
-<clipPath id="clip0_2314_37">
-<rect width="20" height="20" fill="white"/>
-</clipPath>
-</defs>
-</svg>
-
-
+                <g clip-path="url(#clip0_2314_37)">
+                <path d="M3.67236 16.1288C5.75633 18.3664 9.09472 19.0199 11.9678 17.9209C12.4331 17.7426 12.8782 17.4159 13.2829 17.2674C14.1529 16.9308 14.8711 18.0397 13.9809 18.6436C11.9678 20.0397 8.81146 20.3268 6.4847 19.6436C4.5626 19.0793 3.45992 18.1585 2.10433 16.7921C2.06386 16.7426 2.04363 16.703 1.9627 16.7228C1.85142 17.1684 1.78061 17.703 1.62886 18.1288C1.2849 19.0694 0.0102463 18.812 0.0709443 17.9011C0.4149 16.9011 0.556529 15.6832 0.940949 14.7129C1.26467 13.8912 1.98293 14.307 2.56968 14.4357C3.15643 14.5644 3.79376 14.6337 4.39062 14.7822C4.98748 14.9308 5.94854 15.1684 5.4933 16.0199C5.10888 16.7525 4.24899 16.208 3.67236 16.109V16.1288Z" fill="#9CA3AF"/>
+                <path d="M17.5418 14.3663L19.2312 13.9703C19.99 14.0297 20.3036 14.9505 19.646 15.3861L16.2874 16.2772C15.8423 16.3168 15.5792 16.0891 15.387 15.7228L14.517 12.4653C14.598 11.8614 15.296 11.5248 15.7917 11.9505C16.0547 12.1683 16.1559 12.8614 16.2672 13.2079C16.2874 13.2772 16.2368 13.2871 16.3582 13.2772C16.4189 12.8317 16.5808 12.396 16.6415 11.9505C16.9854 9.24753 15.6501 6.53466 13.4143 4.9703C13.1412 4.78218 12.4128 4.43565 12.2914 4.21782C12.0183 3.75248 12.3724 3.08911 12.9288 3.08911C13.2221 3.08911 14.0719 3.64357 14.3349 3.83169C17.7138 6.15842 19.1705 10.604 17.5418 14.3861V14.3663Z" fill="#9CA3AF"/>
+                <path d="M9.41842 1.93076C9.68144 2.21788 10.167 2.48521 10.167 2.94066C10.167 3.3961 9.67132 3.74264 9.37795 4.02977C8.77097 4.62383 8.15387 5.20798 7.57724 5.83175C7.15235 6.16838 6.43409 5.80204 6.38351 5.29709C6.32282 4.71293 7.04108 4.30699 7.37491 3.91095C7.01073 3.93076 6.58584 4.09907 6.24188 4.23769C3.75327 5.24759 1.92221 7.58422 1.6086 10.2179C1.55802 10.6733 1.6086 11.1684 1.55802 11.604C1.45686 12.5446 0.161966 12.4951 0.050686 11.6931C-0.0605938 10.8912 0.131617 9.61392 0.34406 8.84165C1.2343 5.50501 4.25908 2.79214 7.75934 2.31689C7.44573 1.84165 6.46444 1.31689 6.47456 0.722835C6.48468 0.158479 7.13212 -0.178155 7.62782 0.108974C7.90096 0.26739 8.76085 1.18818 9.03399 1.46541C9.17562 1.60402 9.29702 1.79214 9.42853 1.94066L9.41842 1.93076Z" fill="#9CA3AF"/>
+                </g>
+                <defs>
+                <clipPath id="clip0_2314_37">
+                <rect width="20" height="20" fill="white"/>
+                </clipPath>
+                </defs>
+                </svg>
                 Sprints
               </a>
             </li>
@@ -106,10 +220,46 @@
             </svg>
             Login
           </a>
+          <div class="theme-switch">
+            <svg class="theme-switch-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <span class="theme-switch-text">Light Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="theme-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           {% else %}
           <div class="user-info">
             <div class="user-avatar">{{ current_user.username[0] }}</div>
             <span>{{ current_user.username }}</span>
+          </div>
+          <div class="theme-switch">
+            <svg class="theme-switch-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <span class="theme-switch-text">Light Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="theme-toggle">
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <a href="{{ url_for('logout') }}" class="btn-logout">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -161,5 +311,59 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    
+    <!-- Dark Mode Toggle Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeText = document.querySelector('.theme-switch-text');
+        const themeIcon = document.querySelector('.theme-switch-icon');
+        
+        // Check for saved theme preference or use device preference
+        const savedTheme = localStorage.getItem('theme') || 
+                          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        
+        // Apply saved theme on page load
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = savedTheme === 'dark';
+        updateThemeText(savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        // Toggle theme when checkbox changes
+        themeToggle.addEventListener('change', function() {
+          const theme = this.checked ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+          updateThemeText(theme);
+          updateThemeIcon(theme);
+        });
+        
+        function updateThemeText(theme) {
+          themeText.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        }
+        
+        function updateThemeIcon(theme) {
+          if (theme === 'dark') {
+            // Moon icon for dark mode
+            themeIcon.innerHTML = `
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
+          } else {
+            // Sun icon for light mode
+            themeIcon.innerHTML = `
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            `;
+          }
+        }
+      });
+    </script>
   </body>
 </html>

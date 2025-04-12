@@ -12,8 +12,8 @@
 <!-- Discussion List -->
 <section class="section discussion-section">
   <div class="section-header">
-    <h3>For Discussion</h3>
-    <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
+    <h3>Projects Complete List</h3>
+    <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add new Goal">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -24,13 +24,132 @@
   <!-- Tabbed section -->
 <section class="section tabbed-section">
   <div class="tabs">
-    <button class="tab-btn active" data-tab="discussion">Active</button>
-    <button class="tab-btn" data-tab="backlog">Discussion</button>
-    <button class="tab-btn" data-tab="discussion">Backlog</button>
+    <button class="tab-btn active" data-tab="active">Active</button>
+    <button class="tab-btn" data-tab="discussion">Discussion</button>
+    <button class="tab-btn" data-tab="backlog">Backlog</button>
     <button class="tab-btn" data-tab="completed">Completed Projects</button>
   </div>
   
-  <div class="tab-content active" id="backlog-tab">
+  <!-- ---------------------- -->
+  <!-- Active Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content active" id="active-tab">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Led by</th>
+            <th>Completed</th>
+            <th>Sprint</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects|selectattr('location', '==', "sprint") %}
+          <tr>
+            <td><a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a></td>
+            <td>{{ project.dri }} <span class="team-tag">{{ project.team }}</span></td>
+            <td>{{ project.created }}</td>
+            <td>
+              <span class="priority-indicator 
+                {% if project.priority == 'High' %}priority-high
+                {% elif project.priority == 'Medium' %}priority-medium
+                {% else %}priority-low{% endif %}">
+                {{ project.priority|default('Medium') }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </a>
+                <a href="#" class="btn-icon" title="Move to discussion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </a>
+                <a href="{{url_for('add_to_cycle', project_id=project.id, sprint_id=2) }}" class="btn-icon" title="Add to Sprint">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- ---------------------- -->
+  <!-- Discussion Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content" id="discussion-tab">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Led by</th>
+            <th>Created</th>
+            <th>Priority</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects|selectattr('location', '==', "discussion") %}
+          <tr>
+            <td><a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a></td>
+            <td>{{ project.dri }} <span class="team-tag">{{ project.team }}</span></td>
+            <td>{{ project.created }}</td>
+            <td>
+              <span class="priority-indicator 
+                {% if project.priority == 'High' %}priority-high
+                {% elif project.priority == 'Medium' %}priority-medium
+                {% else %}priority-low{% endif %}">
+                {{ project.priority|default('Medium') }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </a>
+                <a href="#" class="btn-icon" title="Move to discussion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </a>
+                <a href="{{url_for('add_to_cycle', project_id=project.id, sprint_id=2) }}" class="btn-icon" title="Add to Sprint">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- ---------------------- -->
+  <!-- Backlog Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content" id="backlog-tab">
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -85,6 +204,9 @@
     </div>
   </div>
   
+  <!-- ---------------------- -->
+  <!-- Completed Tab -->
+  <!-- ---------------------- -->
   <div class="tab-content" id="completed-tab">
     <div class="table-responsive">
       <table class="table">
@@ -139,6 +261,7 @@
       </table>
     </div>
   </div>
+  
 </section>
 
 
