@@ -82,6 +82,7 @@ class SprintProjectMap(db.Model):
     project_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Project.id), index=True)
     goal: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
     status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="Committed")
+    order: so.Mapped[int] = so.mapped_column(nullable=True, autoincrement=True)
     
     def __repr__(self):
         return '<Sprint/Project Map {}>'.format(self.body)

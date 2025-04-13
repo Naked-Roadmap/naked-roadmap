@@ -24,10 +24,10 @@
   <!-- Tabbed section -->
 <section class="section tabbed-section">
   <div class="tabs">
-    <button class="tab-btn active" data-tab="active">Active</button>
-    <button class="tab-btn" data-tab="discussion">Discussion</button>
-    <button class="tab-btn" data-tab="backlog">Backlog</button>
-    <button class="tab-btn" data-tab="completed">Completed Projects</button>
+    <button class="tab-btn active" data-tab="active">Active ({% for len in projects|selectattr('location', '==', "sprint") %}{% if loop.index == 1 %}{{ '0' if loop is none else loop|length }}{% endif %}{% endfor %})</button>
+    <button class="tab-btn" data-tab="discussion">Discussion ({% for len in projects|selectattr('location', '==', "discussion") %}{% if loop.index == 1 %}{{ '0' if loop is none else loop|length }}{% endif %}{% endfor %})</button>
+    <button class="tab-btn" data-tab="backlog">Backlog ({% for len in projects|selectattr('location', '==', "backlog") %}{% if loop.index == 1 %}{{ '0' if loop is none else loop|length }}{% endif %}{% endfor %})</button>
+    <button class="tab-btn" data-tab="completed">Completed Projects ({% for len in projects|selectattr('location', '==', "completed") %}{% if loop.index == 1 %}{{ '0' if loop is none else loop|length }}{% endif %}{% endfor %})</button>
   </div>
   
   <!-- ---------------------- -->

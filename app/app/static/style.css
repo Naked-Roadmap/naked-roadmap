@@ -918,3 +918,90 @@ body.dark-mode .info-group label {
 body.dark-mode .sprint-goal-container {
   background-color: var(--color-gray-700);
 }
+
+ /* Styles for collapsible section */
+  .collapsible-header {
+    cursor: pointer;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+  
+  .collapse-icon {
+    transition: transform 0.3s ease;
+  }
+  
+  .collapsed .collapse-icon {
+    transform: rotate(-90deg);
+  }
+  
+  /* Dark mode styles */
+  body.dark-mode {
+    background-color: var(--color-gray-900);
+    color: var(--color-gray-200);
+  }
+  
+  body.dark-mode .section,
+  body.dark-mode .top-bar {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .section-header {
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .discussion-item,
+  body.dark-mode .project-item,
+  body.dark-mode .goal-item,
+  body.dark-mode .table td {
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .table th {
+    color: var(--color-gray-300);
+    border-color: var(--color-gray-700);
+  }
+  
+  body.dark-mode .date-badge {
+    background-color: var(--color-gray-700);
+    color: var(--color-gray-300);
+  }
+  
+  body.dark-mode a {
+    color: var(--color-info);
+  }
+  
+  body.dark-mode a:hover {
+    color: var(--color-primary);
+  }
+  
+  body.dark-mode .welcome-banner {
+    background-color: #645A0A;
+    color: var(--color-white);
+  }
+  
+  body.dark-mode .app-footer {
+    border-color: var(--color-gray-700);
+    color: var(--color-gray-400);
+  }
+
+  /* Toggle icons */
+  .dark-mode-toggle svg.sun {
+    display: none;
+  }
+  
+  .dark-mode-toggle svg.moon {
+    display: block;
+  }
+  
+  body.dark-mode .dark-mode-toggle svg.sun {
+    display: block;
+  }
+  
+  body.dark-mode .dark-mode-toggle svg.moon {
+    display: none;
+  }

@@ -224,7 +224,9 @@ def add_to_cycle(project_id, sprint_id):
     
     
     
-# Add these routes to your Flask application
+########################################################
+### APIs for Async Updates
+########################################################
 
 @app.route('/api/project/<int:project_id>', methods=['GET'])
 def api_get_project(project_id):
@@ -270,22 +272,44 @@ def api_move_project():
     if not project_id or not new_location:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
     
-    # In a real application, you would update your database
-    # This is a simplified example
-    project = next((p for p in projects if p['id'] == int(project_id)), None)
-    
+    # Check if project exists
+    project = Project.query.get(project_id)
     if project is None:
         return jsonify({"success": False, "message": "Project not found"}), 404
     
     # Update the project location
-    project['location'] = new_location
+    project.location = new_location
     
-    # If moving to sprint, also update the sprint goal
-    if new_location == 'sprint' and sprint_goal:
-        project['sprint_goal'] = sprint_goal
+    # If moving to sprint, also handle sprint relationship
+    if new_location == 'sprint':
+        # Check if already in sprint
+        existing_map = SprintProjectMap.query.filter_by(
+            project_id=project_id,
+            sprint_id=2
+        ).first()
+        
+        if existing_map:
+            # Update existing relationship
+            existing_map.goal = sprint_goal
+        else:
+            # Create new sprint-project relationship
+            sprint_project_map = SprintProjectMap(
+                sprint_id=2,
+                project_id=project_id,
+                goal=sprint_goal
+            )
+            db.session.add(sprint_project_map)
     
-    # Return success response
-    return jsonify({
-        "success": True,
-        "message": f"Project moved to {new_location} successfully"
-    })
+    # Commit changes to the database
+    try:
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": f"Project moved to {new_location} successfully"
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": f"Database error: {str(e)}"
+        }), 500
