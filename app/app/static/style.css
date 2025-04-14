@@ -778,7 +778,12 @@ a:hover {
   border-radius: var(--border-radius);
 }
 
-
+.modal.show {
+  z-index: 1055; /* default Bootstrap modal z-index */
+}
+.modal-backdrop.show {
+  z-index: 1050;
+}
 
 /* Dark Mode Styles */
       [data-theme="dark"] {

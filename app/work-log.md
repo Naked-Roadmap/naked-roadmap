@@ -1,7 +1,5 @@
 ## For Next Session
-TODO: Create "Planning Page"
-TODO: Sprint goals route
-TODO: Fix the edit button on modal
+TODO: Create "Planning Page" (if no active sprint, run a planning session)
 TODO: Fix text links in discussion section to work
 TODO: Add in all goals list
 TODO: Load goals into right dashboard section
@@ -15,10 +13,11 @@ TODO: Collected & prioritized single stack roadmap section
 TODO: Associate projects to goals.
 TODO: Goals order
 TODO: Add in changelog per project
+TODO: Add discussion per project
+TODO: Add in an org configuration page outside of the app config.
 
-
-
-
+-- DONE: Sprint goals route
+-- DONE: Fix the edit button on modal
 
 ##
 TODO: Create initialization to run on first time setup to create a backlog sprint, undeletable.

@@ -16,8 +16,8 @@ This is your planning area. Move projects from the discussion area into the spri
 <!-- ---------------------------------- -->
 <!-- Current Sprint and Goals -->
 <!-- ---------------------------------- -->
-<section class="section two-column-section">
-  <div class="column-wide">
+<section class="two-column-section">
+  <div class="column-wide section">
     <div class="section-header">
       <h3>Current Sprint</h3>
       <span class="status-badge status-planned">
@@ -98,7 +98,7 @@ This is your planning area. Move projects from the discussion area into the spri
     <div class="timeline-box">
         <div class="timeline-title">✔ Commitments Completed</div>
 
-        {% set done_count = sprintlog|selectattr('status', '==', "done")|list|length %}
+        {% set done_count = sprintlog|selectattr('status', '==', "Done")|list|length %}
         {% set total_count = sprintlog|count %}
         {% if total_count > 0 %}
             {% set percentage_projects = (done_count / total_count) * 100 %}
@@ -161,25 +161,22 @@ This is your planning area. Move projects from the discussion area into the spri
         
         
         {% for entry in sprintlog %}
-    {% set project = entry.project %}
+        {% set project = entry.project %}
     <div class="project-item">
       <div class="project-header">
         <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
         <span class="status-badge 
-          {% if project.status == 'In Progress' %}status-in-progress
-          {% elif project.status == 'Complete' %}status-complete
-          {% elif project.status == 'Blocked' %}status-blocked
+          {% if entry.status == 'In Progress' %}status-in-progress
+          {% elif entry.status == 'Done' %}status-complete
+          {% elif entry.status == 'Blocked' %}status-blocked
           {% else %}status-planned{% endif %}">
-          {{ project.status|default('Planned') }}
+          {{ entry.status|default('Planned') }}
         </span>
       </div>
       <div class="project-meta">
         <p>
             <strong>Goal:</strong> {{ entry.goal }}
-        <br>
-            <span class="project-owner">{{ project.dri }}</span>
-            <span class="project-team">{{ project.team }}</span>
-            <span class="project-date">{{ project.created.strftime('%Y-%m-%d') }}</span>
+        <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
         </p>
       </div>
     </div>
@@ -188,10 +185,10 @@ This is your planning area. Move projects from the discussion area into the spri
     </div>
   </div>
   
-  <div class="column-narrow">
+  <div class="column-narrow section">
     <div class="section-header">
-      <h3>Goals</h3>
-      <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
+      <h3>Objectives</h3>
+      <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -200,18 +197,12 @@ This is your planning area. Move projects from the discussion area into the spri
     </div>
     
     <div class="goals-list">
+    {% for goal in goals %}
       <div class="goal-item">
-        <h4>Improve User Satisfaction</h4>
-        <p>Increase NPS score by 20% by end of year</p>
+        <h4>{{ goal.title }}</h4>
+        <p>{{ goal.details }}</p>
       </div>
-      <div class="goal-item">
-        <h4>Reduce Technical Debt</h4>
-        <p>Allocate 20% of sprint capacity to tech debt</p>
-      </div>
-      <div class="goal-item">
-        <h4>Expand User Base</h4>
-        <p>Grow monthly active users by 15% QoQ</p>
-      </div>
+    {% endfor %}
     </div>
   </div>
 </section>
@@ -223,7 +214,7 @@ This is your planning area. Move projects from the discussion area into the spri
 
 <section class="section discussion-section">
   <div class="section-header collapsible-header" onclick="toggleDiscussionSection()">
-    <h3>For Discussion <span style="color:gray; font-weight:200;">({{ projects|count }})</span></h3>
+    <h3>Needs Discussion <span style="color:gray; font-weight:200;">({{ projects|count }})</span></h3>
     <div class="header-actions">
       <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add new Goal">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -247,8 +238,8 @@ This is your planning area. Move projects from the discussion area into the spri
     <div class="discussion-actions">
         <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%Y.%m.%d') }}</span>
         <button class="btn-text">Discuss</button>
-        <button class="btn-text">Edit</button>
-        <button class="btn-text">Move to Sprint</button>
+        <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project"><button class="btn-text">Edit</button></a>
+        <button class="btn-text">Commit to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
     </div>
     </div>
@@ -482,7 +473,7 @@ This is your planning area. Move projects from the discussion area into the spri
   // Set up event listeners for other action buttons
   document.getElementById('btn-edit').addEventListener('click', function() {
     const projectId = modal.dataset.projectId;
-    window.location.href = `/edit/${projectId}`;
+    window.location.href = `project/${projectId}/edit/`;
   });
   
   document.getElementById('btn-move-backlog').addEventListener('click', function() {

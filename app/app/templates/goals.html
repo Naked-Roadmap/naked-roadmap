@@ -1,27 +1,293 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% block title %} Create a New Goal {% endblock %}</h1>
+<h1>{% block title %} Manage Goals {% endblock %}</h1>
 
-<form method="post">
+<!-- Create Goal Button -->
+<button class="btn btn-primary" data-toggle="modal" data-target="#createGoalModal">
+  Create Goal
+</button>
 
-    <div class="form-group">
-        {{ form.title.label }}<br>
-        {{ form.title(size=32) }}
+<!-- Create Goal Modal -->
+<div class="modal fade" id="createGoalModal" tabindex="-1" role="dialog" aria-labelledby="createGoalModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form method="post" action="{{ url_for('createGoal') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New Goal</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+          </div>
+          <div class="form-group">
+            {{ form.details.label(class="form-label") }}
+            {{ form.details(class="form-control") }}
+          </div>
+          <div class="form-group">
+            {{ form.requested_by.label(class="form-label") }}
+            {{ form.requested_by(class="form-control") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          {{ form.submit(class="btn btn-success") }}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<hr>
+
+<!-- Discussion List -->
+<section class="section discussion-section">
+  <div class="section-header">
+    <h3>All Goals</h3>
+    <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </a>
+  </div>
+  
+  <!-- Tabbed section -->
+<section class="section tabbed-section">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="active">Active ({% set active_count = goals|selectattr('status', '==', "Active")|list|length %}{{ active_count }})</button>
+    <button class="tab-btn" data-tab="achieved">Achieved ({% set active_count = goals|selectattr('status', '==', "Achieved")|list|length %}{{ active_count }})</button>
+    <button class="tab-btn" data-tab="cancelled">Cancelled ({% set active_count = goals|selectattr('status', '==', "Cancelled")|list|length %}{{ active_count }})</button>
+  </div>
+  
+  <!-- ---------------------- -->
+  <!-- Active Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content active" id="active-tab">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Goal</th>
+            <th>Created By</th>
+            <th>Status</th>
+            <th>End Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for goal in goals|selectattr('status', '==', "Active") %}
+          <tr>
+            <td><strong>{{ goal.title }}</strong><br>{{goal.details}}</td>
+            <td>{{ goal.requested_by }} <span class="team-tag">{{ goal.team }}</span></td>
+            <td>{{ goal.created }}</td>
+            <td>
+              <span class="priority-indicator 
+                {% if goal.priority == 'High' %}priority-high
+                {% elif goal.priority == 'Medium' %}priority-medium
+                {% else %}priority-low{% endif %}">
+                {{ goal.priority|default('Medium') }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="#" class="btn-icon edit-goal-btn" data-toggle="modal" data-target="#editGoalModal"
+   data-id="{{ goal.id }}"
+   data-title="{{ goal.title }}"
+   data-details="{{ goal.details }}"
+   data-requested_by="{{ goal.requested_by }}">
+  <!-- Edit SVG icon -->
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </a>
+                <a href="#" class="btn-icon" title="Move to discussion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
+  
+  <!-- ---------------------- -->
+  <!-- Achieved Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content" id="achieved-tab">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Goal</th>
+            <th>Created By</th>
+            <th>Status</th>
+            <th>End Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for goal in goals|selectattr('status', '==', "Achieved") %}
+          <tr>
+            <td><strong>{{ goal.title }}</strong><br>{{goal.details}}</td>
+            <td>{{ goal.requested_by }} <span class="team-tag">{{ goal.team }}</span></td>
+            <td>{{ goal.created }}</td>
+            <td>
+              <span class="priority-indicator 
+                {% if goal.priority == 'High' %}priority-high
+                {% elif goal.priority == 'Medium' %}priority-medium
+                {% else %}priority-low{% endif %}">
+                {{ goal.priority|default('Medium') }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('editGoal', goal_id=goal.id) }}" class="btn-icon" title="Edit project">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </a>
+                <a href="#" class="btn-icon" title="Move to discussion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- ---------------------- -->
+  <!-- Cancelled Tab -->
+  <!-- ---------------------- -->
+  <div class="tab-content" id="cancelled-tab">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Goal</th>
+            <th>Created By</th>
+            <th>Status</th>
+            <th>End Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for goal in goals|selectattr('status', '==', "Cancelled") %}
+          <tr>
+            <td><strong>{{ goal.title }}</strong><br>{{goal.details}}</td>
+            <td>{{ goal.requested_by }} <span class="team-tag">{{ goal.team }}</span></td>
+            <td>{{ goal.created }}</td>
+            <td>
+              <span class="priority-indicator 
+                {% if goal.priority == 'High' %}priority-high
+                {% elif goal.priority == 'Medium' %}priority-medium
+                {% else %}priority-low{% endif %}">
+                {{ goal.priority|default('Medium') }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('editGoal', goal_id=goal.id) }}" class="btn-icon" title="Edit project">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </a>
+                <a href="#" class="btn-icon" title="Move to discussion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+</section>
+
+<!-- Edit Goal Modal -->
+<div class="modal fade" id="editGoalModal" tabindex="-1" role="dialog" aria-labelledby="editGoalModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form method="post" action="{{ url_for('editGoal') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Goal</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="goal_id" id="edit-goal-id">
+          <div class="form-group">
+            <label for="edit-goal-title">Title</label>
+            <input type="text" name="title" id="edit-goal-title" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-goal-details">Details</label>
+            <input type="text" name="details" id="edit-goal-details" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-goal-requested-by">Requested By</label>
+            <input type="text" name="requested_by" id="edit-goal-requested-by" class="form-control">
+          </div>
+        </div>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Update Goal</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.edit-goal-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('edit-goal-id').value = this.dataset.id;
+      document.getElementById('edit-goal-title').value = this.dataset.title;
+      document.getElementById('edit-goal-details').value = this.dataset.details;
+      document.getElementById('edit-goal-requested-by').value = this.dataset.requested_by;
+    });
+  });
+</script>
+
+
+<script>
+  // Tabs functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
     
-    <div class="form-group">
-        {{ form.details.label }}<br>
-        {{ form.details(size=32) }}
-    </div>
-    
-    <div class="form-group">
-        {{ form.requested_by.label }}<br>
-        {{ form.requested_by(size=32) }}
-    </div>
-    
-    <div class="form-group">
-        {{ form.submit() }}
-    </div>
-</form>
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all buttons and contents
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked button and corresponding content
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+      });
+    });
+  });
+</script>
 {% endblock %}

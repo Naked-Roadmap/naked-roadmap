@@ -8,7 +8,11 @@ from werkzeug.exceptions import abort
 from urllib.parse import urlsplit
 from config import Config
 from datetime import datetime
+from flask_wtf.csrf import generate_csrf
 
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf())
 
 @app.route('/')
 @app.route('/index')
@@ -21,7 +25,7 @@ def index():
         .order_by(Project.created.desc())
         .all()
     )
-    submittedGoals = (
+    goals = (
         Goal.query
         .order_by(Goal.created.desc())
         .all()
@@ -37,7 +41,7 @@ def index():
         .all()
     )
     today = datetime.now()
-    return render_template('index.html', title='Home', projects=projects, goals=submittedGoals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today)
+    return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today)
 
 @app.route('/<int:project_id>')
 def project(project_id):
@@ -70,7 +74,7 @@ def createProject():
         
     return render_template('create.html', form=form)
 
-@app.route('/<int:project_id>/edit', methods=('GET', 'POST'))
+@app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
 def edit(project_id):
     project = (
         Project.query
@@ -166,27 +170,42 @@ def projectspage():
     
     
 ########################################################
-### Managing Goals
+### Managing Objectives
 ########################################################
 
 @app.route('/goals', methods=['GET', 'POST'])
-def submitGoal():
+def createGoal():
     form = CreateGoal()
-    if request.method == 'POST':
-        requestDetails = Goal(
+    if form.validate_on_submit():
+        new_goal = Goal(
             title=form.title.data,
             details=form.details.data,
             requested_by=form.requested_by.data,
             user_id=current_user.id
         )
-
-        db.session.add(requestDetails)
+        db.session.add(new_goal)
         db.session.commit()
-        
-        flash('Congratulations, request captured!')
-        return redirect(url_for('index'))
-        
-    return render_template('goals.html', form=form)
+        flash('Goal created successfully.')
+        return redirect(url_for('createGoal'))
+
+    goals = Goal.query.order_by(Goal.created.desc()).all()
+    return render_template('goals.html', form=form, goals=goals)
+
+
+@app.route('/goals/edit', methods=['POST'])
+@login_required
+def editGoal():
+    goal_id = request.form.get('goal_id')
+    goal = Goal.query.get(goal_id)
+    if goal:
+        goal.title = request.form.get('title')
+        goal.details = request.form.get('details')
+        goal.requested_by = request.form.get('requested_by')
+        db.session.commit()
+        flash('Goal updated successfully.')
+    else:
+        flash('Goal not found.')
+    return redirect(url_for('createGoal'))
     
     
 ########################################################

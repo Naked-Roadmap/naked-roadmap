@@ -59,6 +59,7 @@ class Goal(db.Model):
     requested_by: so.Mapped[str] = so.mapped_column(sa.TEXT())
     details: so.Mapped[str] = so.mapped_column(sa.TEXT())
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
     
     def __repr__(self):
         return '<Request {}>'.format(self.body)
@@ -81,7 +82,7 @@ class SprintProjectMap(db.Model):
     sprint_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Sprint.id), index=True)
     project_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Project.id), index=True)
     goal: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
-    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="committed")
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="Planned")
     order: so.Mapped[int] = so.mapped_column(nullable=True, autoincrement=True)
     project = db.relationship("Project", backref="sprint_mappings")
     sprint = db.relationship("Sprint", backref="project_mappings")
