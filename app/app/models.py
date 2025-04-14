@@ -81,8 +81,10 @@ class SprintProjectMap(db.Model):
     sprint_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Sprint.id), index=True)
     project_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Project.id), index=True)
     goal: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
-    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="Committed")
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), default="committed")
     order: so.Mapped[int] = so.mapped_column(nullable=True, autoincrement=True)
+    project = db.relationship("Project", backref="sprint_mappings")
+    sprint = db.relationship("Sprint", backref="project_mappings")
     
     def __repr__(self):
         return '<Sprint/Project Map {}>'.format(self.body)

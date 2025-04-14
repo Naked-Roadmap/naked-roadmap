@@ -422,8 +422,8 @@ a:hover {
 }
 
 .project-item {
-  padding: var(--spacing-4) 0;
-  border-bottom: 1px solid var(--color-gray-200);
+  padding: 10px 0px;
+  /* border-bottom: 1px solid var(--color-gray-200); */
   display: flex;
   flex-direction: column;
 }
@@ -436,10 +436,16 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-2);
+  /* margin-bottom: var(--spacing-2); */
 }
 
 .project-header h4 {
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.project-header h5 {
+  font-size:1em;
   margin-bottom: 0;
   font-weight: 600;
 }
@@ -473,11 +479,16 @@ a:hover {
 
 .project-meta {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: left;
   color: var(--color-gray-600);
   font-size: 12px;
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-2);
+}
+
+.project-meta p {
+    margin-bottom:0px;
 }
 
 .project-owner {
@@ -1005,3 +1016,32 @@ body.dark-mode .sprint-goal-container {
   body.dark-mode .dark-mode-toggle svg.moon {
     display: none;
   }
+  
+  
+  
+  .container-progress-full {
+        background-color: grey; 
+        width: 100%; 
+        border-radius: 9px; 
+}
+
+/* TODO: Update Dark Mode Styles */
+.project-item {
+    position: relative;
+    padding-left: 1rem;
+    border-left: 3px solid transparent;
+    /* margin-bottom: 1rem; */
+    background: white;
+    border-radius: 0.5rem;
+    }
+/* TODO: Update Dark Mode Styles */    
+.project-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, #4f46e5, #3b82f6); /* Indigo to blue */
+}

@@ -7,6 +7,8 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
 from urllib.parse import urlsplit
 from config import Config
+from datetime import datetime
+
 
 @app.route('/')
 @app.route('/index')
@@ -29,7 +31,13 @@ def index():
         .order_by(Sprint.date_start.desc())
         .all()
     )
-    return render_template('index.html', title='Home', projects=projects, goals=submittedGoals, config=Config, sprints=sprints)
+    sprintlog = (
+        SprintProjectMap.query
+        .order_by(SprintProjectMap.order.asc())
+        .all()
+    )
+    today = datetime.now()
+    return render_template('index.html', title='Home', projects=projects, goals=submittedGoals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today)
 
 @app.route('/<int:project_id>')
 def project(project_id):

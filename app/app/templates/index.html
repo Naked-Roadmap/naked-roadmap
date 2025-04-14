@@ -11,7 +11,216 @@
 This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
 </div>
 
+
+
+<!-- ---------------------------------- -->
+<!-- Current Sprint and Goals -->
+<!-- ---------------------------------- -->
+<section class="section two-column-section">
+  <div class="column-wide">
+    <div class="section-header">
+      <h3>Current Sprint</h3>
+      <span class="status-badge status-planned">
+        {% if sprints|length > 0 %}
+          Duration: {{ sprints[0].date_start.strftime('%Y.%m.%d') }} &rarr; {{ sprints[0].date_end.strftime('%Y.%m.%d') }}
+        {% endif %}
+      </span>
+    </div>
+    
+    <div class="sprint-projects">
+        <style>
+    .dual-timelines {
+        display: flex;
+        gap: 20px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .timeline-box {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .timeline-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .container-progress-full,
+    .timeline-progress-full {
+        position: relative;
+        background-color: #e0e0e0;
+        width: 100%;
+        border-radius: 9px;
+        height: 20px;
+        margin: 10px 0;
+    }
+
+    .container-progress {
+        height: 100%;
+        background-color: rgb(116, 194, 92);
+        border-radius: 9px;
+        transition: width 0.5s ease-in-out;
+        min-width: 40px;
+    }
+
+    .timeline-progress {
+        height: 100%;
+        background-color: #3498db;
+        border-radius: 9px;
+        transition: width 0.5s ease-in-out;
+    }
+
+    .progress-text,
+    .timeline-text {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        color: #333;
+        white-space: nowrap;
+        z-index: 2;
+    }
+
+    .timeline-dates {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+    }
+</style>
+
+      <div class="dual-timelines">
+    <!-- Project Progress Timeline -->
+    <div class="timeline-box">
+        <div class="timeline-title">✔ Commitments Completed</div>
+
+        {% set done_count = sprintlog|selectattr('status', '==', "done")|list|length %}
+        {% set total_count = sprintlog|count %}
+        {% if total_count > 0 %}
+            {% set percentage_projects = (done_count / total_count) * 100 %}
+        {% else %}
+            {% set percentage_projects = 0 %}
+        {% endif %}
+
+        <div class="container-progress-full">
+            <div class="container-progress" style="width: {{ percentage_projects }}%;"></div>
+            <span class="progress-text">
+                {{ done_count }} out of {{ total_count }} Projects
+            </span>
+        </div>
+    </div>
+
+    <!-- Sprint Time Progress Timeline -->
+    <div class="timeline-box">
+        <div class="timeline-title"> ⏲ Sprint Time Remaining</div>
+
+        {% set sprint = sprints[0] %}
+        {% set start_date = sprint.date_start %}
+        {% set end_date = sprint.date_end %}
+        {% set today_date = today.date() %}
+
+        {% set total_days = (end_date - start_date).days %}
+        {% if total_days <= 0 %}{% set total_days = 1 %}{% endif %}
+
+        {% set days_elapsed = (today_date - start_date).days %}
+        {% set percentage_time = (days_elapsed / total_days) * 100 %}
+        {% if percentage_time > 100 %}
+            {% set percentage_time = 100 %}
+        {% elif percentage_time < 0 %}
+            {% set percentage_time = 0 %}
+        {% endif %}
+
+        <div class="timeline-progress-full">
+            <div class="timeline-progress" style="width: {{ percentage_time }}%;"></div>
+            <span class="timeline-text">
+                {% set days_remaining = total_days - days_elapsed %}
+                {% if days_remaining > 0 %}
+                    {{ days_remaining }} days remaining
+                {% elif days_remaining == 0 %}
+                    Last day of sprint
+                {% else %}
+                    Sprint ended
+                {% endif %}
+            </span>
+        </div>
+
+        {# <div class="timeline-dates">
+            <span>{{ sprint.date_start.strftime('%Y.%m.%d') }}</span>
+            <span>{{ sprint.date_end.strftime('%Y.%m.%d') }}</span>
+        </div> #}
+    </div>
+</div>
+        
+        <hr>
+        
+        <div class="timeline-title">👨‍💻 Projects</div>
+        
+        
+        {% for entry in sprintlog %}
+    {% set project = entry.project %}
+    <div class="project-item">
+      <div class="project-header">
+        <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
+        <span class="status-badge 
+          {% if project.status == 'In Progress' %}status-in-progress
+          {% elif project.status == 'Complete' %}status-complete
+          {% elif project.status == 'Blocked' %}status-blocked
+          {% else %}status-planned{% endif %}">
+          {{ project.status|default('Planned') }}
+        </span>
+      </div>
+      <div class="project-meta">
+        <p>
+            <strong>Goal:</strong> {{ entry.goal }}
+        <br>
+            <span class="project-owner">{{ project.dri }}</span>
+            <span class="project-team">{{ project.team }}</span>
+            <span class="project-date">{{ project.created.strftime('%Y-%m-%d') }}</span>
+        </p>
+      </div>
+    </div>
+  {% endfor %}
+  
+    </div>
+  </div>
+  
+  <div class="column-narrow">
+    <div class="section-header">
+      <h3>Goals</h3>
+      <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </a>
+    </div>
+    
+    <div class="goals-list">
+      <div class="goal-item">
+        <h4>Improve User Satisfaction</h4>
+        <p>Increase NPS score by 20% by end of year</p>
+      </div>
+      <div class="goal-item">
+        <h4>Reduce Technical Debt</h4>
+        <p>Allocate 20% of sprint capacity to tech debt</p>
+      </div>
+      <div class="goal-item">
+        <h4>Expand User Base</h4>
+        <p>Grow monthly active users by 15% QoQ</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ---------------------------------- -->
 <!-- Discussion List -->
+<!-- ---------------------------------- -->
+
 <section class="section discussion-section">
   <div class="section-header collapsible-header" onclick="toggleDiscussionSection()">
     <h3>For Discussion <span style="color:gray; font-weight:200;">({{ projects|count }})</span></h3>
@@ -61,102 +270,6 @@ This is your planning area. Move projects from the discussion area into the spri
     </div>
     </div>
     {% endfor %}
-  </div>
-</section>
-
-<!-- Two-column layout -->
-<section class="section two-column-section">
-  <div class="column-wide">
-    <div class="section-header">
-      <h3>Current Sprint</h3>
-      <span class="sprint-dates">
-        {% if sprints|length > 0 %}
-          {{ sprints[0].date_start }} - {{ sprints[0].date_end }}
-        {% endif %}
-      </span>
-    </div>
-    
-    <div class="sprint-projects">
-        <style>
-      .container-progress-full {
-            background-color: grey; 
-            width: 100%; 
-            border-radius: 9px; 
-      }
-      .container-progress { 
-            background-color: rgb(192, 192, 192); 
-            width: 80%; 
-            border-radius: 9px; 
-        } 
-        .skill { 
-            background-color: rgb(116, 194, 92); 
-            color: white; 
-            padding: 1%; 
-            text-align: center; 
-            font-size: 10px; 
-            border-radius: 9px; 
-        } </style>
-      <div class="container-progress-full">
-          <div class="container-progress"> 
-            <div class="skill html">80%</div> 
-            </div>
-        </div>
-        <hr>
-      {% for project in projects|selectattr('location', '==', "sprint") %}
-      <div class="project-item">
-        <div class="project-header">
-          <h4><a href="{{ url_for('project', project_id=project['id']) }}">{{ project.name }}</a></h4>
-          <span class="status-badge 
-            {% if project.status == 'In Progress' %}status-in-progress
-            {% elif project.status == 'Complete' %}status-complete
-            {% elif project.status == 'Blocked' %}status-blocked
-            {% else %}status-planned{% endif %}">
-            {{ project.status|default('Planned') }}
-          </span>
-        </div>
-        <div class="project-meta">
-          <span class="project-owner">{{ project.dri }}</span>
-          <span class="project-team">{{ project.team }}</span>
-          <span class="project-date">{{ project.created.strftime('%Y-%m-%d')}}</span>
-        </div>
-        <div class="project-actions">
-          <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  
-  <div class="column-narrow">
-    <div class="section-header">
-      <h3>Goals</h3>
-      <a href="{{ url_for('submitGoal') }}" class="btn-icon" title="Add new Goal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </a>
-    </div>
-    
-    <div class="goals-list">
-      <div class="goal-item">
-        <h4>Improve User Satisfaction</h4>
-        <p>Increase NPS score by 20% by end of year</p>
-      </div>
-      <div class="goal-item">
-        <h4>Reduce Technical Debt</h4>
-        <p>Allocate 20% of sprint capacity to tech debt</p>
-      </div>
-      <div class="goal-item">
-        <h4>Expand User Base</h4>
-        <p>Grow monthly active users by 15% QoQ</p>
-      </div>
-    </div>
   </div>
 </section>
 
