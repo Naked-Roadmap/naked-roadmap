@@ -5,15 +5,17 @@
 {% block title %}{{ config.company_name }} Roadmap - Dashboard{% endblock %}
 
 {% block content %}
-<div class="welcome-banner">
+
+<h1>Manage Projects</h1>
+{# <div class="welcome-banner">
   <h2>All of your projects</h2>
-</div>
+</div> #}
 
 <!-- Discussion List -->
 <section class="section discussion-section">
   <div class="section-header">
-    <h3>Projects Complete List</h3>
-    <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add new Goal">
+    <h3>All Projects</h3>
+    <a href="{{ url_for('createProject') }}" class="btn-icon" title="Create a New Project">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>

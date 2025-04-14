@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% block title %} Manage Goals {% endblock %}</h1>
+<h1>{% block title %} Manage Objectives {% endblock %}</h1>
 
 <!-- Create Goal Button -->
-<button class="btn btn-primary" data-toggle="modal" data-target="#createGoalModal">
-  Create Goal
-</button>
+{# <button class="btn btn-primary" data-toggle="modal" data-target="#createGoalModal">
+  Create Objective
+</button> #}
 
 <!-- Create Goal Modal -->
 <div class="modal fade" id="createGoalModal" tabindex="-1" role="dialog" aria-labelledby="createGoalModalLabel" aria-hidden="true">
@@ -14,7 +14,7 @@
     <form method="post" action="{{ url_for('createGoal') }}">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Create New Goal</h5>
+          <h5 class="modal-title">Create New Objective</h5>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -45,8 +45,8 @@
 <!-- Discussion List -->
 <section class="section discussion-section">
   <div class="section-header">
-    <h3>All Goals</h3>
-    <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
+    <h3>All Objectives</h3>
+    <a href="#" data-toggle="modal" data-target="#createGoalModal">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -70,7 +70,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Goal</th>
+            <th>Objective</th>
             <th>Created By</th>
             <th>Status</th>
             <th>End Date</th>
@@ -127,7 +127,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Goal</th>
+            <th>Objective</th>
             <th>Created By</th>
             <th>Status</th>
             <th>End Date</th>
@@ -179,7 +179,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Goal</th>
+            <th>Objective</th>
             <th>Created By</th>
             <th>Status</th>
             <th>End Date</th>
