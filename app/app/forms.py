@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, DateField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 import sqlalchemy as sa
 from app import db
-from app.models import User, Project, Goal, Sprint
+from app.models import User, Project, Goal, Sprint, Comment
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -52,3 +52,10 @@ class CreateSprint(FlaskForm):
     date_start = DateField('Start of Sprint', format='%Y-%m-%d', validators=[DataRequired()] )
     date_end = DateField('End of Sprint', format='%Y-%m-%d', validators=[DataRequired()] )
     submit = SubmitField('submit')
+    
+class CommentForm(FlaskForm):
+    content = TextAreaField('Comment', validators=[
+        DataRequired(message='Comment cannot be empty'),
+        Length(min=1, max=1000, message='Comment must be between 1 and 1000 characters')
+    ])
+    submit = SubmitField('Submit Comment')

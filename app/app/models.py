@@ -48,10 +48,12 @@ class Project(db.Model):
     requirements: so.Mapped[str] = so.mapped_column(sa.TEXT())
     launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
     location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
+    type: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
 
     def __repr__(self):
         return '<Project {}>'.format(self.body)
         
+# TODO: Rename to be Objectives
 class Goal(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
@@ -60,6 +62,7 @@ class Goal(db.Model):
     details: so.Mapped[str] = so.mapped_column(sa.TEXT())
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
     status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
+    completed: so.Mapped[datetime] = so.mapped_column(nullable=True)
     
     def __repr__(self):
         return '<Request {}>'.format(self.body)
@@ -76,6 +79,8 @@ class Sprint(db.Model):
     def __repr__(self):
         return '<Sprint {}>'.format(self.body)
 
+# TODO: Rename to be commitments
+# https://alembic.sqlalchemy.org/en/latest/ops.html#alembic.operations.Operations.rename_table
 class SprintProjectMap(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     added: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
@@ -86,9 +91,30 @@ class SprintProjectMap(db.Model):
     order: so.Mapped[int] = so.mapped_column(nullable=True, autoincrement=True)
     project = db.relationship("Project", backref="sprint_mappings")
     sprint = db.relationship("Sprint", backref="project_mappings")
+    critical: so.Mapped[bool] = so.mapped_column(default=False, nullable=True)
     
     def __repr__(self):
         return '<Sprint/Project Map {}>'.format(self.body)
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('comments', lazy='dynamic', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref=db.backref('comments', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Comment {self.id} by User {self.user_id} on Project {self.project_id}>'
+
 
 # Notes:
 # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database

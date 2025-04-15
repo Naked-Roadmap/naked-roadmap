@@ -1,7 +1,5 @@
-## For Next Session
+## Requirements
 TODO: Create "Planning Page" (if no active sprint, run a planning session)
-TODO: Fix text links in discussion section to work
-TODO: Add in all goals list
 TODO: Load goals into right dashboard section
 TODO: "Sprint" dropdown for homepage to select which one projects are being added to. Show only active and upcoming sprints.
 TODO: Only one sprint active. The rest as upcoming or completed.
@@ -16,19 +14,20 @@ TODO: Add in changelog per project
 TODO: Add discussion per project
 TODO: Add in an org configuration page outside of the app config.
 
--- DONE: Sprint goals route
--- DONE: Fix the edit button on modal
-
-##
-TODO: Create initialization to run on first time setup to create a backlog sprint, undeletable.
-
-TODO: Create community disqus as part of implementation of marketing site to allow modding, feature requests, support, etc. 
-
-## 2025.04.03
+## Nice to Have
 TODO: Different types of users:
     - Viewer
     - Editer
 TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
+
+## Marketing
+TODO: Create community disqus as part of implementation of marketing site to allow modding, feature requests, support, etc. 
+
+## DONE
+-- DONE: Sprint goals route
+-- DONE: Fix the edit button on modal
+-- DONE: Add in all goals list
+-- DONE: Fix text links in discussion section to work
 
 ## Reminders:
 - init env

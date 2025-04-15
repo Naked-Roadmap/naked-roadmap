@@ -1,6 +1,6 @@
 from app import app, db, login
-from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint
-from app.models import User, Project, Goal, Sprint, SprintProjectMap
+from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint, CommentForm
+from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
@@ -42,15 +42,45 @@ def index():
     )
     today = datetime.now()
     return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today)
-
-@app.route('/<int:project_id>')
+    
+@app.route('/project/<int:project_id>')
 def project(project_id):
-    project = (
-        Project.query
-        .filter_by(id=project_id)
-        .first()
-    )
-    return render_template('project.html', project=project)
+    project = Project.query.filter_by(id=project_id).first_or_404()
+    
+    # Get comments for this project
+    comments = Comment.query.filter_by(project_id=project_id).order_by(Comment.created_at.desc()).all()
+    
+    # Initialize comment form
+    form = CommentForm()
+    
+    return render_template('project.html', project=project, comments=comments, form=form)
+
+# @app.route('/<int:project_id>')
+# def project(project_id):
+#     project = (
+#         Project.query
+#         .filter_by(id=project_id)
+#         .first()
+#     )
+#     return render_template('project.html', project=project)
+    
+@app.route('/project/<int:project_id>/edit')
+@login_required
+def edit_project(project_id):
+    project = Project.query.filter_by(id=project_id).first_or_404()
+    # Implement project edit logic here
+    return render_template('edit_project.html', project=project)
+
+@app.route('/project/<int:project_id>/delete', methods=['POST'])
+@login_required
+def delete_project(project_id):
+    project = Project.query.filter_by(id=project_id).first_or_404()
+    # Implement project delete logic here
+    db.session.delete(project)
+    db.session.commit()
+    flash('Project deleted successfully!', 'success')
+    return redirect(url_for('dashboard'))
+    
     
 @app.route('/create', methods=['GET', 'POST'])
 def createProject():
@@ -189,7 +219,7 @@ def createGoal():
         return redirect(url_for('createGoal'))
 
     goals = Goal.query.order_by(Goal.created.desc()).all()
-    return render_template('goals.html', form=form, goals=goals)
+    return render_template('objectives.html', form=form, goals=goals)
 
 
 @app.route('/goals/edit', methods=['POST'])
@@ -340,3 +370,69 @@ def api_move_project():
             "success": False,
             "message": f"Database error: {str(e)}"
         }), 500
+        
+        
+        
+@app.route('/project/<int:project_id>/add_comment', methods=['POST'])
+@login_required
+def add_comment(project_id):
+    project = Project.query.filter_by(id=project_id).first_or_404()
+    form = CommentForm()
+    
+    if form.validate_on_submit():
+        comment = Comment(
+            content=form.content.data,
+            project_id=project_id,
+            user_id=current_user.id
+        )
+        
+        db.session.add(comment)
+        db.session.commit()
+        
+        flash('Comment added successfully!', 'success')
+    else:
+        flash('Error adding comment. Please check your input.', 'danger')
+    
+    return redirect(url_for('project', project_id=project_id))
+
+@app.route('/comment/<int:comment_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_comment(comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first_or_404()
+    
+    # Check if current user is the author of the comment
+    if comment.user_id != current_user.id:
+        flash('You do not have permission to edit this comment.', 'danger')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    form = CommentForm()
+    
+    if request.method == 'GET':
+        form.content.data = comment.content
+    
+    if form.validate_on_submit():
+        comment.content = form.content.data
+        db.session.commit()
+        
+        flash('Comment updated successfully!', 'success')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    return render_template('edit_comment.html', form=form, comment=comment)
+
+@app.route('/comment/<int:comment_id>/delete', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first_or_404()
+    
+    # Check if current user is the author of the comment
+    if comment.user_id != current_user.id:
+        flash('You do not have permission to delete this comment.', 'danger')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    project_id = comment.project_id
+    
+    db.session.delete(comment)
+    db.session.commit()
+    
+    flash('Comment deleted successfully!', 'success')
+    return redirect(url_for('project', project_id=project_id))

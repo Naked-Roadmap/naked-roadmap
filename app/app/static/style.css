@@ -477,7 +477,7 @@ a:hover {
   color: var(--color-danger);
 }
 
-.project-meta {
+/* .project-meta {
   display: flex;
   flex-direction: column;
   align-items: left;
@@ -485,6 +485,16 @@ a:hover {
   font-size: 12px;
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-2);
+} */
+
+.project-meta {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    color: var(--color-gray-600);
+    font-size: 12px;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-2);
 }
 
 .project-meta p {
@@ -1031,14 +1041,25 @@ body.dark-mode .sprint-goal-container {
 }
 
 /* TODO: Update Dark Mode Styles */
-.project-item {
+/* .project-item {
     position: relative;
     padding-left: 1rem;
     border-left: 3px solid transparent;
     /* margin-bottom: 1rem; */
     background: white;
     border-radius: 0.5rem;
-    }
+    } */
+.project-item {
+    position: relative;
+    padding-left: 1rem;
+    border-left: 3px solid transparent;
+    background: white;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column; /* Change to column direction */
+    width: 100%; /* Ensure full width */
+    margin-bottom: 1rem; /* Add some spacing between items */
+}
 /* TODO: Update Dark Mode Styles */    
 .project-item::before {
     content: '';
@@ -1049,4 +1070,162 @@ body.dark-mode .sprint-goal-container {
     width: 4px;
     border-radius: 2px;
     background: linear-gradient(to bottom, #4f46e5, #3b82f6); /* Indigo to blue */
+}
+
+
+/* Styles for comments section */
+.comments-list {
+  margin-bottom: var(--spacing-6);
+}
+
+.comment-item {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  margin-bottom: var(--spacing-4);
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: var(--spacing-3);
+}
+
+.comment-meta {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.comment-date {
+  font-size: 12px;
+  color: var(--color-gray-500);
+}
+
+.comment-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.comment-content {
+  color: var(--color-gray-700);
+  line-height: 1.5;
+}
+
+.comment-form-container {
+  background-color: var(--color-gray-100);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-4);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.form-control {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-gray-900);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(62, 99, 221, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-errors {
+  color: var(--color-danger);
+  font-size: 12px;
+  margin-top: var(--spacing-1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--color-gray-500);
+}
+
+/* Button Styles */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-danger:hover {
+  background-color: #d32f2f;
+}
+
+.inline-form {
+  display: inline;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .comment-item {
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .comment-author {
+  color: var(--color-gray-300);
+}
+
+[data-theme="dark"] .comment-form-container {
+  background-color: var(--color-gray-800);
+}
+
+[data-theme="dark"] .form-control {
+  background-color: var(--color-gray-700);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-200);
+}
+
+[data-theme="dark"] .form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(92, 133, 238, 0.2);
 }

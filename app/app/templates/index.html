@@ -19,7 +19,7 @@ This is your planning area. Move projects from the discussion area into the spri
 <section class="two-column-section">
   <div class="column-wide section">
     <div class="section-header">
-      <h3>Current Sprint</h3>
+      <h3>Current Cycle</h3>
       <span class="status-badge status-planned">
         {% if sprints|length > 0 %}
           Duration: {{ sprints[0].date_start.strftime('%Y.%m.%d') }} &rarr; {{ sprints[0].date_end.strftime('%Y.%m.%d') }}
@@ -116,7 +116,7 @@ This is your planning area. Move projects from the discussion area into the spri
 
     <!-- Sprint Time Progress Timeline -->
     <div class="timeline-box">
-        <div class="timeline-title"> ⏲ Sprint Time Remaining</div>
+        <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
 
         {% set sprint = sprints[0] %}
         {% set start_date = sprint.date_start %}
