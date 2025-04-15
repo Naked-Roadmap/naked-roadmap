@@ -12,9 +12,15 @@
             <!-- Tabbed section -->
             <section class="section tabbed-section">
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="details"><h4>Project Details</h4></button>
-                    <button class="tab-btn" data-tab="cycles"><h4>Cycles</h4></button>
-                    <button class="tab-btn" data-tab="history"><h4>History</h4></button>
+                    <button class="tab-btn active" data-tab="details">
+                        <h4>Project Details</h4>
+                    </button>
+                    <button class="tab-btn" data-tab="cycles">
+                        <h4>Cycles</h4>
+                    </button>
+                    <button class="tab-btn" data-tab="history">
+                        <h4>History</h4>
+                    </button>
                 </div>
 
                 <!-- ---------------------- -->
@@ -25,10 +31,10 @@
                     <div class="section-header" style="padding:0px 0px 20px;">
                         <div>
                             <div class="timeline-title">👨‍💻 <strong>Owner:</strong> {{ project.dri }}<br>
-                            🤝 <strong>Team:</strong> {{ project.team }} <br>
-                            📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}
-                        </div>
-                        
+                                🤝 <strong>Team:</strong> {{ project.team }} <br>
+                                📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}
+                            </div>
+
                         </div>
                         <div class="header-actions">
                             <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn-primary">
@@ -87,7 +93,7 @@
                             {{ project.launch }}
                         </div>
                     </div>
-                    
+
                 </div>
 
                 <!-- ---------------------- -->
@@ -101,7 +107,31 @@
                 <!-- History Tab -->
                 <!-- ---------------------- -->
                 <div class="tab-content" id="history-tab">
-                    HISTORY PLACEHOLDER
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h4>Changelog</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if changelogs %}
+                            <ul class="list-group">
+                                {% for log in changelogs %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span>
+                                            <strong>{{ log.change_type | title }}</strong>: {{ log.content }}
+                                        </span>
+                                        <small class="text-muted">
+                                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M') }} by {{ log.user.username }}
+                                        </small>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No changes recorded yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
             </section>

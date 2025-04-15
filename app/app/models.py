@@ -115,6 +115,21 @@ class Comment(db.Model):
     def __repr__(self):
         return f'<Comment {self.id} by User {self.user_id} on Project {self.project_id}>'
 
-
-# Notes:
-# https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database
+class Changelog(db.Model):
+    __tablename__ = 'changelogs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    change_type = db.Column(db.String(50), nullable=False)  # 'create', 'edit', 'sprint_assignment', etc.
+    content = db.Column(db.Text, nullable=False)  # Description of what changed
+    
+    # Foreign keys
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('changelogs', lazy='dynamic', cascade='all, delete-orphan'))
+    user = db.relationship('User', backref=db.backref('changelogs', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Changelog {self.id}: {self.change_type} by User {self.user_id} on Project {self.project_id}>'

@@ -1,6 +1,6 @@
 from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint, CommentForm
-from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment
+from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
@@ -50,26 +50,76 @@ def project(project_id):
     # Get comments for this project
     comments = Comment.query.filter_by(project_id=project_id).order_by(Comment.created_at.desc()).all()
     
+    # Get changelog entries for this project
+    changelogs = Changelog.query.filter_by(project_id=project_id).order_by(Changelog.timestamp.desc()).all()
+    
     # Initialize comment form
     form = CommentForm()
     
-    return render_template('project.html', project=project, comments=comments, form=form)
-
-# @app.route('/<int:project_id>')
-# def project(project_id):
-#     project = (
-#         Project.query
-#         .filter_by(id=project_id)
-#         .first()
-#     )
-#     return render_template('project.html', project=project)
+    return render_template('project.html', project=project, comments=comments, changelogs=changelogs, form=form)
     
-@app.route('/project/<int:project_id>/edit')
+@app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
 @login_required
 def edit_project(project_id):
     project = Project.query.filter_by(id=project_id).first_or_404()
-    # Implement project edit logic here
-    return render_template('edit_project.html', project=project)
+    form = CreateProject()
+    
+    if request.method == 'POST':
+        # Track what changed
+        changes = []
+        if project.name != form.name.data:
+            changes.append(f"Name: '{project.name}' → '{form.name.data}'")
+        if project.dri != form.dri.data:
+            changes.append(f"DRI: '{project.dri}' → '{form.dri.data}'")
+        if project.team != form.team.data:
+            changes.append(f"Team: '{project.team}' → '{form.team.data}'")
+        if project.context != form.context.data:
+            changes.append(f"Context updated")
+        if project.why != form.why.data:
+            changes.append(f"Why updated")
+        if project.requirements != form.requirements.data:
+            changes.append(f"Requirements updated")
+        if project.launch != form.launch.data:
+            changes.append(f"Launch updated")
+        
+        # Update the project
+        Project.query.filter_by(id=project_id).update(dict( 
+            name=form.name.data,
+            dri=form.dri.data,
+            team=form.team.data,
+            context=form.context.data,
+            why=form.why.data,
+            requirements=form.requirements.data,
+            launch=form.launch.data
+        ))
+        
+        # Create changelog entry if changes were made
+        if changes:
+            change_content = ", ".join(changes)
+            changelog = Changelog(
+                change_type='edit',
+                content=change_content,
+                project_id=project_id,
+                user_id=current_user.id
+            )
+            db.session.add(changelog)
+        
+        db.session.commit()
+        
+        flash('Congratulations, project edited!')
+        return redirect(url_for('index'))
+
+    # Populate form with existing values if it's a GET request
+    if request.method == 'GET':
+        form.name.data = project.name
+        form.dri.data = project.dri
+        form.team.data = project.team
+        form.context.data = project.context
+        form.why.data = project.why
+        form.requirements.data = project.requirements
+        form.launch.data = project.launch
+
+    return render_template('edit.html', project=project, form=form)
 
 @app.route('/project/<int:project_id>/delete', methods=['POST'])
 @login_required
@@ -83,6 +133,7 @@ def delete_project(project_id):
     
     
 @app.route('/create', methods=['GET', 'POST'])
+@login_required  # Make sure this is required to track the user
 def createProject():
     form = CreateProject()
     if request.method == 'POST':
@@ -97,6 +148,16 @@ def createProject():
         )
 
         db.session.add(projectDetails)
+        db.session.flush()  # This gets us the ID of the new project
+        
+        # Create changelog entry
+        changelog = Changelog(
+            change_type='create',
+            content=f"Project '{form.name.data}' created",
+            project_id=projectDetails.id,
+            user_id=current_user.id
+        )
+        db.session.add(changelog)
         db.session.commit()
         
         flash('Congratulations, project created!')
@@ -265,14 +326,28 @@ def createSprint():
     return render_template('sprint.html', form=form)
     
 @app.route('/add-to-cycle/<int:project_id>/<int:sprint_id>/', methods=['GET','POST'])
+@login_required
 def add_to_cycle(project_id, sprint_id):
     if request.method == 'GET':
+        # Get the sprint info for the changelog
+        sprint = Sprint.query.get_or_404(sprint_id)
+        project = Project.query.get_or_404(project_id)
+        
         addToSprint = SprintProjectMap(
             sprint_id=sprint_id,
             project_id=project_id
         )
 
         db.session.add(addToSprint)
+        
+        # Create changelog entry
+        changelog = Changelog(
+            change_type='sprint_assignment',
+            content=f"Project assigned to sprint: '{sprint.title}'",
+            project_id=project_id,
+            user_id=current_user.id
+        )
+        db.session.add(changelog)
         db.session.commit()
         
         flash('Congratulations, added to cycle!')
@@ -316,6 +391,7 @@ def api_get_project(project_id):
     return jsonify(project_data)
 
 @app.route('/api/project/move', methods=['POST'])
+@login_required
 def api_move_project():
     """
     API endpoint to move a project to sprint or backlog
@@ -334,8 +410,21 @@ def api_move_project():
     if project is None:
         return jsonify({"success": False, "message": "Project not found"}), 404
     
+    # Record the old location for the changelog
+    old_location = project.location
+    
     # Update the project location
     project.location = new_location
+    
+    # Create changelog entry for location change
+    if old_location != new_location:
+        changelog = Changelog(
+            change_type='location_change',
+            content=f"Project moved from '{old_location}' to '{new_location}'",
+            project_id=project_id,
+            user_id=current_user.id
+        )
+        db.session.add(changelog)
     
     # If moving to sprint, also handle sprint relationship
     if new_location == 'sprint':
@@ -346,6 +435,15 @@ def api_move_project():
         ).first()
         
         if existing_map:
+            # Check if goal changed
+            if existing_map.goal != sprint_goal:
+                goal_changelog = Changelog(
+                    change_type='sprint_goal_update',
+                    content=f"Sprint goal updated to: '{sprint_goal}'",
+                    project_id=project_id,
+                    user_id=current_user.id
+                )
+                db.session.add(goal_changelog)
             # Update existing relationship
             existing_map.goal = sprint_goal
         else:
@@ -356,6 +454,16 @@ def api_move_project():
                 goal=sprint_goal
             )
             db.session.add(sprint_project_map)
+            
+            # Add a changelog entry for the new assignment
+            sprint = Sprint.query.get(2)
+            sprint_changelog = Changelog(
+                change_type='sprint_assignment',
+                content=f"Project assigned to sprint: '{sprint.title}'",
+                project_id=project_id,
+                user_id=current_user.id
+            )
+            db.session.add(sprint_changelog)
     
     # Commit changes to the database
     try:
