@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, DateField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, DateField, HiddenField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 import sqlalchemy as sa
 from app import db
 from app.models import User, Project, Goal, Sprint, Comment
+import re
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -32,14 +33,50 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Please use a different email address.')
             
 class CreateProject(FlaskForm):
-    name = StringField('Project Name', validators=[DataRequired()])
-    dri = StringField('Directly Responsible Individual', validators=[DataRequired()])
-    team = StringField('Assigned Team', validators=[DataRequired()])
-    context = TextAreaField('Context and Background Information')
-    why = TextAreaField('Reason for Prioritization')
-    requirements = TextAreaField('Requirements')
-    launch = TextAreaField('Launch Plan')
-    submit = SubmitField('submit')
+    # CSRF token is automatically included by Flask-WTF
+    
+    name = StringField('Project Name', validators=[
+        DataRequired(message="Project name is required"),
+        Length(min=3, max=100, message="Project name must be between 3 and 100 characters")
+    ])
+    
+    dri = StringField('Directly Responsible Individual', validators=[
+        DataRequired(message="DRI is required"),
+        Length(max=100, message="DRI name must be less than 100 characters")
+    ])
+    
+    team = StringField('Assigned Team', validators=[
+        DataRequired(message="Team name is required"),
+        Length(max=100, message="Team name must be less than 100 characters")
+    ])
+    
+    context = TextAreaField('Context and Background Information', validators=[
+        Length(max=10000, message="Context information is too long")
+    ])
+    
+    why = TextAreaField('Reason for Prioritization', validators=[
+        Length(max=10000, message="Prioritization rationale is too long")
+    ])
+    
+    requirements = TextAreaField('Requirements', validators=[
+        Length(max=10000, message="Requirements are too long")
+    ])
+    
+    launch = TextAreaField('Launch Plan', validators=[
+        Length(max=10000, message="Launch plan is too long")
+    ])
+    
+    submit = SubmitField('Save Changes')
+    
+    # Custom validators
+    def validate_name(self, field):
+        # Prevent XSS in project name
+        if re.search(r'<[^>]*script', field.data, re.IGNORECASE):
+            raise ValidationError("Project name contains invalid characters")
+        
+        # Prevent SQL injection in project name
+        if re.search(r'(\b(select|insert|update|delete|drop|union|exec)\b|[;\'"])', field.data, re.IGNORECASE):
+            raise ValidationError("Project name contains invalid characters")
     
 class CreateGoal(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])

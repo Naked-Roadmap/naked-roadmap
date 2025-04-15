@@ -9,6 +9,10 @@ from urllib.parse import urlsplit
 from config import Config
 from datetime import datetime
 from flask_wtf.csrf import generate_csrf
+from . import utils
+from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html
+import bleach
+
 
 @app.context_processor
 def inject_csrf_token():
@@ -62,9 +66,22 @@ def project(project_id):
 @login_required
 def edit_project(project_id):
     project = Project.query.filter_by(id=project_id).first_or_404()
+    
+    # Check if user has permission to edit the project
+    if not current_user.can_edit_project(project):
+        flash('You do not have permission to edit this project.', 'error')
+        return redirect(url_for('index'))
+    
     form = CreateProject()
     
     if request.method == 'POST':
+        # Check for CSRF token validity
+        if not form.validate_on_submit():
+            if request.is_xhr:  # For AJAX requests (autosave)
+                return jsonify({'success': False, 'message': 'CSRF validation failed'})
+            flash('Form validation failed. Please try again.', 'error')
+            return render_template('edit.html', project=project, form=form)
+        
         # Track what changed
         changes = []
         if project.name != form.name.data:
@@ -73,6 +90,8 @@ def edit_project(project_id):
             changes.append(f"DRI: '{project.dri}' → '{form.dri.data}'")
         if project.team != form.team.data:
             changes.append(f"Team: '{project.team}' → '{form.team.data}'")
+        
+        # For text fields, just note that they were updated (to avoid storing large diffs)
         if project.context != form.context.data:
             changes.append(f"Context updated")
         if project.why != form.why.data:
@@ -82,33 +101,45 @@ def edit_project(project_id):
         if project.launch != form.launch.data:
             changes.append(f"Launch updated")
         
-        # Update the project
-        Project.query.filter_by(id=project_id).update(dict( 
-            name=form.name.data,
-            dri=form.dri.data,
-            team=form.team.data,
-            context=form.context.data,
-            why=form.why.data,
-            requirements=form.requirements.data,
-            launch=form.launch.data
-        ))
+        # Sanitize HTML input to prevent XSS attacks
+        sanitized_data = {
+            'name': bleach.clean(form.name.data, strip=True),
+            'dri': bleach.clean(form.dri.data, strip=True),
+            'team': bleach.clean(form.team.data, strip=True),
+            'context': clean_html(form.context.data),
+            'why': clean_html(form.why.data),
+            'requirements': clean_html(form.requirements.data),
+            'launch': clean_html(form.launch.data)
+        }
         
-        # Create changelog entry if changes were made
-        if changes:
+        # Check if this is an autosave request
+        is_autosave = request.form.get('autosave') == 'true'
+        
+        # Update the project
+        Project.query.filter_by(id=project_id).update(sanitized_data)
+        
+        # Create changelog entry if changes were made and not an autosave
+        if changes and not is_autosave:
             change_content = ", ".join(changes)
             changelog = Changelog(
                 change_type='edit',
                 content=change_content,
                 project_id=project_id,
-                user_id=current_user.id
+                user_id=current_user.id,
+                timestamp=datetime.utcnow()
             )
             db.session.add(changelog)
         
         db.session.commit()
         
-        flash('Congratulations, project edited!')
-        return redirect(url_for('index'))
-
+        # For AJAX requests (autosave)
+        if request.is_xhr:
+            return jsonify({'success': True, 'message': 'Changes saved'})
+        
+        if not is_autosave:
+            flash('Project updated successfully!', 'success')
+            return redirect(url_for('project', project_id=project_id))
+    
     # Populate form with existing values if it's a GET request
     if request.method == 'GET':
         form.name.data = project.name
