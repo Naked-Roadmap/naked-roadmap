@@ -1229,3 +1229,7 @@ body.dark-mode .sprint-goal-container {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(92, 133, 238, 0.2);
 }
+
+button > h3, h4 {
+    margin-bottom:0px;
+}

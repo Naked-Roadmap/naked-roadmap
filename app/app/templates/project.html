@@ -12,9 +12,9 @@
             <!-- Tabbed section -->
             <section class="section tabbed-section">
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="details">Project Details </button>
-                    <button class="tab-btn" data-tab="cycles">Cycles</button>
-                    <button class="tab-btn" data-tab="history">History</button>
+                    <button class="tab-btn active" data-tab="details"><h4>Project Details</h4></button>
+                    <button class="tab-btn" data-tab="cycles"><h4>Cycles</h4></button>
+                    <button class="tab-btn" data-tab="history"><h4>History</h4></button>
                 </div>
 
                 <!-- ---------------------- -->
@@ -22,8 +22,14 @@
                 <!-- ---------------------- -->
                 <div class="tab-content active" id="details-tab">
 
-                    <div class="section-header">
-                        <h3>Project Details</h3>
+                    <div class="section-header" style="padding:0px 0px 20px;">
+                        <div>
+                            <div class="timeline-title">👨‍💻 <strong>Owner:</strong> {{ project.dri }}<br>
+                            🤝 <strong>Team:</strong> {{ project.team }} <br>
+                            📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}
+                        </div>
+                        
+                        </div>
                         <div class="header-actions">
                             <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn-primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit">
@@ -45,13 +51,10 @@
                             </form>
                         </div>
                     </div>
-                    <div class="timeline-title">👨‍💻 <strong>Project Leader:</strong> {{ project.dri }} | 👨‍👦‍👦 <strong>Team:</strong> {{ project.team }} </div>
-
-                    <hr>
 
                     <div class="project-item">
                         <div class="project-header">
-                            <h5>Context and Background:</h5>
+                            <h5>Context and Background</h5>
                         </div>
                         <div class="project-meta">
                             {{ project.context }}
@@ -84,15 +87,7 @@
                             {{ project.launch }}
                         </div>
                     </div>
-
-                    <div class="project-item">
-                        <div class="project-header">
-                            <h5>Meta</h5>
-                        </div>
-                        <div class="project-meta">
-                            <strong>Created on:</strong> {{ project.created }}
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <!-- ---------------------- -->
@@ -118,14 +113,34 @@
             <h3>Discussion</h3>
         </div>
         <div class="discussion-container">
+            <!-- Comment Form -->
+            <div class="comment-form-container">
+                <form method="POST" action="{{ url_for('add_comment', project_id=project.id) }}">
+                    {{ form.csrf_token }}
+                    <div class="form-group">
+                        {{ form.content.label }}
+                        {{ form.content(class="form-control", rows=3) }}
+          {% if form.content.errors %}
+                        <div class="form-errors">
+                            {% for error in form.content.errors %}
+                            <span class="error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
             <!-- Comments List -->
             <div class="comments-list">
                 {% for comment in comments %}
                 <div class="comment-item">
                     <div class="comment-header">
-                        <div class="user-avatar">{{ comment.user.initials }}</div>
+                        {# <div class="user-avatar">{{ comment.user.username|truncate(1,true,'') }}</div> #}
                         <div class="comment-meta">
-                            <span class="comment-author">{{ comment.user.name }}</span>
+                            <span class="comment-author">{{ comment.user.username }}</span>
                             <span class="comment-date">{{ comment.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
                         </div>
                         {% if current_user.id == comment.user_id %}
@@ -146,28 +161,6 @@
                     <p>No comments yet. Be the first to add a comment!</p>
                 </div>
                 {% endfor %}
-            </div>
-
-            <!-- Comment Form -->
-            <div class="comment-form-container">
-                <h4>Add a Comment</h4>
-                <form method="POST" action="{{ url_for('add_comment', project_id=project.id) }}">
-                    {{ form.csrf_token }}
-                    <div class="form-group">
-                        {{ form.content.label }}
-                        {{ form.content(class="form-control", rows=3) }}
-          {% if form.content.errors %}
-                        <div class="form-errors">
-                            {% for error in form.content.errors %}
-                            <span class="error">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Submit Comment</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>

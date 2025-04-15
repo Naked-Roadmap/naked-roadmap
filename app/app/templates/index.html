@@ -8,10 +8,8 @@
 <div class="welcome-banner">
   <h2>Welcome, {{ current_user.username }}</h2>
   <p>Manage your team's product roadmap with ease.<br>
-This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
+    This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
 </div>
-
-
 
 <!-- ---------------------------------- -->
 <!-- Current Sprint and Goals -->
@@ -22,169 +20,169 @@ This is your planning area. Move projects from the discussion area into the spri
       <h3>Current Cycle</h3>
       <span class="status-badge status-planned">
         {% if sprints|length > 0 %}
-          Duration: {{ sprints[0].date_start.strftime('%Y.%m.%d') }} &rarr; {{ sprints[0].date_end.strftime('%Y.%m.%d') }}
+        {{ sprints[0].date_start.strftime('%b %d, %Y') }} &rarr; {{ sprints[0].date_end.strftime('%b %d, %Y') }}
         {% endif %}
       </span>
     </div>
-    
+
     <div class="sprint-projects">
-        <style>
-    .dual-timelines {
-        display: flex;
-        gap: 20px;
-        justify-content: space-between;
-        flex-wrap: wrap;
-    }
+      <style>
+        .dual-timelines {
+          display: flex;
+          gap: 20px;
+          justify-content: space-between;
+          flex-wrap: wrap;
+        }
 
-    .timeline-box {
-        flex: 1;
-        min-width: 250px;
-    }
+        .timeline-box {
+          flex: 1;
+          min-width: 250px;
+        }
 
-    .timeline-title {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 6px;
-    }
+        .timeline-title {
+          font-weight: bold;
+          font-size: 14px;
+          margin-bottom: 6px;
+        }
 
-    .container-progress-full,
-    .timeline-progress-full {
-        position: relative;
-        background-color: #e0e0e0;
-        width: 100%;
-        border-radius: 9px;
-        height: 20px;
-        margin: 10px 0;
-    }
+        .container-progress-full,
+        .timeline-progress-full {
+          position: relative;
+          background-color: #e0e0e0;
+          width: 100%;
+          border-radius: 9px;
+          height: 20px;
+          margin: 10px 0;
+        }
 
-    .container-progress {
-        height: 100%;
-        background-color: rgb(116, 194, 92);
-        border-radius: 9px;
-        transition: width 0.5s ease-in-out;
-        min-width: 40px;
-    }
+        .container-progress {
+          height: 100%;
+          background-color: rgb(116, 194, 92);
+          border-radius: 9px;
+          transition: width 0.5s ease-in-out;
+          min-width: 40px;
+        }
 
-    .timeline-progress {
-        height: 100%;
-        background-color: #3498db;
-        border-radius: 9px;
-        transition: width 0.5s ease-in-out;
-    }
+        .timeline-progress {
+          height: 100%;
+          background-color: #3498db;
+          border-radius: 9px;
+          transition: width 0.5s ease-in-out;
+        }
 
-    .progress-text,
-    .timeline-text {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 11px;
-        color: #333;
-        white-space: nowrap;
-        z-index: 2;
-    }
+        .progress-text,
+        .timeline-text {
+          position: absolute;
+          left: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 11px;
+          color: #333;
+          white-space: nowrap;
+          z-index: 2;
+        }
 
-    .timeline-dates {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: #666;
-        margin-top: 4px;
-    }
-</style>
+        .timeline-dates {
+          display: flex;
+          justify-content: space-between;
+          font-size: 11px;
+          color: #666;
+          margin-top: 4px;
+        }
+      </style>
 
       <div class="dual-timelines">
-    <!-- Project Progress Timeline -->
-    <div class="timeline-box">
-        <div class="timeline-title">✔ Commitments Completed</div>
+        <!-- Project Progress Timeline -->
+        <div class="timeline-box">
+          <div class="timeline-title">✔ Commitments Completed</div>
 
-        {% set done_count = sprintlog|selectattr('status', '==', "Done")|list|length %}
-        {% set total_count = sprintlog|count %}
-        {% if total_count > 0 %}
-            {% set percentage_projects = (done_count / total_count) * 100 %}
-        {% else %}
-            {% set percentage_projects = 0 %}
-        {% endif %}
+          {% set done_count = sprintlog|selectattr('status', '==', "Done")|list|length %}
+          {% set total_count = sprintlog|count %}
+          {% if total_count > 0 %}
+          {% set percentage_projects = (done_count / total_count) * 100 %}
+          {% else %}
+          {% set percentage_projects = 0 %}
+          {% endif %}
 
-        <div class="container-progress-full">
+          <div class="container-progress-full">
             <div class="container-progress" style="width: {{ percentage_projects }}%;"></div>
             <span class="progress-text">
-                {{ done_count }} out of {{ total_count }} Projects
+              {{ done_count }} out of {{ total_count }} Projects
             </span>
+          </div>
         </div>
-    </div>
 
-    <!-- Sprint Time Progress Timeline -->
-    <div class="timeline-box">
-        <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
+        <!-- Sprint Time Progress Timeline -->
+        <div class="timeline-box">
+          <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
 
-        {% set sprint = sprints[0] %}
-        {% set start_date = sprint.date_start %}
-        {% set end_date = sprint.date_end %}
-        {% set today_date = today.date() %}
+          {% set sprint = sprints[0] %}
+          {% set start_date = sprint.date_start %}
+          {% set end_date = sprint.date_end %}
+          {% set today_date = today.date() %}
 
-        {% set total_days = (end_date - start_date).days %}
-        {% if total_days <= 0 %}{% set total_days = 1 %}{% endif %}
+          {% set total_days = (end_date - start_date).days %}
+          {% if total_days <= 0 %}{% set total_days = 1 %}{% endif %}
 
-        {% set days_elapsed = (today_date - start_date).days %}
-        {% set percentage_time = (days_elapsed / total_days) * 100 %}
-        {% if percentage_time > 100 %}
-            {% set percentage_time = 100 %}
-        {% elif percentage_time < 0 %}
-            {% set percentage_time = 0 %}
-        {% endif %}
+          {% set days_elapsed = (today_date - start_date).days %}
+          {% set percentage_time = (days_elapsed / total_days) * 100 %}
+          {% if percentage_time > 100 %}
+          {% set percentage_time = 100 %}
+          {% elif percentage_time < 0 %}
+          {% set percentage_time = 0 %}
+          {% endif %}
 
-        <div class="timeline-progress-full">
+          <div class="timeline-progress-full">
             <div class="timeline-progress" style="width: {{ percentage_time }}%;"></div>
             <span class="timeline-text">
-                {% set days_remaining = total_days - days_elapsed %}
-                {% if days_remaining > 0 %}
-                    {{ days_remaining }} days remaining
+              {% set days_remaining = total_days - days_elapsed %}
+              {% if days_remaining > 0 %}
+              {{ days_remaining }} days remaining
                 {% elif days_remaining == 0 %}
                     Last day of sprint
                 {% else %}
                     Sprint ended
                 {% endif %}
             </span>
-        </div>
+          </div>
 
-        {# <div class="timeline-dates">
+          {# <div class="timeline-dates">
             <span>{{ sprint.date_start.strftime('%Y.%m.%d') }}</span>
             <span>{{ sprint.date_end.strftime('%Y.%m.%d') }}</span>
         </div> #}
-    </div>
-</div>
-        
-        <hr>
-        
-        <div class="timeline-title">👨‍💻 Projects</div>
-        
-        
-        {% for entry in sprintlog %}
-        {% set project = entry.project %}
-    <div class="project-item">
-      <div class="project-header">
-        <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
-        <span class="status-badge 
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="timeline-title">👨‍💻 Projects</div>
+
+
+      {% for entry in sprintlog %}
+      {% set project = entry.project %}
+      <div class="project-item">
+        <div class="project-header">
+          <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
+          <span class="status-badge 
           {% if entry.status == 'In Progress' %}status-in-progress
           {% elif entry.status == 'Done' %}status-complete
           {% elif entry.status == 'Blocked' %}status-blocked
           {% else %}status-planned{% endif %}">
-          {{ entry.status|default('Planned') }}
-        </span>
-      </div>
-      <div class="project-meta">
-        <p>
+            {{ entry.status|default('Planned') }}
+          </span>
+        </div>
+        <div class="project-meta">
+          <p>
             <strong>Goal:</strong> {{ entry.goal }}
-        <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
-        </p>
+            <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
+          </p>
+        </div>
       </div>
-    </div>
-  {% endfor %}
-  
+      {% endfor %}
+
     </div>
   </div>
-  
+
   <div class="column-narrow section">
     <div class="section-header">
       <h3>Objectives</h3>
@@ -195,14 +193,14 @@ This is your planning area. Move projects from the discussion area into the spri
         </svg>
       </a>
     </div>
-    
+
     <div class="goals-list">
-    {% for goal in goals %}
+      {% for goal in goals %}
       <div class="goal-item">
         <h4>{{ goal.title }}</h4>
         <p>{{ goal.details }}</p>
       </div>
-    {% endfor %}
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -229,36 +227,37 @@ This is your planning area. Move projects from the discussion area into the spri
       </span>
     </div>
   </div>
-  
+
   <div class="discussion-list" id="discussion-list">
     {% for project in projects|selectattr('location', '==', "discussion") %}
     <div class="discussion-item" data-project-id="{{ project.id }}">
-    <p><strong>{{ project.name }}</strong><br>
-    <span class="discussion-details">{{ project.context }}</span></p>
-    <div class="discussion-actions">
-        <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%Y.%m.%d') }}</span>
+      <p><strong>{{ project.name }}</strong><br>
+        <span class="discussion-details">{{ project.context }}</span>
+      </p>
+      <div class="discussion-actions">
+        <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%b %d, %Y') }}</span>
         <button class="btn-text">Discuss</button>
         <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project"><button class="btn-text">Edit</button></a>
         <button class="btn-text">Commit to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
-    </div>
+      </div>
     </div>
     {% endfor %}
-    
+
     {% for goal in goals %}
     <div class="discussion-item" data-project-id="{{ goal.id }}">
-    <div class="discussion-meta">
-        
-        
-    </div>
-    <h4>{{ goal.title }}</h4>
-    <p class="discussion-details">{{ goal.details }}</p>
-    <div class="discussion-actions">
+      <div class="discussion-meta">
+
+
+      </div>
+      <h4>{{ goal.title }}</h4>
+      <p class="discussion-details">{{ goal.details }}</p>
+      <div class="discussion-actions">
         <span class="requester date-badge">{{ goal.requested_by }}</span> <span class="date-badge">{{ goal.created.strftime('%Y.%m.%d') }}</span>
         <button class="btn-text">Discuss</button>
         <button class="btn-text">Move to Sprint</button>
         <button class="btn-text">Move to Backlog</button>
-    </div>
+      </div>
     </div>
     {% endfor %}
   </div>
@@ -270,7 +269,7 @@ This is your planning area. Move projects from the discussion area into the spri
     <button class="tab-btn active" data-tab="backlog">Projects Backlog</button>
     <button class="tab-btn" data-tab="completed">Completed Projects</button>
   </div>
-  
+
   <div class="tab-content active" id="backlog-tab">
     <div class="table-responsive">
       <table class="table">
@@ -325,7 +324,7 @@ This is your planning area. Move projects from the discussion area into the spri
       </table>
     </div>
   </div>
-  
+
   <div class="tab-content" id="completed-tab">
     <div class="table-responsive">
       <table class="table">
@@ -384,261 +383,261 @@ This is your planning area. Move projects from the discussion area into the spri
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-  // Existing tab functionality
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-  
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      // Remove active class from all buttons and contents
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabContents.forEach(content => content.classList.remove('active'));
-      
-      // Add active class to clicked button and corresponding content
-      button.classList.add('active');
-      const tabId = button.getAttribute('data-tab');
-      document.getElementById(`${tabId}-tab`).classList.add('active');
-    });
-  });
-  
-  // Initialize dark mode from localStorage
-  if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-  }
-  
-  // Modal functionality
-  const modal = document.getElementById('projectModal');
-  const closeModalBtn = document.querySelector('.close-modal');
-  const discussButtons = document.querySelectorAll('.discussion-actions .btn-text');
-  
-  // Set up event listeners for discuss buttons
-  discussButtons.forEach(button => {
-    if (button.textContent.trim() === 'Discuss') {
-      button.addEventListener('click', function(e) {
-        e.preventDefault();
-        const projectItem = this.closest('.discussion-item');
-        const projectId = projectItem.dataset.projectId;
-        openProjectModal(projectId);
+    // Existing tab functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all buttons and contents
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+
+        // Add active class to clicked button and corresponding content
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
       });
+    });
+
+    // Initialize dark mode from localStorage
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
     }
-  });
-  
-  // Close modal when clicking the × button
-  closeModalBtn.addEventListener('click', function() {
-    closeModal();
-  });
-  
-  // Close modal when clicking outside the modal
-  window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-      closeModal();
-    }
-  });
-  
-  // Handle "Move to Sprint" button
-  const moveToSprintBtn = document.getElementById('btn-move-sprint');
-  const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
-  const cancelBtn = document.getElementById('btn-cancel');
-  const sprintGoalContainer = document.getElementById('sprint-goal-container');
-  
-  moveToSprintBtn.addEventListener('click', function() {
-    // Show sprint goal input and confirm/cancel buttons
-    sprintGoalContainer.style.display = 'block';
-    confirmSprintBtn.style.display = 'inline-block';
-    cancelBtn.style.display = 'inline-block';
-    // Hide action buttons
-    moveToSprintBtn.style.display = 'none';
-    document.getElementById('btn-edit').style.display = 'none';
-    document.getElementById('btn-move-backlog').style.display = 'none';
-  });
-  
-  cancelBtn.addEventListener('click', function() {
-    // Reset modal to normal state
-    resetModalButtons();
-  });
-  
-  confirmSprintBtn.addEventListener('click', function() {
-    const projectId = modal.dataset.projectId;
-    const sprintGoal = document.getElementById('sprint-goal').value;
-    
-    if (!sprintGoal.trim()) {
-      alert('Please enter a sprint goal before confirming.');
-      return;
-    }
-    
-    // Submit the data to move the project to sprint
-    moveProjectToSprint(projectId, sprintGoal);
-  });
-  
-  // Set up event listeners for other action buttons
-  document.getElementById('btn-edit').addEventListener('click', function() {
-    const projectId = modal.dataset.projectId;
-    window.location.href = `project/${projectId}/edit/`;
-  });
-  
-  document.getElementById('btn-move-backlog').addEventListener('click', function() {
-    const projectId = modal.dataset.projectId;
-    moveProjectToBacklog(projectId);
-  });
-});
 
-// Function to open the modal and load project details
-function openProjectModal(projectId) {
-  const modal = document.getElementById('projectModal');
-  modal.dataset.projectId = projectId;
-  
-  // Show the modal
-  modal.style.display = 'block';
-  
-  // Fetch project details via AJAX
-  fetchProjectDetails(projectId);
-}
+    // Modal functionality
+    const modal = document.getElementById('projectModal');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const discussButtons = document.querySelectorAll('.discussion-actions .btn-text');
 
-// Function to close the modal
-function closeModal() {
-  const modal = document.getElementById('projectModal');
-  modal.style.display = 'none';
-  resetModalButtons();
-  
-  // Clear the sprint goal input
-  document.getElementById('sprint-goal').value = '';
-}
-
-// Reset modal buttons to their default state
-function resetModalButtons() {
-  document.getElementById('sprint-goal-container').style.display = 'none';
-  document.getElementById('btn-confirm-sprint').style.display = 'none';
-  document.getElementById('btn-cancel').style.display = 'none';
-  
-  document.getElementById('btn-move-sprint').style.display = 'inline-block';
-  document.getElementById('btn-edit').style.display = 'inline-block';
-  document.getElementById('btn-move-backlog').style.display = 'inline-block';
-}
-
-// Function to fetch project details from server
-function fetchProjectDetails(projectId) {
-  fetch(`/api/project/${projectId}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+    // Set up event listeners for discuss buttons
+    discussButtons.forEach(button => {
+      if (button.textContent.trim() === 'Discuss') {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const projectItem = this.closest('.discussion-item');
+          const projectId = projectItem.dataset.projectId;
+          openProjectModal(projectId);
+        });
       }
-      return response.json();
-    })
-    .then(project => {
-      // Populate modal with project details
-      document.getElementById('modal-title').textContent = "Project Details";
-      document.getElementById('modal-project-title').textContent = project.name;
-      document.getElementById('modal-project-details').textContent = project.details || 'No details provided';
-      document.getElementById('modal-project-context').textContent = project.context || 'No context provided';
-      document.getElementById('modal-project-requirements').textContent = project.requirements || 'No requirements specified';
-      document.getElementById('modal-project-dri').textContent = project.dri || 'Unassigned';
-      document.getElementById('modal-project-created').textContent = project.created || '';
-    })
-    .catch(error => {
-      console.error('Error fetching project details:', error);
-      alert('Failed to load project details. Please try again.');
+    });
+
+    // Close modal when clicking the × button
+    closeModalBtn.addEventListener('click', function() {
       closeModal();
     });
-}
 
-// Function to move project to sprint
-function moveProjectToSprint(projectId, sprintGoal) {
-  const data = {
-    projectId: projectId,
-    sprintGoal: sprintGoal,
-    location: 'sprint'
-  };
-  
-  fetch('/api/project/move', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(result => {
-    if (result.success) {
-      // Close the modal and refresh the page to show updated data
-      closeModal();
-      window.location.reload();
-    } else {
-      alert(result.message || 'Failed to move project to sprint.');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('An error occurred while processing your request.');
+    // Close modal when clicking outside the modal
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Handle "Move to Sprint" button
+    const moveToSprintBtn = document.getElementById('btn-move-sprint');
+    const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
+    const cancelBtn = document.getElementById('btn-cancel');
+    const sprintGoalContainer = document.getElementById('sprint-goal-container');
+
+    moveToSprintBtn.addEventListener('click', function() {
+      // Show sprint goal input and confirm/cancel buttons
+      sprintGoalContainer.style.display = 'block';
+      confirmSprintBtn.style.display = 'inline-block';
+      cancelBtn.style.display = 'inline-block';
+      // Hide action buttons
+      moveToSprintBtn.style.display = 'none';
+      document.getElementById('btn-edit').style.display = 'none';
+      document.getElementById('btn-move-backlog').style.display = 'none';
+    });
+
+    cancelBtn.addEventListener('click', function() {
+      // Reset modal to normal state
+      resetModalButtons();
+    });
+
+    confirmSprintBtn.addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      const sprintGoal = document.getElementById('sprint-goal').value;
+
+      if (!sprintGoal.trim()) {
+        alert('Please enter a sprint goal before confirming.');
+        return;
+      }
+
+      // Submit the data to move the project to sprint
+      moveProjectToSprint(projectId, sprintGoal);
+    });
+
+    // Set up event listeners for other action buttons
+    document.getElementById('btn-edit').addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      window.location.href = `project/${projectId}/edit/`;
+    });
+
+    document.getElementById('btn-move-backlog').addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      moveProjectToBacklog(projectId);
+    });
   });
-}
 
-// Function to move project to backlog
-function moveProjectToBacklog(projectId) {
-  const data = {
-    projectId: projectId,
-    location: 'backlog'
-  };
-  
-  fetch('/api/project/move', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(result => {
-    if (result.success) {
-      // Close the modal and refresh the page to show updated data
-      closeModal();
-      window.location.reload();
+  // Function to open the modal and load project details
+  function openProjectModal(projectId) {
+    const modal = document.getElementById('projectModal');
+    modal.dataset.projectId = projectId;
+
+    // Show the modal
+    modal.style.display = 'block';
+
+    // Fetch project details via AJAX
+    fetchProjectDetails(projectId);
+  }
+
+  // Function to close the modal
+  function closeModal() {
+    const modal = document.getElementById('projectModal');
+    modal.style.display = 'none';
+    resetModalButtons();
+
+    // Clear the sprint goal input
+    document.getElementById('sprint-goal').value = '';
+  }
+
+  // Reset modal buttons to their default state
+  function resetModalButtons() {
+    document.getElementById('sprint-goal-container').style.display = 'none';
+    document.getElementById('btn-confirm-sprint').style.display = 'none';
+    document.getElementById('btn-cancel').style.display = 'none';
+
+    document.getElementById('btn-move-sprint').style.display = 'inline-block';
+    document.getElementById('btn-edit').style.display = 'inline-block';
+    document.getElementById('btn-move-backlog').style.display = 'inline-block';
+  }
+
+  // Function to fetch project details from server
+  function fetchProjectDetails(projectId) {
+    fetch(`/api/project/${projectId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(project => {
+        // Populate modal with project details
+        document.getElementById('modal-title').textContent = "Project Details";
+        document.getElementById('modal-project-title').textContent = project.name;
+        document.getElementById('modal-project-details').textContent = project.details || 'No details provided';
+        document.getElementById('modal-project-context').textContent = project.context || 'No context provided';
+        document.getElementById('modal-project-requirements').textContent = project.requirements || 'No requirements specified';
+        document.getElementById('modal-project-dri').textContent = project.dri || 'Unassigned';
+        document.getElementById('modal-project-created').textContent = project.created || '';
+      })
+      .catch(error => {
+        console.error('Error fetching project details:', error);
+        alert('Failed to load project details. Please try again.');
+        closeModal();
+      });
+  }
+
+  // Function to move project to sprint
+  function moveProjectToSprint(projectId, sprintGoal) {
+    const data = {
+      projectId: projectId,
+      sprintGoal: sprintGoal,
+      location: 'sprint'
+    };
+
+    fetch('/api/project/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.success) {
+          // Close the modal and refresh the page to show updated data
+          closeModal();
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to move project to sprint.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request.');
+      });
+  }
+
+  // Function to move project to backlog
+  function moveProjectToBacklog(projectId) {
+    const data = {
+      projectId: projectId,
+      location: 'backlog'
+    };
+
+    fetch('/api/project/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.success) {
+          // Close the modal and refresh the page to show updated data
+          closeModal();
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to move project to backlog.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request.');
+      });
+  }
+
+  // Toggle discussion section
+  function toggleDiscussionSection() {
+    const header = document.querySelector('.discussion-section .section-header');
+    const content = document.getElementById('discussion-list');
+
+    header.classList.toggle('collapsed');
+
+    if (header.classList.contains('collapsed')) {
+      content.style.display = 'none';
     } else {
-      alert(result.message || 'Failed to move project to backlog.');
+      content.style.display = 'block';
     }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('An error occurred while processing your request.');
-  });
-}
-
-// Toggle discussion section
-function toggleDiscussionSection() {
-  const header = document.querySelector('.discussion-section .section-header');
-  const content = document.getElementById('discussion-list');
-  
-  header.classList.toggle('collapsed');
-  
-  if (header.classList.contains('collapsed')) {
-    content.style.display = 'none';
-  } else {
-    content.style.display = 'block';
   }
-}
 
-// Toggle dark mode
-function toggleDarkMode() {
-  const body = document.body;
-  
-  body.classList.toggle('dark-mode');
-  
-  // Save preference to localStorage
-  if (body.classList.contains('dark-mode')) {
-    localStorage.setItem('darkMode', 'enabled');
-  } else {
-    localStorage.setItem('darkMode', 'disabled');
+  // Toggle dark mode
+  function toggleDarkMode() {
+    const body = document.body;
+
+    body.classList.toggle('dark-mode');
+
+    // Save preference to localStorage
+    if (body.classList.contains('dark-mode')) {
+      localStorage.setItem('darkMode', 'enabled');
+    } else {
+      localStorage.setItem('darkMode', 'disabled');
+    }
   }
-}
 </script>
 
 <!-- Project Details Modal -->
@@ -675,7 +674,7 @@ function toggleDarkMode() {
           <p id="modal-project-created"></p>
         </div>
       </div>
-      
+
       <!-- Sprint Goal Input (hidden by default) -->
       <div id="sprint-goal-container" class="sprint-goal-container" style="display: none;">
         <label for="sprint-goal">Sprint Goal:</label>

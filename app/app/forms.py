@@ -54,7 +54,7 @@ class CreateSprint(FlaskForm):
     submit = SubmitField('submit')
     
 class CommentForm(FlaskForm):
-    content = TextAreaField('Comment', validators=[
+    content = TextAreaField('Add a New Comment', validators=[
         DataRequired(message='Comment cannot be empty'),
         Length(min=1, max=1000, message='Comment must be between 1 and 1000 characters')
     ])
