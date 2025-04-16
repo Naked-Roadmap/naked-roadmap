@@ -1,17 +1,17 @@
 ## Requirements
-TODO: Create "Planning Page" (if no active sprint, run a planning session)
-TODO: Load goals into right dashboard section
-TODO: "Sprint" dropdown for homepage to select which one projects are being added to. Show only active and upcoming sprints.
+TODO: Make sure objectives on the planning page show the number of projects supporting them.
+TODO: On the project page, ability to attach a project to a goal.
 TODO: Only one sprint active. The rest as upcoming or completed.
 TODO: Sort sprint projects
+TODO: Add cycle commitment outcomes per project alongside goals.
+TODO: Send "Planned cycle email"
+TODO: Send "Retro'd cycle email"
 TODO: Add in "critical" toggle for sprint projects, and reason for critical
-TODO: % completed of sprint bar.
 TODO: Projects as tasks vs. projects
 TODO: Collected & prioritized single stack roadmap section
 TODO: Associate projects to goals.
 TODO: Goals order
-TODO: Add in changelog per project
-TODO: Add discussion per project
+TODO: Edit or delete comment on project only if you're the owner of the comment.
 TODO: Add in an org configuration page outside of the app config.
 
 ## Nice to Have
@@ -24,12 +24,19 @@ TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
 TODO: Create community disqus as part of implementation of marketing site to allow modding, feature requests, support, etc. 
 
 ## DONE
+-- DONE: Create "Planning Page" (if no active sprint, run a planning session)
+-- DONE: "Sprint" dropdown for homepage to select which one projects are being added to. Show only active and upcoming sprints.
 -- DONE: Sprint goals route
 -- DONE: Fix the edit button on modal
 -- DONE: Add in all goals list
 -- DONE: Fix text links in discussion section to work
+-- DONE: Load goals into right dashboard section
+-- DONE: % completed of sprint bar.
+-- DONE: Add discussion per project
+-- DONE: Add in changelog per project
 
 ## Reminders:
+
 - init env
 - flask run
 - flask db init

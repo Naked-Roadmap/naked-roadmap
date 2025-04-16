@@ -18,8 +18,8 @@
                     <button class="tab-btn" data-tab="cycles">
                         <h4>Cycles</h4>
                     </button>
-                    <button class="tab-btn" data-tab="history">
-                        <h4>History</h4>
+                    <button class="tab-btn" data-tab="changelog">
+                        <h4>Changelog</h4>
                     </button>
                 </div>
 
@@ -100,37 +100,44 @@
                 <!-- Cycles Tab -->
                 <!-- ---------------------- -->
                 <div class="tab-content" id="cycles-tab">
-                    CYCLES PLACEHOLDER
+                    {% for cycle in cycles %}
+                    {% set sprint = cycle.sprint %}
+                    <div class="cycle-details">
+                        <h5>{{ sprint.title }} </h5>
+                        <p> <span class="status-badge status-planned" style="margin-right:10px;">
+                                {{ sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ sprint.date_end.strftime('%b %d, %Y') }}
+                            </span> <span class="status-badge 
+                        {% if cycle.status == 'In Progress' %}status-in-progress
+                        {% elif cycle.status == 'Done' %}status-complete
+                        {% elif cycle.status == 'Blocked' %}status-blocked
+                        {% else %}status-planned{% endif %}">
+                                {{ cycle.status|default('Planned') }}
+                            </span></p>
+                        <p><strong>Goal:</strong> {{ cycle.goal }}</p>
+                        <hr>
+                    </div>
+                    {% endfor %}
                 </div>
 
                 <!-- ---------------------- -->
                 <!-- History Tab -->
                 <!-- ---------------------- -->
-                <div class="tab-content" id="history-tab">
+                <div class="tab-content" id="changelog-tab">
                     <div class="card mt-4">
-                        <div class="card-header">
-                            <h4>Changelog</h4>
-                        </div>
-                        <div class="card-body">
-                            {% if changelogs %}
-                            <ul class="list-group">
-                                {% for log in changelogs %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <span>
-                                            <strong>{{ log.change_type | title }}</strong>: {{ log.content }}
-                                        </span>
-                                        <small class="text-muted">
-                                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M') }} by {{ log.user.username }}
-                                        </small>
-                                    </div>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <p class="text-muted">No changes recorded yet.</p>
-                            {% endif %}
-                        </div>
+                        {% if changelogs %}
+                        <ul class="list-group">
+                            {% for log in changelogs %}
+                            <li class="list-group-item">
+                                <span>
+                                    <strong>{{ log.timestamp.strftime('%b %d, %Y (%H:%M)') }}</strong> by {{ log.user.username }}
+                                </span><br>
+                                <small class="text-muted">{{ log.change_type | title }}</strong>: {{ log.content }}</small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No changes recorded yet.</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -138,7 +145,7 @@
         </section>
     </div>
 
-    <div class="column-narrow section">
+    <div class="column-narrow section" style="background-color:#f6f8fa; border-left:1px #f2f3f5 solid; border-radius:0px;">
         <div class="section-header">
             <h3>Discussion</h3>
         </div>
@@ -150,7 +157,7 @@
                     <div class="form-group">
                         {{ form.content.label }}
                         {{ form.content(class="form-control", rows=3) }}
-          {% if form.content.errors %}
+                    {% if form.content.errors %}
                         <div class="form-errors">
                             {% for error in form.content.errors %}
                             <span class="error">{{ error }}</span>
@@ -188,7 +195,7 @@
                 </div>
                 {% else %}
                 <div class="empty-state">
-                    <p>No comments yet. Be the first to add a comment!</p>
+                    <p>No comments yet. Go ahead and ask a question or start a discussion.</p>
                 </div>
                 {% endfor %}
             </div>

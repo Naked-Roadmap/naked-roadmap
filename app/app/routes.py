@@ -13,7 +13,6 @@ from . import utils
 from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html
 import bleach
 
-
 @app.context_processor
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
@@ -57,10 +56,13 @@ def project(project_id):
     # Get changelog entries for this project
     changelogs = Changelog.query.filter_by(project_id=project_id).order_by(Changelog.timestamp.desc()).all()
     
+    # Get cycle commitment entries for this project
+    cycles = SprintProjectMap.query.filter_by(project_id=project_id).order_by(SprintProjectMap.added.desc()).all()
+    
     # Initialize comment form
     form = CommentForm()
     
-    return render_template('project.html', project=project, comments=comments, changelogs=changelogs, form=form)
+    return render_template('project.html', project=project, comments=comments, changelogs=changelogs, form=form, cycles=cycles)
     
 @app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
 @login_required
@@ -224,10 +226,6 @@ def edit(project_id):
 
 @app.route('/<int:project_id>/delete', methods=('POST',))
 def delete(project_id):
-    # project = (
-    #     Project.query
-    #     .filter_by(id=project_id)
-    # )
     deleteProject = db.session.query(Project).filter(Project.id==project_id).first()
     db.session.delete(deleteProject)
     db.session.commit()
@@ -575,3 +573,309 @@ def delete_comment(comment_id):
     
     flash('Comment deleted successfully!', 'success')
     return redirect(url_for('project', project_id=project_id))
+    
+    
+########################################################
+### Manage Cycles
+########################################################
+
+@app.route('/sprints/', methods=['GET', 'POST'])
+def show_cycles():
+    cycles = (
+        Sprint.query
+        .all()
+    )
+    form = CreateSprint()
+    
+    try:
+        if request.method == 'POST':
+            sprintDetails = Sprint(
+                title=form.title.data,
+                date_start=form.date_start.data,
+                date_end=form.date_end.data
+            )
+    
+            db.session.add(sprintDetails)
+            db.session.commit()
+            
+            flash('Congratulations, sprint created!')
+            return redirect(url_for('index'))
+    except TypeError as e:
+        print(f"Error: {e}")
+    return render_template('cycles.html', title='Naked Roadmap - View All Cycles', cycles=cycles, form=form)
+    
+@app.route('/planning/')
+@login_required
+def plan_sprint():
+    projects = (
+        Project.query
+        .order_by(Project.created.desc())
+        .all()
+    )
+    goals = (
+        Goal.query
+        .order_by(Goal.created.desc())
+        .all()
+    )
+    
+    # Get all sprints ordered by start date
+    sprints = (
+        Sprint.query
+        .order_by(Sprint.date_start.asc())
+        .all()
+    )
+    
+    # Find recommended sprint (next upcoming sprint or current sprint)
+    today = datetime.now()
+    recommended_sprint = None
+    
+    for sprint in sprints:
+        # If sprint starts in the future or is currently active
+        if sprint.date_end >= today.date():
+            recommended_sprint = sprint
+            break
+    
+    sprintlog = (
+        SprintProjectMap.query
+        .order_by(SprintProjectMap.order.asc())
+        .all()
+    )
+    
+    return render_template(
+        'plan-cycle.html', 
+        title='Plan a Cycle', 
+        projects=projects, 
+        goals=goals, 
+        config=Config, 
+        sprints=sprints, 
+        recommended_sprint=recommended_sprint,
+        sprintlog=sprintlog, 
+        datetime=datetime, 
+        today=today
+    )
+    
+    
+########################################################
+### API Routes for Sprint Selection
+########################################################
+
+@app.route('/api/sprint/<int:sprint_id>', methods=['GET'])
+def api_get_sprint(sprint_id):
+    """API endpoint to get sprint details including associated projects"""
+    sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # Get all projects associated with this sprint
+    sprint_projects = SprintProjectMap.query.filter_by(sprint_id=sprint_id).all()
+    
+    # Build the response data
+    sprint_data = {
+        'id': sprint.id,
+        'title': sprint.title,
+        'date_start': sprint.date_start.isoformat() if sprint.date_start else None,
+        'date_end': sprint.date_end.isoformat() if sprint.date_end else None,
+        'projects': []
+    }
+    
+    # Add project data
+    for entry in sprint_projects:
+        project = Project.query.get(entry.project_id)
+        if project:
+            sprint_data['projects'].append({
+                'id': project.id,
+                'name': project.name,
+                'status': entry.status,
+                'goal': entry.goal,
+                'dri': project.dri,
+                'team': project.team
+            })
+    
+    return jsonify({'success': True, 'sprint': sprint_data})
+
+@app.route('/api/create_sprint', methods=['POST'])
+@login_required
+def api_create_sprint():
+    """API endpoint to create a new sprint and return its details"""
+    form = CreateSprint()
+    
+    if form.validate_on_submit():
+        try:
+            new_sprint = Sprint(
+                title=form.title.data,
+                date_start=form.date_start.data,
+                date_end=form.date_end.data
+            )
+            
+            db.session.add(new_sprint)
+            db.session.commit()
+            
+            # Return the new sprint data
+            sprint_data = {
+                'id': new_sprint.id,
+                'title': new_sprint.title,
+                'date_start': new_sprint.date_start.isoformat() if new_sprint.date_start else None,
+                'date_end': new_sprint.date_end.isoformat() if new_sprint.date_end else None
+            }
+            
+            return jsonify({'success': True, 'sprint': sprint_data})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)})
+    
+    return jsonify({'success': False, 'message': 'Form validation failed'})
+
+@app.route('/api/project/commit_to_sprint', methods=['POST'])
+@login_required
+def api_commit_to_sprint():
+    """API endpoint to commit a project to the selected sprint"""
+    data = request.json
+    project_id = data.get('projectId')
+    sprint_id = data.get('sprintId')
+    goal = data.get('goal', '')
+    
+    if not project_id or not sprint_id:
+        return jsonify({'success': False, 'message': 'Missing required fields'})
+    
+    # Check if project and sprint exist
+    project = Project.query.get_or_404(project_id)
+    sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # Check if this project is already in this sprint
+    existing = SprintProjectMap.query.filter_by(
+        project_id=project_id,
+        sprint_id=sprint_id
+    ).first()
+    
+    if existing:
+        # Update the goal if it's changed
+        if existing.goal != goal:
+            existing.goal = goal
+            
+            # Add changelog entry
+            changelog = Changelog(
+                change_type='sprint_goal_update',
+                content=f"Sprint goal updated to: '{goal}'",
+                project_id=project_id,
+                user_id=current_user.id
+            )
+            db.session.add(changelog)
+            
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Project goal updated in sprint',
+            'sprintProjectId': existing.id
+        })
+    
+    # Create new sprint-project mapping
+    new_mapping = SprintProjectMap(
+        sprint_id=sprint_id,
+        project_id=project_id,
+        goal=goal,
+        status="Planned"
+    )
+    
+    db.session.add(new_mapping)
+    
+    # Update project location
+    project.location = 'sprint'
+    
+    # Add changelog entries
+    changelog1 = Changelog(
+        change_type='sprint_assignment',
+        content=f"Project assigned to sprint: '{sprint.title}'",
+        project_id=project_id,
+        user_id=current_user.id
+    )
+    
+    changelog2 = Changelog(
+        change_type='location_change',
+        content=f"Project moved to sprint",
+        project_id=project_id,
+        user_id=current_user.id
+    )
+    
+    db.session.add(changelog1)
+    db.session.add(changelog2)
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Project committed to sprint successfully',
+            'sprintProjectId': new_mapping.id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+        
+        
+@app.route('/api/projects/reorder', methods=['POST'])
+@login_required
+def reorder_projects():
+    """API endpoint to update the order of projects in a sprint"""
+    data = request.json
+    
+    if not data or 'projects' not in data:
+        return jsonify({'success': False, 'message': 'Missing project order data'})
+    
+    try:
+        # Begin transaction
+        for project_data in data['projects']:
+            sprint_project = SprintProjectMap.query.get(project_data['id'])
+            if sprint_project:
+                sprint_project.order = project_data['order']
+                
+                # Add changelog entry for significant order changes (optional)
+                # Only log if order changed by more than 2 positions to avoid clutter
+                old_order = getattr(sprint_project, 'order', 0) or 0
+                new_order = project_data['order']
+                if abs(old_order - new_order) > 2:
+                    changelog = Changelog(
+                        change_type='project_reorder',
+                        content=f"Project priority changed from position {old_order} to {new_order}",
+                        project_id=sprint_project.project_id,
+                        user_id=current_user.id
+                    )
+                    db.session.add(changelog)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Project order updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/project/toggle_critical', methods=['POST'])
+@login_required
+def toggle_project_critical():
+    """API endpoint to toggle a project's critical status"""
+    data = request.json
+    
+    if not data or 'sprintProjectId' not in data or 'critical' not in data:
+        return jsonify({'success': False, 'message': 'Missing required fields'})
+    
+    sprint_project_id = data['sprintProjectId']
+    critical_status = data['critical']
+    
+    try:
+        sprint_project = SprintProjectMap.query.get_or_404(sprint_project_id)
+        
+        # Update the critical status
+        old_status = sprint_project.critical
+        sprint_project.critical = critical_status
+        
+        # Add changelog entry if status changed
+        if old_status != critical_status:
+            status_text = "critical" if critical_status else "non-critical"
+            changelog = Changelog(
+                change_type='critical_status_change',
+                content=f"Project marked as {status_text}",
+                project_id=sprint_project.project_id,
+                user_id=current_user.id
+            )
+            db.session.add(changelog)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Project critical status updated to {critical_status}'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
