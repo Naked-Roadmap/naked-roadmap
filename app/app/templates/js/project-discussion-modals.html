@@ -1,0 +1,207 @@
+<script>
+// Modal functionality
+    const modal = document.getElementById('projectModal');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const discussButtons = document.querySelectorAll('.discussion-actions .btn-text');
+
+    // Set up event listeners for discuss buttons
+    discussButtons.forEach(button => {
+      if (button.textContent.trim() === 'Discuss') {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const projectItem = this.closest('.discussion-item');
+          const projectId = projectItem.dataset.projectId;
+          openProjectModal(projectId);
+        });
+      }
+    });
+
+    // Close modal when clicking the × button
+    closeModalBtn.addEventListener('click', function() {
+      closeModal();
+    });
+
+    // Close modal when clicking outside the modal
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Handle "Move to Sprint" button
+    const moveToSprintBtn = document.getElementById('btn-move-sprint');
+    const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
+    const cancelBtn = document.getElementById('btn-cancel');
+    const sprintGoalContainer = document.getElementById('sprint-goal-container');
+
+    moveToSprintBtn.addEventListener('click', function() {
+      // Show sprint goal input and confirm/cancel buttons
+      sprintGoalContainer.style.display = 'block';
+      confirmSprintBtn.style.display = 'inline-block';
+      cancelBtn.style.display = 'inline-block';
+      // Hide action buttons
+      moveToSprintBtn.style.display = 'none';
+      document.getElementById('btn-edit').style.display = 'none';
+      document.getElementById('btn-move-backlog').style.display = 'none';
+    });
+
+    cancelBtn.addEventListener('click', function() {
+      // Reset modal to normal state
+      resetModalButtons();
+    });
+
+    confirmSprintBtn.addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      const sprintGoal = document.getElementById('sprint-goal').value;
+
+      if (!sprintGoal.trim()) {
+        alert('Please enter a sprint goal before confirming.');
+        return;
+      }
+
+      // Submit the data to move the project to sprint
+      moveProjectToSprint(projectId, sprintGoal);
+    });
+
+    // Set up event listeners for other action buttons
+    document.getElementById('btn-edit').addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      window.location.href = `project/${projectId}/edit/`;
+    });
+
+    document.getElementById('btn-move-backlog').addEventListener('click', function() {
+      const projectId = modal.dataset.projectId;
+      moveProjectToBacklog(projectId);
+    });
+  });
+
+  // Function to open the modal and load project details
+  function openProjectModal(projectId) {
+    const modal = document.getElementById('projectModal');
+    modal.dataset.projectId = projectId;
+
+    // Show the modal
+    modal.style.display = 'block';
+
+    // Fetch project details via AJAX
+    fetchProjectDetails(projectId);
+  }
+
+  // Function to close the modal
+  function closeModal() {
+    const modal = document.getElementById('projectModal');
+    modal.style.display = 'none';
+    resetModalButtons();
+
+    // Clear the sprint goal input
+    document.getElementById('sprint-goal').value = '';
+  }
+
+  // Reset modal buttons to their default state
+  function resetModalButtons() {
+    document.getElementById('sprint-goal-container').style.display = 'none';
+    document.getElementById('btn-confirm-sprint').style.display = 'none';
+    document.getElementById('btn-cancel').style.display = 'none';
+
+    document.getElementById('btn-move-sprint').style.display = 'inline-block';
+    document.getElementById('btn-edit').style.display = 'inline-block';
+    document.getElementById('btn-move-backlog').style.display = 'inline-block';
+  }
+
+  // Function to fetch project details from server
+  function fetchProjectDetails(projectId) {
+    fetch(`/api/project/${projectId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(project => {
+        // Populate modal with project details
+        document.getElementById('modal-title').textContent = "Project Details";
+        document.getElementById('modal-project-title').textContent = project.name;
+        document.getElementById('modal-project-details').textContent = project.details || 'No details provided';
+        document.getElementById('modal-project-context').textContent = project.context || 'No context provided';
+        document.getElementById('modal-project-requirements').textContent = project.requirements || 'No requirements specified';
+        document.getElementById('modal-project-dri').textContent = project.dri || 'Unassigned';
+        document.getElementById('modal-project-created').textContent = project.created || '';
+      })
+      .catch(error => {
+        console.error('Error fetching project details:', error);
+        alert('Failed to load project details. Please try again.');
+        closeModal();
+      });
+  }
+
+  // Function to move project to sprint
+  function moveProjectToSprint(projectId, sprintGoal) {
+    const data = {
+      projectId: projectId,
+      sprintGoal: sprintGoal,
+      location: 'sprint'
+    };
+
+    fetch('/api/project/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.success) {
+          // Close the modal and refresh the page to show updated data
+          closeModal();
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to move project to sprint.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request.');
+      });
+  }
+
+  // Function to move project to backlog
+  function moveProjectToBacklog(projectId) {
+    const data = {
+      projectId: projectId,
+      location: 'backlog'
+    };
+
+    fetch('/api/project/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.success) {
+          // Close the modal and refresh the page to show updated data
+          closeModal();
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to move project to backlog.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request.');
+      });
+  }
+</script>

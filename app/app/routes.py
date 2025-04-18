@@ -43,8 +43,18 @@ def index():
         .order_by(SprintProjectMap.order.asc())
         .all()
     )
+    comments = (
+        Comment.query
+        .order_by(Comment.created_at.desc())
+        .limit(5)
+    )
+    changes = (
+        Changelog.query
+        .order_by(Changelog.timestamp.desc())
+        .limit(5)
+    )
     today = datetime.now()
-    return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today)
+    return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today, comments=comments, changes=changes)
     
 @app.route('/project/<int:project_id>')
 def project(project_id):
@@ -423,12 +433,11 @@ def api_get_project(project_id):
 @login_required
 def api_move_project():
     """
-    API endpoint to move a project to sprint or backlog
+    API endpoint to move a project to sprint, backlog, or discussion
     """
     data = request.json
     project_id = data.get('projectId')
     new_location = data.get('location')
-    sprint_goal = data.get('sprintGoal', '')
     
     # Validate the required fields
     if not project_id or not new_location:
@@ -451,48 +460,31 @@ def api_move_project():
             change_type='location_change',
             content=f"Project moved from '{old_location}' to '{new_location}'",
             project_id=project_id,
-            user_id=current_user.id
+            user_id=current_user.id,
+            timestamp=datetime.utcnow()
         )
         db.session.add(changelog)
     
-    # If moving to sprint, also handle sprint relationship
-    if new_location == 'sprint':
-        # Check if already in sprint
-        existing_map = SprintProjectMap.query.filter_by(
-            project_id=project_id,
-            sprint_id=2
-        ).first()
-        
-        if existing_map:
-            # Check if goal changed
-            if existing_map.goal != sprint_goal:
-                goal_changelog = Changelog(
-                    change_type='sprint_goal_update',
-                    content=f"Sprint goal updated to: '{sprint_goal}'",
-                    project_id=project_id,
-                    user_id=current_user.id
-                )
-                db.session.add(goal_changelog)
-            # Update existing relationship
-            existing_map.goal = sprint_goal
-        else:
-            # Create new sprint-project relationship
-            sprint_project_map = SprintProjectMap(
-                sprint_id=2,
-                project_id=project_id,
-                goal=sprint_goal
-            )
-            db.session.add(sprint_project_map)
+    # If project is moving out of sprint, remove it from sprint mappings
+    if old_location == 'sprint' or new_location != 'sprint':
+        # Find all sprint mappings for this project and remove them
+        sprint_mappings = SprintProjectMap.query.filter_by(project_id=project_id).all()
+        for mapping in sprint_mappings:
+            # Add changelog for sprint removal
+            sprint = Sprint.query.get(mapping.sprint_id)
+            sprint_name = sprint.title if sprint else "Unknown Sprint"
             
-            # Add a changelog entry for the new assignment
-            sprint = Sprint.query.get(2)
-            sprint_changelog = Changelog(
-                change_type='sprint_assignment',
-                content=f"Project assigned to sprint: '{sprint.title}'",
+            removal_changelog = Changelog(
+                change_type='sprint_removal',
+                content=f"Project removed from sprint: '{sprint_name}'",
                 project_id=project_id,
-                user_id=current_user.id
+                user_id=current_user.id,
+                timestamp=datetime.utcnow()
             )
-            db.session.add(sprint_changelog)
+            db.session.add(removal_changelog)
+            
+            # Delete the mapping
+            db.session.delete(mapping)
     
     # Commit changes to the database
     try:
@@ -825,11 +817,12 @@ def api_create_sprint():
 @app.route('/api/project/commit_to_sprint', methods=['POST'])
 @login_required
 def api_commit_to_sprint():
-    """API endpoint to commit a project to the selected sprint"""
+    """API endpoint to commit a project to the selected sprint or update its goal"""
     data = request.json
     project_id = data.get('projectId')
     sprint_id = data.get('sprintId')
     goal = data.get('goal', '')
+    sprint_project_id = data.get('sprintProjectId')
     
     if not project_id or not sprint_id:
         return jsonify({'success': False, 'message': 'Missing required fields'})
@@ -837,6 +830,33 @@ def api_commit_to_sprint():
     # Check if project and sprint exist
     project = Project.query.get_or_404(project_id)
     sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # If sprint_project_id is provided, update existing record
+    if sprint_project_id:
+        existing = SprintProjectMap.query.get(sprint_project_id)
+        if existing:
+            old_goal = existing.goal
+            existing.goal = goal
+            
+            # Add changelog entry if goal changed
+            if old_goal != goal:
+                changelog = Changelog(
+                    change_type='sprint_goal_update',
+                    content=f"Sprint goal updated from '{old_goal}' to '{goal}'",
+                    project_id=project_id,
+                    user_id=current_user.id,
+                    timestamp=datetime.utcnow()
+                )
+                db.session.add(changelog)
+            
+            db.session.commit()
+            return jsonify({
+                'success': True, 
+                'message': 'Project goal updated in sprint',
+                'sprintProjectId': existing.id
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Sprint project mapping not found'})
     
     # Check if this project is already in this sprint
     existing = SprintProjectMap.query.filter_by(
@@ -846,17 +866,34 @@ def api_commit_to_sprint():
     
     if existing:
         # Update the goal if it's changed
+        old_goal = existing.goal
         if existing.goal != goal:
             existing.goal = goal
             
             # Add changelog entry
             changelog = Changelog(
                 change_type='sprint_goal_update',
-                content=f"Sprint goal updated to: '{goal}'",
+                content=f"Sprint goal updated from '{old_goal}' to '{goal}'",
                 project_id=project_id,
-                user_id=current_user.id
+                user_id=current_user.id,
+                timestamp=datetime.utcnow()
             )
             db.session.add(changelog)
+        
+        # Ensure project location is set to 'active' when in sprint
+        if project.location != 'active':
+            old_location = project.location
+            project.location = 'active'
+            
+            # Add changelog for location change
+            location_changelog = Changelog(
+                change_type='location_change',
+                content=f"Project moved from '{old_location}' to 'active'",
+                project_id=project_id,
+                user_id=current_user.id,
+                timestamp=datetime.utcnow()
+            )
+            db.session.add(location_changelog)
             
         db.session.commit()
         return jsonify({
@@ -866,35 +903,44 @@ def api_commit_to_sprint():
         })
     
     # Create new sprint-project mapping
+    # First, get count of current projects to set the order
+    current_count = SprintProjectMap.query.filter_by(sprint_id=sprint_id).count()
+    
     new_mapping = SprintProjectMap(
         sprint_id=sprint_id,
         project_id=project_id,
         goal=goal,
-        status="Planned"
+        status="Planned",
+        order=current_count + 1,
+        added=datetime.utcnow()
     )
     
     db.session.add(new_mapping)
     
-    # Update project location
-    project.location = 'sprint'
+    # Update project location to 'active' when added to sprint
+    old_location = project.location
+    project.location = 'active'
     
-    # Add changelog entries
-    changelog1 = Changelog(
-        change_type='sprint_assignment',
-        content=f"Project assigned to sprint: '{sprint.title}'",
-        project_id=project_id,
-        user_id=current_user.id
-    )
-    
-    changelog2 = Changelog(
+    # Add changelog for location change
+    changelog_location = Changelog(
         change_type='location_change',
-        content=f"Project moved to sprint",
+        content=f"Project moved from '{old_location}' to 'active'",
         project_id=project_id,
-        user_id=current_user.id
+        user_id=current_user.id,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(changelog_location)
+    
+    # Add changelog entries for sprint assignment
+    changelog_sprint = Changelog(
+        change_type='sprint_assignment',
+        content=f"Project assigned to sprint: '{sprint.title}' with goal: '{goal}'",
+        project_id=project_id,
+        user_id=current_user.id,
+        timestamp=datetime.utcnow()
     )
     
-    db.session.add(changelog1)
-    db.session.add(changelog2)
+    db.session.add(changelog_sprint)
     
     try:
         db.session.commit()

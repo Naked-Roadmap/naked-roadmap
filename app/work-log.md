@@ -1,7 +1,7 @@
 ## Requirements
 Projects Pages
 TODO: On Dashboard, show recent comments as well
-TODO: Fix the star/critical functionality on planning page
+<!-- TODO: Fix the star/critical functionality on planning page -->
 TODO: Fix links on the planning page discussion section
 TODO: Fix links on the planning page commitments section
 TODO: Send email when planning is complete
@@ -23,6 +23,15 @@ Goals Page:
 TODO: Goals order
 TODO: Edit or delete comment on project only if you're the owner of the comment.
 TODO: Add in an org configuration page outside of the app config.
+
+## Analytics
+TODO: Team Load (active projects)
+TODO: Individual Load (active projects)
+TODO: Project Completion Average (Days, Cycles)
+TODO: Number of projects completed
+TODO: Commitment Completion %
+TODO: Number of cycles run
+TODO: Number of goals achieved
 
 ## Nice to Have
 TODO: Different types of users:
