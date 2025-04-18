@@ -30,6 +30,7 @@
       </div>
 
       <nav class="sidebar-nav">
+        <h6 style="margin:0px 20px; padding-bottom:10px;">View</h6>
         <ul>
           <li>
             <a href="{{ url_for('index') }}" class="active">
@@ -69,9 +70,12 @@
           <li>
             <hr>
           </li>
+        </ul>
+        <h6 style="margin:0px 20px; padding-bottom:10px;">Do</h6>
+        <ul>
           <li>
             <a href="{{url_for('plan_sprint') }}">
-              <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;"> Plan a Cycle
+              <img src="{{ url_for('static', filename='./icons/cycle-2.svg')}}" style="max-height:20px; margin-right:10px;"> Plan a Cycle
             </a>
           </li>
           <li>

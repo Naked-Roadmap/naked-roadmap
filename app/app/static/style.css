@@ -146,6 +146,8 @@ a:hover {
   list-style: none;
   padding: 0;
   margin: 0;
+  margin-left: 20px;
+  border-left: 1px solid gray;
 }
 
 .sidebar-nav li {
@@ -1092,10 +1094,10 @@ border-radius: 0.5rem;
   content: '';
   position: absolute;
   left: 0;
-  top: 0.75rem;
-  bottom: 0.75rem;
-  width: 4px;
-  border-radius: 2px;
+  top: 0rem;
+  bottom: 0rem;
+  width: 5px;
+  border-radius: 2px 0px 0px 2px;
   background: linear-gradient(to bottom, #4f46e5, #3b82f6);
   /* Indigo to blue */
 }
@@ -1533,4 +1535,4 @@ h4 {
   font-size: 11px;
   color: #666;
   margin-top: 4px;
-}
+} 
