@@ -49,6 +49,7 @@ class Project(db.Model):
     launch: so.Mapped[str] = so.mapped_column(sa.TEXT())
     location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
     type: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
 
     def __repr__(self):
         return '<Project {}>'.format(self.body)

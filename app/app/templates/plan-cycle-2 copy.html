@@ -14,8 +14,8 @@
 <!-- Select a Cycle -->
 <!-- ---------------------------------- -->
 
-<section class="section discussion-section">
-  <div class="section-header collapsible-header" onclick="toggleDiscussionSection()">
+<section class="section cycle-section">
+  <div class="section-header collapsible-header" onclick="toggleCycleSection()">
     <h3>Select Sprint</h3>
     <div class="header-actions">
       <span class="collapse-icon">
@@ -26,76 +26,92 @@
     </div>
   </div>
 
-  <div class="discussion-list" id="discussion-list">
-    <div class="sprint-selection-container">
-      <div class="sprint-selection-option">
-        <h4>RECOMMENDED SPRINT</h4>
-        {% if recommended_sprint %}
-        <div class="sprint-card" data-sprint-id="{{ recommended_sprint.id }}">
-          <strong>{{ recommended_sprint.title }}</strong>
-          <span class="sprint-dates">{{ recommended_sprint.date_start.strftime('%b %d') }} - {{ recommended_sprint.date_end.strftime('%b %d, %Y') }}</span>
-          <button class="btn-primary select-sprint-btn" data-sprint-id="{{ recommended_sprint.id }}">Select This Sprint</button>
-        </div>
-        {% else %}
-        <div class="no-sprint-message">
-          <p>No upcoming sprints found. Please create a new sprint or select from existing ones.</p>
-        </div>
-        {% endif %}
-      </div>
+  <div class="sprint-selection-option">
+    <h4>SELECT SPRINT</h4>
+    {# <form id="select-sprint-form" action="{{ url_for('selectSprint') }}" method="GET"> #}
+      <select id="sprint-dropdown" name="sprint_id" class="form-control" style="height:100%;">
+        {% for sprint in sprints %}
+        <option value="{{ sprint.id }}">{{ sprint.title }} ({{ sprint.date_start.strftime('%b %d') }} - {{ sprint.date_end.strftime('%b %d, %Y') }})</option>
+        {% endfor %}
+        <option value="new">-- Create a New Sprint --</option>
+      </select>
+      <button type="submit" id="select-dropdown-sprint" class="btn-secondary">Select</button>
+    {# </form> #}
+  </div>
 
-      <div class="sprint-selection-option">
-        <h4>OR SELECT FROM EXISTING SPRINTS</h4>
-        <div class="sprint-dropdown-container">
-          <select id="sprint-dropdown" class="form-control">
-            <option value="">-- Select a Sprint --</option>
-            {% for sprint in sprints %}
-            {% if sprint.date_end >= today.date() %}
-            <option value="{{ sprint.id }}">{{ sprint.title }} ({{ sprint.date_start.strftime('%b %d') }} - {{ sprint.date_end.strftime('%b %d, %Y') }})</option>
-            {% endif %}
-            {% endfor %}
-          </select>
-          <button id="select-dropdown-sprint" class="btn-secondary">Select</button>
-        </div>
-      </div>
+  <div class="sprint-selection-option">
+    <h4>OR CREATE NEW SPRINT</h4>
+    <button id="create-sprint-btn" class="btn-secondary">Create New Sprint</button>
+  </div>
 
-      <div class="sprint-selection-option">
-        <h4>OR CREATE NEW SPRINT</h4>
-        <button id="create-sprint-btn" class="btn-secondary">Create New Sprint</button>
+  <!-- Sprint creation form (hidden by default) -->
+  <div id="create-sprint-form" class="sprint-creation-form" style="display: none;">
+    <form id="sprint-form" method="POST" action="{{ url_for('planningStep2CycleCreation') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group">
+        <label for="title">Sprint Title</label>
+        <input type="text" id="title" name="title" class="form-control" required>
       </div>
+      <div class="form-group">
+        <label for="date_start">Start Date</label>
+        <input type="date" id="date_start" name="date_start" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="date_end">End Date</label>
+        <input type="date" id="date_end" name="date_end" class="form-control" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Create & Select</button>
+        <button type="button" id="cancel-create" class="btn-text">Cancel</button>
+      </div>
+    </form>
+  </div>
 
-      <!-- Sprint creation form (hidden by default) -->
-      <div id="create-sprint-form" class="sprint-creation-form" style="display: none;">
-        <form id="sprint-form" method="POST" action="{{ url_for('createSprint') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <div class="form-group">
-            <label for="title">Sprint Title</label>
-            <input type="text" id="title" name="title" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label for="date_start">Start Date</label>
-            <input type="date" id="date_start" name="date_start" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label for="date_end">End Date</label>
-            <input type="date" id="date_end" name="date_end" class="form-control" required>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Create & Select</button>
-            <button type="button" id="cancel-create" class="btn-text">Cancel</button>
-          </div>
-        </form>
-      </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle the dropdown selection and form submission
+      const selectSprintForm = document.getElementById('select-sprint-form');
+      const sprintDropdown = document.getElementById('sprint-dropdown');
+      const createSprintForm = document.getElementById('create-sprint-form');
+      const createSprintBtn = document.getElementById('create-sprint-btn');
+      const cancelCreateBtn = document.getElementById('cancel-create');
 
-      <!-- Current selection display -->
-      <div id="current-selection" class="current-selection" style="display: none;">
-        <h4>CURRENTLY PLANNING FOR:</h4>
-        <div class="selected-sprint-info">
-          <span id="selected-sprint-title"></span>
-          <span id="selected-sprint-dates"></span>
-          <button id="change-sprint-btn" class="btn-text">Change</button>
-        </div>
-      </div>
+      // Handle the select sprint form submission
+      selectSprintForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const selectedValue = sprintDropdown.value;
+
+        if (selectedValue === 'new') {
+          // Show the create sprint form if "Create a New Sprint" is selected
+          createSprintForm.style.display = 'block';
+        } else {
+          // Submit to the next route with the sprint ID
+          window.location.href = "{{ url_for('planningStep2CycleSelected') }}/" + selectedValue;
+        }
+      });
+
+      // Handle the "Create New Sprint" button click
+      createSprintBtn.addEventListener('click', function() {
+        createSprintForm.style.display = 'block';
+      });
+
+      // Handle the cancel button click
+      cancelCreateBtn.addEventListener('click', function() {
+        createSprintForm.style.display = 'none';
+      });
+    });
+  </script>
+
+  <!-- Current selection display -->
+  <div id="current-selection" class="current-selection" style="display: none;">
+    <h4>CURRENTLY PLANNING FOR:</h4>
+    <div class="selected-sprint-info">
+      <span id="selected-sprint-title"></span>
+      <span id="selected-sprint-dates"></span>
+      <button id="change-sprint-btn" class="btn-text">Change</button>
     </div>
+  </div>
+  </div>
   </div>
 </section>
 
@@ -117,23 +133,23 @@
           <button class="tab-btn active" data-tab="discussion">For Discussion</button>
           <button class="tab-btn" data-tab="backlog">Backlog</button>
         </div>
-  {# </div> #}
+        {# </div> #}
 
-  <div class="discussion-list" id="discussion-list">
-   {% for project in projects|selectattr('location', '==', "discussion") %}
-   <div class="discussion-item" data-project-id="{{ project.id }}">
-     <p><strong>{{ project.name }}</strong><br>
-       <span class="discussion-details">{{ project.context }}</span>
-     </p>
-     <div class="discussion-actions">
-       <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%b %d, %Y') }}</span>
-       <button class="btn-text">Discuss</button>
-       <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project"><button class="btn-text">Edit</button></a>
-       <button class="btn-text">Commit to Sprint</button>
-       <button class="btn-text">Move to Backlog</button>
-     </div>
-   </div>
-    {% endfor %}
+        <div class="discussion-list" id="discussion-list">
+          {% for project in projects|selectattr('location', '==', "discussion") %}
+          <div class="discussion-item" data-project-id="{{ project.id }}">
+            <p><strong>{{ project.name }}</strong><br>
+              <span class="discussion-details">{{ project.context }}</span>
+            </p>
+            <div class="discussion-actions">
+              <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%b %d, %Y') }}</span>
+              <button class="btn-text">Discuss</button>
+              <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project"><button class="btn-text">Edit</button></a>
+              <button class="btn-text">Commit to Sprint</button>
+              <button class="btn-text">Move to Backlog</button>
+            </div>
+          </div>
+          {% endfor %}
         </div>
 
         <div class="tab-content" id="backlog-tab">
@@ -353,12 +369,12 @@
           color: #666;
           margin-top: 4px;
         }
-        
+
         /* New styles for sortable projects */
         .sortable-projects {
           padding: 5px 0;
         }
-        
+
         .project-item {
           cursor: grab;
           position: relative;
@@ -369,27 +385,27 @@
           transition: all 0.2s ease;
           background-color: #fff;
         }
-        
+
         .project-item:hover {
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .project-item.sortable-ghost {
           opacity: 0.5;
           background-color: #f5f5f5;
         }
-        
+
         .project-item.sortable-chosen {
-          box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
         }
-        
+
         .drag-handle {
           cursor: grab;
           color: #ccc;
           margin-right: 5px;
           display: inline-block;
         }
-        
+
         .critical-toggle {
           position: absolute;
           right: 12px;
@@ -399,11 +415,11 @@
           color: #ccc;
           transition: color 0.2s ease;
         }
-        
+
         .critical-toggle.active {
           color: #f1c40f;
         }
-        
+
         .critical-badge {
           background-color: #f1c40f;
           color: white;
@@ -413,14 +429,14 @@
           margin-left: 8px;
           vertical-align: middle;
         }
-        
+
         .dark-mode .project-item {
           background-color: #2c3e50;
           border-color: #34495e;
         }
-        
+
         .dark-mode .project-item:hover {
-          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
       </style>
 
@@ -536,152 +552,154 @@
 
 <!-- Add our custom script for sortable functionality and critical toggle -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize Sortable for project reordering
-  const projectsList = document.getElementById('sortable-projects');
-  
-  if (projectsList && projectsList.children.length > 0) {
-    const sortable = new Sortable(projectsList, {
-      animation: 150,
-      handle: '.drag-handle',
-      ghostClass: 'sortable-ghost',
-      chosenClass: 'sortable-chosen',
-      onEnd: function(evt) {
-        updateProjectOrder();
-      }
-    });
-    
-    // Function to get all projects and their new order
-    function updateProjectOrder() {
-      const projects = document.querySelectorAll('#sortable-projects .project-item');
-      const orderData = [];
-      
-      projects.forEach((project, index) => {
-        orderData.push({
-          id: project.dataset.id,
-          order: index + 1
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Sortable for project reordering
+    const projectsList = document.getElementById('sortable-projects');
+
+    if (projectsList && projectsList.children.length > 0) {
+      const sortable = new Sortable(projectsList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function(evt) {
+          updateProjectOrder();
+        }
+      });
+
+      // Function to get all projects and their new order
+      function updateProjectOrder() {
+        const projects = document.querySelectorAll('#sortable-projects .project-item');
+        const orderData = [];
+
+        projects.forEach((project, index) => {
+          orderData.push({
+            id: project.dataset.id,
+            order: index + 1
+          });
         });
-      });
-      
-      // Send the new order to the server
-      fetch('/api/projects/reorder', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ projects: orderData })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showNotification('Project order updated successfully', 'success');
-        } else {
-          showNotification('Failed to update project order', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error updating project order:', error);
-        showNotification('Error updating project order', 'error');
-      });
-    }
-    
-    // Add event listeners for critical toggle buttons
-    const criticalToggles = document.querySelectorAll('.critical-toggle');
-    criticalToggles.forEach(toggle => {
-      toggle.addEventListener('click', function() {
-        const id = this.dataset.id;
-        const isCurrentlyActive = this.classList.contains('active');
-        const newCriticalState = !isCurrentlyActive;
-        
-        // Toggle the visual state immediately for better UX
-        this.classList.toggle('active');
-        
-        // Update the icon fill
-        const starIcon = this.querySelector('svg');
-        if (starIcon) {
-          starIcon.setAttribute('fill', newCriticalState ? 'currentColor' : 'none');
-        }
-        
-        // Add or remove the critical badge
-        const projectItem = this.closest('.project-item');
-        const existingBadge = projectItem.querySelector('.critical-badge');
-        
-        if (newCriticalState && !existingBadge) {
-          const badge = document.createElement('span');
-          badge.className = 'critical-badge';
-          badge.textContent = 'Critical';
-          projectItem.querySelector('.project-header').insertBefore(
-            badge, 
-            projectItem.querySelector('.status-badge')
-          );
-        } else if (!newCriticalState && existingBadge) {
-          existingBadge.remove();
-        }
-        
-        // Send the update to the server
-        fetch('/api/project/toggle_critical', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify({ 
-            sprintProjectId: id, 
-            critical: newCriticalState 
+
+        // Send the new order to the server
+        fetch('/api/projects/reorder', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+              projects: orderData
+            })
           })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showNotification(
-              newCriticalState ? 'Project marked as critical' : 'Project unmarked as critical', 
-              'success'
-            );
-          } else {
-            // Revert the visual change if the server update failed
-            this.classList.toggle('active');
-            if (starIcon) {
-              starIcon.setAttribute('fill', !newCriticalState ? 'currentColor' : 'none');
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification('Project order updated successfully', 'success');
+            } else {
+              showNotification('Failed to update project order', 'error');
             }
-            if (!newCriticalState && !existingBadge) {
-              const badge = document.createElement('span');
-              badge.className = 'critical-badge';
-              badge.textContent = 'Critical';
-              projectItem.querySelector('.project-header').insertBefore(
-                badge, 
-                projectItem.querySelector('.status-badge')
-              );
-            } else if (newCriticalState && existingBadge) {
-              existingBadge.remove();
-            }
-            showNotification('Failed to update project status', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error updating critical status:', error);
-          // Revert the visual change if there was an error
+          })
+          .catch(error => {
+            console.error('Error updating project order:', error);
+            showNotification('Error updating project order', 'error');
+          });
+      }
+
+      // Add event listeners for critical toggle buttons
+      const criticalToggles = document.querySelectorAll('.critical-toggle');
+      criticalToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+          const id = this.dataset.id;
+          const isCurrentlyActive = this.classList.contains('active');
+          const newCriticalState = !isCurrentlyActive;
+
+          // Toggle the visual state immediately for better UX
           this.classList.toggle('active');
+
+          // Update the icon fill
+          const starIcon = this.querySelector('svg');
           if (starIcon) {
-            starIcon.setAttribute('fill', !newCriticalState ? 'currentColor' : 'none');
+            starIcon.setAttribute('fill', newCriticalState ? 'currentColor' : 'none');
           }
-          if (!newCriticalState && !existingBadge) {
+
+          // Add or remove the critical badge
+          const projectItem = this.closest('.project-item');
+          const existingBadge = projectItem.querySelector('.critical-badge');
+
+          if (newCriticalState && !existingBadge) {
             const badge = document.createElement('span');
             badge.className = 'critical-badge';
             badge.textContent = 'Critical';
             projectItem.querySelector('.project-header').insertBefore(
-              badge, 
+              badge,
               projectItem.querySelector('.status-badge')
             );
-          } else if (newCriticalState && existingBadge) {
+          } else if (!newCriticalState && existingBadge) {
             existingBadge.remove();
           }
-          showNotification('Error updating project status', 'error');
+
+          // Send the update to the server
+          fetch('/api/project/toggle_critical', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({
+                sprintProjectId: id,
+                critical: newCriticalState
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showNotification(
+                  newCriticalState ? 'Project marked as critical' : 'Project unmarked as critical',
+                  'success'
+                );
+              } else {
+                // Revert the visual change if the server update failed
+                this.classList.toggle('active');
+                if (starIcon) {
+                  starIcon.setAttribute('fill', !newCriticalState ? 'currentColor' : 'none');
+                }
+                if (!newCriticalState && !existingBadge) {
+                  const badge = document.createElement('span');
+                  badge.className = 'critical-badge';
+                  badge.textContent = 'Critical';
+                  projectItem.querySelector('.project-header').insertBefore(
+                    badge,
+                    projectItem.querySelector('.status-badge')
+                  );
+                } else if (newCriticalState && existingBadge) {
+                  existingBadge.remove();
+                }
+                showNotification('Failed to update project status', 'error');
+              }
+            })
+            .catch(error => {
+              console.error('Error updating critical status:', error);
+              // Revert the visual change if there was an error
+              this.classList.toggle('active');
+              if (starIcon) {
+                starIcon.setAttribute('fill', !newCriticalState ? 'currentColor' : 'none');
+              }
+              if (!newCriticalState && !existingBadge) {
+                const badge = document.createElement('span');
+                badge.className = 'critical-badge';
+                badge.textContent = 'Critical';
+                projectItem.querySelector('.project-header').insertBefore(
+                  badge,
+                  projectItem.querySelector('.status-badge')
+                );
+              } else if (newCriticalState && existingBadge) {
+                existingBadge.remove();
+              }
+              showNotification('Error updating project status', 'error');
+            });
         });
       });
-    });
-  }
-});
+    }
+  });
 </script>
 
 
@@ -946,252 +964,394 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   // Add this script to the bottom of the page (before the closing body tag)
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Get elements
-  const createSprintBtn = document.getElementById('create-sprint-btn');
-  const createSprintForm = document.getElementById('create-sprint-form');
-  const cancelCreateBtn = document.getElementById('cancel-create');
-  const selectDropdownSprintBtn = document.getElementById('select-dropdown-sprint');
-  const sprintDropdown = document.getElementById('sprint-dropdown');
-  const currentSelection = document.getElementById('current-selection');
-  const selectedSprintTitle = document.getElementById('selected-sprint-title');
-  const selectedSprintDates = document.getElementById('selected-sprint-dates');
-  const changeSprintBtn = document.getElementById('change-sprint-btn');
-  const sprintSelectionOptions = document.querySelectorAll('.sprint-selection-option');
-  
-  // Check if there's already a selected sprint in session storage
-  const storedSprintId = sessionStorage.getItem('selectedSprintId');
-  const storedSprintTitle = sessionStorage.getItem('selectedSprintTitle');
-  const storedSprintDates = sessionStorage.getItem('selectedSprintDates');
-  
-  if (storedSprintId && storedSprintTitle) {
-    // Hide selection options and show current selection
-    sprintSelectionOptions.forEach(option => {
-      option.style.display = 'none';
-    });
-    selectedSprintTitle.textContent = storedSprintTitle;
-    selectedSprintDates.textContent = storedSprintDates;
-    currentSelection.style.display = 'block';
-    
-    // Update any relevant UI elements with the selected sprint
-    updateUIWithSelectedSprint(storedSprintId);
-  }
-  
-  // Show create sprint form
-  createSprintBtn.addEventListener('click', function() {
-    sprintSelectionOptions.forEach(option => {
-      option.style.display = 'none';
-    });
-    createSprintForm.style.display = 'block';
-    
-    // Set default dates
-    const today = new Date();
-    const twoWeeksLater = new Date(today);
-    twoWeeksLater.setDate(today.getDate() + 14);
-    
-    document.getElementById('date_start').valueAsDate = today;
-    document.getElementById('date_end').valueAsDate = twoWeeksLater;
-  });
-  
-  // Cancel create sprint
-  cancelCreateBtn.addEventListener('click', function() {
-    createSprintForm.style.display = 'none';
-    sprintSelectionOptions.forEach(option => {
-      option.style.display = 'block';
-    });
-  });
-  
-  // Handle form submission with AJAX
-  const sprintForm = document.getElementById('sprint-form');
-  sprintForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch(this.action, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Store the new sprint info in session storage
-        sessionStorage.setItem('selectedSprintId', data.sprint.id);
-        sessionStorage.setItem('selectedSprintTitle', data.sprint.title);
-        sessionStorage.setItem('selectedSprintDates', 
-          `${new Date(data.sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - 
-           ${new Date(data.sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`);
-        
-        // Update the UI
-        selectedSprintTitle.textContent = data.sprint.title;
-        selectedSprintDates.textContent = `${new Date(data.sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - 
-                                           ${new Date(data.sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`;
-        createSprintForm.style.display = 'none';
-        currentSelection.style.display = 'block';
-        
-        // Update relevant UI elements
-        updateUIWithSelectedSprint(data.sprint.id);
-        
-        // Show success message
-        showNotification('Sprint created and selected successfully!', 'success');
-      } else {
-        showNotification('Error creating sprint: ' + data.message, 'error');
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification('An error occurred. Please try again.', 'error');
-    });
-  });
-  
-  // Select sprint from dropdown
-  selectDropdownSprintBtn.addEventListener('click', function() {
-    const selectedSprintId = sprintDropdown.value;
-    if (!selectedSprintId) {
-      showNotification('Please select a sprint from the dropdown', 'error');
-      return;
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get elements
+    const createSprintBtn = document.getElementById('create-sprint-btn');
+    const createSprintForm = document.getElementById('create-sprint-form');
+    const cancelCreateBtn = document.getElementById('cancel-create');
+    const selectDropdownSprintBtn = document.getElementById('select-dropdown-sprint');
+    const sprintDropdown = document.getElementById('sprint-dropdown');
+    const currentSelection = document.getElementById('current-selection');
+    const selectedSprintTitle = document.getElementById('selected-sprint-title');
+    const selectedSprintDates = document.getElementById('selected-sprint-dates');
+    const changeSprintBtn = document.getElementById('change-sprint-btn');
+    const sprintSelectionOptions = document.querySelectorAll('.sprint-selection-option');
+
+    // Check if there's already a selected sprint in session storage
+    const storedSprintId = sessionStorage.getItem('selectedSprintId');
+    const storedSprintTitle = sessionStorage.getItem('selectedSprintTitle');
+    const storedSprintDates = sessionStorage.getItem('selectedSprintDates');
+
+    if (storedSprintId && storedSprintTitle) {
+      // Hide selection options and show current selection
+      sprintSelectionOptions.forEach(option => {
+        option.style.display = 'none';
+      });
+      selectedSprintTitle.textContent = storedSprintTitle;
+      selectedSprintDates.textContent = storedSprintDates;
+      currentSelection.style.display = 'block';
+
+      // Update any relevant UI elements with the selected sprint
+      updateUIWithSelectedSprint(storedSprintId);
     }
-    
-    const selectedOption = sprintDropdown.options[sprintDropdown.selectedIndex];
-    const sprintTitle = selectedOption.text;
-    
-    // Store selected sprint in session storage
-    sessionStorage.setItem('selectedSprintId', selectedSprintId);
-    sessionStorage.setItem('selectedSprintTitle', sprintTitle);
-    
-    // Update UI
-    selectedSprintTitle.textContent = sprintTitle;
-    sprintSelectionOptions.forEach(option => {
-      option.style.display = 'none';
+
+    // Show create sprint form
+    createSprintBtn.addEventListener('click', function() {
+      sprintSelectionOptions.forEach(option => {
+        option.style.display = 'none';
+      });
+      createSprintForm.style.display = 'block';
+
+      // Set default dates
+      const today = new Date();
+      const twoWeeksLater = new Date(today);
+      twoWeeksLater.setDate(today.getDate() + 14);
+
+      document.getElementById('date_start').valueAsDate = today;
+      document.getElementById('date_end').valueAsDate = twoWeeksLater;
     });
-    currentSelection.style.display = 'block';
-    
-    // Update relevant UI elements
-    updateUIWithSelectedSprint(selectedSprintId);
-    
-    showNotification('Sprint selected successfully!', 'success');
-  });
-  
-  // Select recommended sprint button handler
-  document.querySelectorAll('.select-sprint-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const sprintId = this.getAttribute('data-sprint-id');
-      const sprintCard = this.closest('.sprint-card');
-      const sprintTitle = sprintCard.querySelector('strong').textContent;
-      const sprintDates = sprintCard.querySelector('.sprint-dates').textContent;
-      
-      // Store in session storage
-      sessionStorage.setItem('selectedSprintId', sprintId);
+
+    // Cancel create sprint
+    cancelCreateBtn.addEventListener('click', function() {
+      createSprintForm.style.display = 'none';
+      sprintSelectionOptions.forEach(option => {
+        option.style.display = 'block';
+      });
+    });
+
+    // Handle form submission with AJAX
+    const sprintForm = document.getElementById('sprint-form');
+    sprintForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+
+      fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Store the new sprint info in session storage
+            sessionStorage.setItem('selectedSprintId', data.sprint.id);
+            sessionStorage.setItem('selectedSprintTitle', data.sprint.title);
+            sessionStorage.setItem('selectedSprintDates',
+              `${new Date(data.sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - 
+           ${new Date(data.sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`);
+
+            // Update the UI
+            selectedSprintTitle.textContent = data.sprint.title;
+            selectedSprintDates.textContent = `${new Date(data.sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - 
+                                           ${new Date(data.sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`;
+            createSprintForm.style.display = 'none';
+            currentSelection.style.display = 'block';
+
+            // Update relevant UI elements
+            updateUIWithSelectedSprint(data.sprint.id);
+
+            // Show success message
+            showNotification('Sprint created and selected successfully!', 'success');
+          } else {
+            showNotification('Error creating sprint: ' + data.message, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showNotification('An error occurred. Please try again.', 'error');
+        });
+    });
+
+    // Select sprint from dropdown
+    selectDropdownSprintBtn.addEventListener('click', function() {
+      const selectedSprintId = sprintDropdown.value;
+      if (!selectedSprintId) {
+        showNotification('Please select a sprint from the dropdown', 'error');
+        return;
+      }
+
+      const selectedOption = sprintDropdown.options[sprintDropdown.selectedIndex];
+      const sprintTitle = selectedOption.text;
+
+      // Store selected sprint in session storage
+      sessionStorage.setItem('selectedSprintId', selectedSprintId);
       sessionStorage.setItem('selectedSprintTitle', sprintTitle);
-      sessionStorage.setItem('selectedSprintDates', sprintDates);
-      
+
       // Update UI
       selectedSprintTitle.textContent = sprintTitle;
-      selectedSprintDates.textContent = sprintDates;
       sprintSelectionOptions.forEach(option => {
         option.style.display = 'none';
       });
       currentSelection.style.display = 'block';
-      
+
       // Update relevant UI elements
-      updateUIWithSelectedSprint(sprintId);
-      
-      showNotification('Recommended sprint selected!', 'success');
+      updateUIWithSelectedSprint(selectedSprintId);
+
+      showNotification('Sprint selected successfully!', 'success');
     });
-  });
-  
-  // Change sprint button handler
-  changeSprintBtn.addEventListener('click', function() {
-    currentSelection.style.display = 'none';
-    sprintSelectionOptions.forEach(option => {
-      option.style.display = 'block';
+
+    // Select recommended sprint button handler
+    document.querySelectorAll('.select-sprint-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const sprintId = this.getAttribute('data-sprint-id');
+        const sprintCard = this.closest('.sprint-card');
+        const sprintTitle = sprintCard.querySelector('strong').textContent;
+        const sprintDates = sprintCard.querySelector('.sprint-dates').textContent;
+
+        // Store in session storage
+        sessionStorage.setItem('selectedSprintId', sprintId);
+        sessionStorage.setItem('selectedSprintTitle', sprintTitle);
+        sessionStorage.setItem('selectedSprintDates', sprintDates);
+
+        // Update UI
+        selectedSprintTitle.textContent = sprintTitle;
+        selectedSprintDates.textContent = sprintDates;
+        sprintSelectionOptions.forEach(option => {
+          option.style.display = 'none';
+        });
+        currentSelection.style.display = 'block';
+
+        // Update relevant UI elements
+        updateUIWithSelectedSprint(sprintId);
+
+        showNotification('Recommended sprint selected!', 'success');
+      });
     });
-    
-    // Clear stored sprint
-    sessionStorage.removeItem('selectedSprintId');
-    sessionStorage.removeItem('selectedSprintTitle');
-    sessionStorage.removeItem('selectedSprintDates');
-  });
-  
-  // Function to update UI elements with selected sprint
-  function updateUIWithSelectedSprint(sprintId) {
-    // Update all "Add to Sprint" buttons to use the selected sprint ID
-    document.querySelectorAll('.btn-text').forEach(button => {
-      if (button.textContent === 'Commit to Sprint' || button.textContent === 'Move to Sprint') {
-        // Update the button's sprint-related attributes
-        button.setAttribute('data-sprint-id', sprintId);
+
+    // Change sprint button handler
+    changeSprintBtn.addEventListener('click', function() {
+      currentSelection.style.display = 'none';
+      sprintSelectionOptions.forEach(option => {
+        option.style.display = 'block';
+      });
+
+      // Clear stored sprint
+      sessionStorage.removeItem('selectedSprintId');
+      sessionStorage.removeItem('selectedSprintTitle');
+      sessionStorage.removeItem('selectedSprintDates');
+    });
+
+    // Function to update UI elements with selected sprint
+    function updateUIWithSelectedSprint(sprintId) {
+      // Update all "Add to Sprint" buttons to use the selected sprint ID
+      document.querySelectorAll('.btn-text').forEach(button => {
+        if (button.textContent === 'Commit to Sprint' || button.textContent === 'Move to Sprint') {
+          // Update the button's sprint-related attributes
+          button.setAttribute('data-sprint-id', sprintId);
+        }
+      });
+
+      // Update the sprint details section to show selected sprint's data
+      fetchSprintDetails(sprintId);
+    }
+
+    // Function to fetch sprint details and update the UI
+    function fetchSprintDetails(sprintId) {
+      fetch(`/api/sprint/${sprintId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update the sprint commitments section
+            updateSprintCommitments(data.sprint);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching sprint details:', error);
+        });
+    }
+
+    // Function to update the sprint commitments section
+    function updateSprintCommitments(sprint) {
+      const commitmentSection = document.querySelector('.sprint-projects');
+      // Update title and date range
+      const sectionHeader = document.querySelector('.section-header .status-badge');
+      if (sectionHeader) {
+        sectionHeader.textContent = `${new Date(sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})} → ${new Date(sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`;
       }
-    });
-    
-    // Update the sprint details section to show selected sprint's data
-    fetchSprintDetails(sprintId);
+
+      // If the sprint has projects, refresh the list
+      if (sprint.projects && sprint.projects.length > 0) {
+        // Update project counts and progress bars
+        updateProgressBars(sprint);
+      }
+    }
+
+    // Function to update progress bars in the commitments section
+    function updateProgressBars(sprint) {
+      if (!sprint.projects) return;
+
+      const doneCount = sprint.projects.filter(p => p.status === 'Done').length;
+      const totalCount = sprint.projects.length;
+      const percentageProjects = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
+
+      // Update project completion progress bar
+      const projectProgressBar = document.querySelector('.container-progress');
+      const projectProgressText = document.querySelector('.progress-text');
+
+      if (projectProgressBar) {
+        projectProgressBar.style.width = `${percentageProjects}%`;
+      }
+
+      if (projectProgressText) {
+        projectProgressText.textContent = `${doneCount} out of ${totalCount} Projects`;
+      }
+    }
+
+    // Helper function to show notifications
+    function showNotification(message, type) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+
+      // Add to document
+      document.body.appendChild(notification);
+
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 500);
+      }, 3000);
+    }
+  });
+
+  // When opening the modal, initialize with selected sprint
+  function openProjectModal(projectId) {
+    const modal = document.getElementById('projectModal');
+    modal.dataset.projectId = projectId;
+
+    // Show the modal
+    modal.style.display = 'block';
+
+    // Get selected sprint from session storage
+    const selectedSprintId = sessionStorage.getItem('selectedSprintId');
+    const selectedSprintTitle = sessionStorage.getItem('selectedSprintTitle');
+
+    // Store selected sprint ID in modal data attribute
+    if (selectedSprintId) {
+      modal.dataset.sprintId = selectedSprintId;
+
+      // Update the sprint title in the modal
+      const modalSprintTitle = document.getElementById('modal-sprint-title');
+      if (modalSprintTitle) {
+        modalSprintTitle.textContent = selectedSprintTitle;
+      }
+    } else {
+      // If no sprint is selected, disable the "Commit to Sprint" button
+      const moveToSprintBtn = document.getElementById('btn-move-sprint');
+      if (moveToSprintBtn) {
+        moveToSprintBtn.disabled = true;
+        moveToSprintBtn.title = "Please select a sprint first";
+      }
+    }
+
+    // Fetch project details via AJAX
+    fetchProjectDetails(projectId);
   }
-  
-  // Function to fetch sprint details and update the UI
-  function fetchSprintDetails(sprintId) {
-    fetch(`/api/sprint/${sprintId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Update the sprint commitments section
-          updateSprintCommitments(data.sprint);
+
+  // Update the moveToSprintBtn click handler
+  document.getElementById('btn-move-sprint').addEventListener('click', function() {
+    const modal = document.getElementById('projectModal');
+    const selectedSprintId = modal.dataset.sprintId;
+
+    if (!selectedSprintId) {
+      showNotification('Please select a sprint first before committing a project.', 'error');
+      return;
+    }
+
+    // Show sprint goal input and confirm/cancel buttons
+    document.getElementById('sprint-goal-container').style.display = 'block';
+    document.getElementById('btn-confirm-sprint').style.display = 'inline-block';
+    document.getElementById('btn-cancel').style.display = 'inline-block';
+
+    // Hide action buttons
+    this.style.display = 'none';
+    document.getElementById('btn-edit').style.display = 'none';
+    document.getElementById('btn-move-backlog').style.display = 'none';
+  });
+
+  // Update the confirmSprintBtn click handler
+  document.getElementById('btn-confirm-sprint').addEventListener('click', function() {
+    const modal = document.getElementById('projectModal');
+    const projectId = modal.dataset.projectId;
+    const sprintId = modal.dataset.sprintId;
+    const sprintGoal = document.getElementById('sprint-goal').value;
+
+    if (!sprintGoal.trim()) {
+      showNotification('Please enter a sprint goal before confirming.', 'error');
+      return;
+    }
+
+    // Submit the data to commit the project to the selected sprint
+    commitProjectToSprint(projectId, sprintId, sprintGoal);
+  });
+
+  // New function to commit a project to the selected sprint
+  function commitProjectToSprint(projectId, sprintId, goal) {
+    const data = {
+      projectId: projectId,
+      sprintId: sprintId,
+      goal: goal
+    };
+
+    fetch('/api/project/commit_to_sprint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.success) {
+          // Close the modal
+          closeModal();
+
+          // Show success message
+          showNotification('Project committed to sprint successfully!', 'success');
+
+          // Refresh the sprint commitments section
+          fetchSprintDetails(sprintId);
+
+          // Remove the project from the discussion list
+          const projectItem = document.querySelector(`.discussion-item[data-project-id="${projectId}"]`);
+          if (projectItem) {
+            projectItem.classList.add('fade-out');
+            setTimeout(() => {
+              projectItem.remove();
+            }, 500);
+          }
+        } else {
+          showNotification(result.message || 'Failed to commit project to sprint.', 'error');
         }
       })
       .catch(error => {
-        console.error('Error fetching sprint details:', error);
+        console.error('Error:', error);
+        showNotification('An error occurred while processing your request.', 'error');
       });
   }
-  
-  // Function to update the sprint commitments section
-  function updateSprintCommitments(sprint) {
-    const commitmentSection = document.querySelector('.sprint-projects');
-    // Update title and date range
-    const sectionHeader = document.querySelector('.section-header .status-badge');
-    if (sectionHeader) {
-      sectionHeader.textContent = `${new Date(sprint.date_start).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})} → ${new Date(sprint.date_end).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`;
-    }
-    
-    // If the sprint has projects, refresh the list
-    if (sprint.projects && sprint.projects.length > 0) {
-      // Update project counts and progress bars
-      updateProgressBars(sprint);
-    }
-  }
-  
-  // Function to update progress bars in the commitments section
-  function updateProgressBars(sprint) {
-    if (!sprint.projects) return;
-    
-    const doneCount = sprint.projects.filter(p => p.status === 'Done').length;
-    const totalCount = sprint.projects.length;
-    const percentageProjects = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
-    
-    // Update project completion progress bar
-    const projectProgressBar = document.querySelector('.container-progress');
-    const projectProgressText = document.querySelector('.progress-text');
-    
-    if (projectProgressBar) {
-      projectProgressBar.style.width = `${percentageProjects}%`;
-    }
-    
-    if (projectProgressText) {
-      projectProgressText.textContent = `${doneCount} out of ${totalCount} Projects`;
-    }
-  }
-  
+
   // Helper function to show notifications
   function showNotification(message, type) {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
-    
+
     // Add to document
     document.body.appendChild(notification);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
       notification.classList.add('fade-out');
@@ -1200,148 +1360,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 500);
     }, 3000);
   }
-});
-
-// When opening the modal, initialize with selected sprint
-function openProjectModal(projectId) {
-  const modal = document.getElementById('projectModal');
-  modal.dataset.projectId = projectId;
-
-  // Show the modal
-  modal.style.display = 'block';
-
-  // Get selected sprint from session storage
-  const selectedSprintId = sessionStorage.getItem('selectedSprintId');
-  const selectedSprintTitle = sessionStorage.getItem('selectedSprintTitle');
-  
-  // Store selected sprint ID in modal data attribute
-  if (selectedSprintId) {
-    modal.dataset.sprintId = selectedSprintId;
-    
-    // Update the sprint title in the modal
-    const modalSprintTitle = document.getElementById('modal-sprint-title');
-    if (modalSprintTitle) {
-      modalSprintTitle.textContent = selectedSprintTitle;
-    }
-  } else {
-    // If no sprint is selected, disable the "Commit to Sprint" button
-    const moveToSprintBtn = document.getElementById('btn-move-sprint');
-    if (moveToSprintBtn) {
-      moveToSprintBtn.disabled = true;
-      moveToSprintBtn.title = "Please select a sprint first";
-    }
-  }
-
-  // Fetch project details via AJAX
-  fetchProjectDetails(projectId);
-}
-
-// Update the moveToSprintBtn click handler
-document.getElementById('btn-move-sprint').addEventListener('click', function() {
-  const modal = document.getElementById('projectModal');
-  const selectedSprintId = modal.dataset.sprintId;
-  
-  if (!selectedSprintId) {
-    showNotification('Please select a sprint first before committing a project.', 'error');
-    return;
-  }
-  
-  // Show sprint goal input and confirm/cancel buttons
-  document.getElementById('sprint-goal-container').style.display = 'block';
-  document.getElementById('btn-confirm-sprint').style.display = 'inline-block';
-  document.getElementById('btn-cancel').style.display = 'inline-block';
-  
-  // Hide action buttons
-  this.style.display = 'none';
-  document.getElementById('btn-edit').style.display = 'none';
-  document.getElementById('btn-move-backlog').style.display = 'none';
-});
-
-// Update the confirmSprintBtn click handler
-document.getElementById('btn-confirm-sprint').addEventListener('click', function() {
-  const modal = document.getElementById('projectModal');
-  const projectId = modal.dataset.projectId;
-  const sprintId = modal.dataset.sprintId;
-  const sprintGoal = document.getElementById('sprint-goal').value;
-
-  if (!sprintGoal.trim()) {
-    showNotification('Please enter a sprint goal before confirming.', 'error');
-    return;
-  }
-
-  // Submit the data to commit the project to the selected sprint
-  commitProjectToSprint(projectId, sprintId, sprintGoal);
-});
-
-// New function to commit a project to the selected sprint
-function commitProjectToSprint(projectId, sprintId, goal) {
-  const data = {
-    projectId: projectId,
-    sprintId: sprintId,
-    goal: goal
-  };
-
-  fetch('/api/project/commit_to_sprint', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(result => {
-    if (result.success) {
-      // Close the modal
-      closeModal();
-      
-      // Show success message
-      showNotification('Project committed to sprint successfully!', 'success');
-      
-      // Refresh the sprint commitments section
-      fetchSprintDetails(sprintId);
-      
-      // Remove the project from the discussion list
-      const projectItem = document.querySelector(`.discussion-item[data-project-id="${projectId}"]`);
-      if (projectItem) {
-        projectItem.classList.add('fade-out');
-        setTimeout(() => {
-          projectItem.remove();
-        }, 500);
-      }
-    } else {
-      showNotification(result.message || 'Failed to commit project to sprint.', 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('An error occurred while processing your request.', 'error');
-  });
-}
-
-// Helper function to show notifications
-function showNotification(message, type) {
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.textContent = message;
-  
-  // Add to document
-  document.body.appendChild(notification);
-  
-  // Remove after 3 seconds
-  setTimeout(() => {
-    notification.classList.add('fade-out');
-    setTimeout(() => {
-      document.body.removeChild(notification);
-    }, 500);
-  }, 3000);
-}
 </script>
 
 <!-- Project Details Modal -->

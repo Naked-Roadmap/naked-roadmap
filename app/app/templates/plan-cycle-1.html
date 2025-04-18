@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block title %}{{ config.company_name }} Roadmap - Dashboard{% endblock %}
+
+{% block content %}
+<div class="welcome-banner">
+  <h2>Kick off a Cycle</h2>
+  <p>This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
+</div>
+
+<!-- ---------------------------------- -->
+<!-- Select a Cycle -->
+<!-- ---------------------------------- -->
+
+<section class="section cycle-section">
+  <div class="section-header collapsible-header" onclick="toggleCycleSection()">
+    <h3>Select Sprint</h3>
+    <div class="header-actions">
+      <span class="collapse-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </span>
+    </div>
+  </div>
+
+  <div class="sprint-selection-option">
+  <h4>SELECT SPRINT</h4>
+  <form id="select-sprint-form">
+    <select id="sprint-dropdown" name="sprint_id" class="form-control" style="height:100%;">
+      {% for sprint in sprints %}
+      <option value="{{ sprint.id }}">{{ sprint.title }} ({{ sprint.date_start.strftime('%b %d') }} - {{ sprint.date_end.strftime('%b %d, %Y') }})</option>
+      {% endfor %}
+      <option value="new">-- Create a New Sprint --</option>
+    </select>
+    <button type="submit" id="select-dropdown-sprint" class="btn-secondary">Select</button>
+  </form>
+</div>
+
+<!-- Sprint creation form (hidden by default) -->
+<div id="create-sprint-form" class="sprint-creation-form" style="display: none;">
+  <form id="sprint-form" method="POST" action="{{ url_for('planningStep2CycleCreation') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="form-group">
+      <label for="title">Sprint Title</label>
+      <input type="text" id="title" name="title" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="date_start">Start Date</label>
+      <input type="date" id="date_start" name="date_start" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="date_end">End Date</label>
+      <input type="date" id="date_end" name="date_end" class="form-control" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Create & Select</button>
+      <button type="button" id="cancel-create" class="btn-text">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle the dropdown selection and form submission
+  const selectSprintForm = document.getElementById('select-sprint-form');
+  const sprintDropdown = document.getElementById('sprint-dropdown');
+  const createSprintForm = document.getElementById('create-sprint-form');
+  const createSprintBtn = document.getElementById('create-sprint-btn');
+  const cancelCreateBtn = document.getElementById('cancel-create');
+
+  // Handle the select sprint form submission
+  selectSprintForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const selectedValue = sprintDropdown.value;
+    
+    if (selectedValue === 'new') {
+      // Show the create sprint form if "Create a New Sprint" is selected
+      createSprintForm.style.display = 'block';
+    } else {
+      // Build the URL dynamically based on the selected sprint ID
+      const baseUrl = window.location.pathname.split('/').slice(0, -1).join('/');
+      window.location.href = baseUrl + '/cycle/' + selectedValue;
+    }
+  });
+
+  // Handle the "Create New Sprint" button click
+  createSprintBtn.addEventListener('click', function() {
+    createSprintForm.style.display = 'block';
+  });
+
+  // Handle the cancel button click
+  cancelCreateBtn.addEventListener('click', function() {
+    createSprintForm.style.display = 'none';
+  });
+});
+</script>
+
+
+
+
+{% endblock %}

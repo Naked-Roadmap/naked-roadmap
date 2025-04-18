@@ -1,5 +1,15 @@
 ## Requirements
+Projects Pages
+TODO: On Dashboard, show recent comments as well
+TODO: Fix the star/critical functionality on planning page
+TODO: Fix links on the planning page discussion section
+TODO: Fix links on the planning page commitments section
+TODO: Send email when planning is complete
+TODO: Sent sprint as active when complete
+TODO: If no active cycle, then use last completed on dashboard
 TODO: Make sure objectives on the planning page show the number of projects supporting them.
+TODO: Fix styles for create page. 
+TODO: Projects as tasks vs. projects
 TODO: On the project page, ability to attach a project to a goal.
 TODO: Only one sprint active. The rest as upcoming or completed.
 TODO: Sort sprint projects
@@ -7,9 +17,9 @@ TODO: Add cycle commitment outcomes per project alongside goals.
 TODO: Send "Planned cycle email"
 TODO: Send "Retro'd cycle email"
 TODO: Add in "critical" toggle for sprint projects, and reason for critical
-TODO: Projects as tasks vs. projects
 TODO: Collected & prioritized single stack roadmap section
 TODO: Associate projects to goals.
+Goals Page:
 TODO: Goals order
 TODO: Edit or delete comment on project only if you're the owner of the comment.
 TODO: Add in an org configuration page outside of the app config.
@@ -21,7 +31,7 @@ TODO: Different types of users:
 TODO: Public vs. Private (anyone can see vs. need to be logged in to see)
 
 ## Marketing
-TODO: Create community disqus as part of implementation of marketing site to allow modding, feature requests, support, etc. 
+TODO: Create community discourse as part of implementation of marketing site to allow modding, feature requests, support, etc.  https://github.com/discourse/discourse
 
 ## DONE
 -- DONE: Create "Planning Page" (if no active sprint, run a planning session)

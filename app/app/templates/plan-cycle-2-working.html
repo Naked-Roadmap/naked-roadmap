@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block title %}{{ config.company_name }} Roadmap - Dashboard{% endblock %}
+
+{% block content %}
+<div class="welcome-banner">
+  <h2><img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;">Kick off a Cycle</h2>
+  <p>This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
+</div>
+
+<!-- ---------------------------------- -->
+<!-- Select a Cycle -->
+<!-- ---------------------------------- -->
+
+<section class="section cycle-section">
+  <div class="section-header collapsible-header" onclick="toggleCycleSection()">
+    <h3>Select Sprint</h3>
+  </div>
+
+  <div>
+    <h4>CURRENTLY PLANNING FOR:</h4>
+    <p>{{ selectedsprint.title }} ( {{selectedsprint.date_start.strftime('%b %d, %Y')}} - {{selectedsprint.date_end.strftime('%b %d, %Y')}})</p>
+    <p><button id="toggleSelectSprint">Change</button>
+    </p>
+  </div>
+
+  <div class="sprint-selection-option" style="display:none;">
+    <h4>SELECT SPRINT</h4>
+    <form id="select-sprint-form">
+      <select id="sprint-dropdown" name="sprint_id" class="form-control" style="height:100%;">
+        {% for sprint in sprints %}
+        <option value="{{ sprint.id }}">{{ sprint.title }} ({{ sprint.date_start.strftime('%b %d') }} - {{ sprint.date_end.strftime('%b %d, %Y') }})</option>
+        {% endfor %}
+        <option value="new">-- Create a New Sprint --</option>
+      </select>
+      <button type="submit" id="select-dropdown-sprint" class="btn-secondary">Select</button>
+    </form>
+  </div>
+
+  <!-- Sprint creation form (hidden by default) -->
+  <div id="create-sprint-form" class="sprint-creation-form" style="display: none;">
+    <form id="sprint-form" method="POST" action="{{ url_for('planningStep2CycleCreation') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group">
+        <label for="title">Sprint Title</label>
+        <input type="text" id="title" name="title" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="date_start">Start Date</label>
+        <input type="date" id="date_start" name="date_start" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="date_end">End Date</label>
+        <input type="date" id="date_end" name="date_end" class="form-control" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Create & Select</button>
+        <button type="button" id="cancel-create" class="btn-text">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+</section>
+
+<!-- ---------------------------------- -->
+<!-- Discussion List -->
+<!-- ---------------------------------- -->
+
+<section class="two-column-section">
+
+  <!-- Wide Column -->
+  <section class="section discussion-section column-wide section">
+    <div class="section-header collapsible-header" onclick="toggleDiscussionSection()">
+      <h3>Projects Under Discussion <span style="color:gray; font-weight:200;">({{ projects|count }})</span></h3>
+      <div class="header-actions">
+        <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add new Goal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </a>
+        <span class="collapse-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="discussion-list" id="discussion-list">
+      {% for project in projects|selectattr('location', '==', "discussion") %}
+      <div class="discussion-item" data-project-id="{{ project.id }}">
+        <p><strong>{{ project.name }}</strong><br>
+          <span class="discussion-details">{{ project.context }}</span>
+        </p>
+        <div class="discussion-actions">
+          <span class="requester date-badge">{{ project.dri }}</span> <span class="date-badge">{{ project.created.strftime('%b %d, %Y') }}</span>
+          <button class="btn-text">Discuss</button>
+          <a href="{{ url_for('edit', project_id=project.id) }}" class="btn-icon" title="Edit project"><button class="btn-text">Edit</button></a>
+          <button class="btn-text">Commit to Sprint</button>
+          <button class="btn-text">Move to Backlog</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Narrow Column -->
+  <section class="section discussion-section column-narrow section">
+    <div class="section-header">
+      <h3>Active Objectives</h3>
+      <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </a>
+    </div>
+    <div class="goals-list">
+      {% for goal in goals %}
+      <div class="goal-item">
+        <h4>{{ goal.title }}</h4>
+        <p>{{ goal.details }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</section>
+
+
+<!-- ------------------------------ -->
+<!-- Cycle Commitments -->
+<!-- ------------------------------ -->
+
+<section>
+  <div class="section">
+    <div class="section-header">
+      <h3>Cycle Commitments</h3>
+      <span class="status-badge status-planned">
+        {% if sprints|length > 0 %}
+        {{ sprints[0].date_start.strftime('%b %d, %Y') }} &rarr; {{ sprints[0].date_end.strftime('%b %d, %Y') }}
+        {% endif %}
+      </span>
+    </div>
+    <div class="timeline-title">
+      👨‍💻 Projects
+    </div>
+    <div class="sprint-projects sortable-projects" id="sortable-projects">
+      {% for entry in sprintlog %}
+      {% set project = entry.project %}
+      <div class="project-item" data-id="{{ entry.id }}" data-project-id="{{ project.id }}" data-order="{{ entry.order }}">
+        <div class="project-header">
+          <span class="drag-handle">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="5" r="1"></circle>
+              <circle cx="9" cy="12" r="1"></circle>
+              <circle cx="9" cy="19" r="1"></circle>
+              <circle cx="16" cy="5" r="1"></circle>
+              <circle cx="16" cy="12" r="1"></circle>
+              <circle cx="16" cy="19" r="1"></circle>
+            </svg>
+          </span>
+          <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
+          {% if entry.critical %}
+          <span class="critical-badge">Critical</span>
+          {% endif %}
+          <span class="critical-toggle {% if entry.critical %}active{% endif %}" data-id="{{ entry.id }}" title="Mark as critical">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if entry.critical %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </span>
+          <span class="status-badge 
+            {% if entry.status == 'In Progress' %}status-in-progress
+            {% elif entry.status == 'Done' %}status-complete
+            {% elif entry.status == 'Blocked' %}status-blocked
+            {% else %}status-planned{% endif %}">
+            {{ entry.status|default('Planned') }}
+          </span>
+        </div>
+      </div>
+      <div class="project-meta">
+        <p><strong>Priority:</strong> {{ entry.order }}<br>
+          <strong>Goal:</strong> {{ entry.goal }}
+          <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
+        </p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle the dropdown selection and form submission
+    const selectSprintForm = document.getElementById('select-sprint-form');
+    const sprintDropdown = document.getElementById('sprint-dropdown');
+    const createSprintForm = document.getElementById('create-sprint-form');
+    const createSprintBtn = document.getElementById('create-sprint-btn');
+    const cancelCreateBtn = document.getElementById('cancel-create');
+
+    // Handle the select sprint form submission
+    selectSprintForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const selectedValue = sprintDropdown.value;
+
+      if (selectedValue === 'new') {
+        // Show the create sprint form if "Create a New Sprint" is selected
+        createSprintForm.style.display = 'block';
+      } else {
+        // Build the URL dynamically based on the selected sprint ID
+        const baseUrl = window.location.pathname.split('/').slice(0, -1).join('/');
+        window.location.href = baseUrl + '/' + selectedValue;
+      }
+    });
+
+    // Handle the "Create New Sprint" button click
+    createSprintBtn.addEventListener('click', function() {
+      createSprintForm.style.display = 'block';
+    });
+
+    // Handle the cancel button click
+    cancelCreateBtn.addEventListener('click', function() {
+      createSprintForm.style.display = 'none';
+    });
+  });
+</script>
+<script>
+  // Get references to the button and div elements
+  const toggleButton = document.getElementById('toggleSelectSprint');
+  const sprintSelectionDiv = document.querySelector('.sprint-selection-option');
+
+  // Add click event listener to the button
+  toggleButton.addEventListener('click', function() {
+    // Toggle the display property of the div
+    if (sprintSelectionDiv.style.display === 'none') {
+      sprintSelectionDiv.style.display = 'block';
+    } else {
+      sprintSelectionDiv.style.display = 'none';
+    }
+  });
+</script>
+
+{% include './js/sortable.html' %}
+
+
+{% endblock %}

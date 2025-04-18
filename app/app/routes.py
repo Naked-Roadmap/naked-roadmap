@@ -579,7 +579,7 @@ def delete_comment(comment_id):
 ### Manage Cycles
 ########################################################
 
-@app.route('/sprints/', methods=['GET', 'POST'])
+@app.route('/cycles/', methods=['GET', 'POST'])
 def show_cycles():
     cycles = (
         Sprint.query
@@ -604,6 +604,39 @@ def show_cycles():
         print(f"Error: {e}")
     return render_template('cycles.html', title='Naked Roadmap - View All Cycles', cycles=cycles, form=form)
     
+    
+@app.route('/cycles/details/<int:cycle_id>', methods=['GET', 'POST'])
+def show_cycle_details():
+    cycles = (
+        Sprint.query
+        .all()
+    )
+    selected_cycle = next((s for s in cycles if s.id == cycle_id), None)
+    
+    form = CreateSprint()
+    
+    try:
+        if request.method == 'POST':
+            sprintDetails = Sprint(
+                title=form.title.data,
+                date_start=form.date_start.data,
+                date_end=form.date_end.data
+            )
+    
+            db.session.add(sprintDetails)
+            db.session.commit()
+            
+            flash('Congratulations, sprint created!')
+            return redirect(url_for('index'))
+    except TypeError as e:
+        print(f"Error: {e}")
+    return render_template('cycles.html', title='Naked Roadmap - View All Cycles', cycles=cycles, form=form, selected_cycle=selected_cycle)
+    
+    
+########################################################
+### Cycle Planning Process
+########################################################
+    
 @app.route('/planning/')
 @login_required
 def plan_sprint():
@@ -618,9 +651,9 @@ def plan_sprint():
         .all()
     )
     
-    # Get all sprints ordered by start date
     sprints = (
         Sprint.query
+        .filter(Sprint.status != "Completed")
         .order_by(Sprint.date_start.asc())
         .all()
     )
@@ -642,7 +675,7 @@ def plan_sprint():
     )
     
     return render_template(
-        'plan-cycle.html', 
+        'plan-cycle-1.html', 
         title='Plan a Cycle', 
         projects=projects, 
         goals=goals, 
@@ -653,6 +686,72 @@ def plan_sprint():
         datetime=datetime, 
         today=today
     )
+
+@app.route('/planning/cycle/<int:sprint_id>', methods=['GET'])
+def planningStep2CycleSelected(sprint_id):
+    projects = (
+        Project.query
+        .order_by(Project.created.desc())
+        .filter(Project.status != "Completed")
+        .all()
+    )
+    goals = (
+        Goal.query
+        .order_by(Goal.created.desc())
+        .all()
+    )
+    selectedsprint = (
+        Sprint.query
+        .filter(Sprint.id == sprint_id)
+        .first()
+    )
+    # Get all sprints ordered by start date
+    sprints = (
+        Sprint.query
+        .filter(Sprint.status != "Completed")
+        .order_by(Sprint.date_start.asc())
+        .all()
+    )
+    sprintlog = (
+        SprintProjectMap.query
+        .filter(SprintProjectMap.sprint_id == sprint_id)
+        .order_by(SprintProjectMap.order.asc())
+        .all()
+    )
+    today = datetime.now()
+    
+    return render_template(
+        'plan-cycle-2.html', 
+        title='Plan a Cycle', 
+        projects=projects, 
+        goals=goals, 
+        config=Config, 
+        sprints=sprints, 
+        sprintlog=sprintlog, 
+        datetime=datetime, 
+        today=today,
+        selectedsprint=selectedsprint
+    )
+    
+@app.route('/planning/cycle/create', methods=['GET', 'POST'])
+def planningStep2CycleCreation():
+    form = CreateSprint()
+    
+    try:
+        if request.method == 'POST':
+            new_cycle = Sprint(
+                title=form.title.data,
+                date_start=form.date_start.data,
+                date_end=form.date_end.data
+            )
+    
+            db.session.add(new_cycle)
+            db.session.commit()
+
+            flash('Congratulations, sprint created!')
+            return redirect(url_for(planningStep2CycleSelected), sprint_id=new_cycle.id)
+    except TypeError as e:
+        print(f"Error: {e}")
     
     
 ########################################################

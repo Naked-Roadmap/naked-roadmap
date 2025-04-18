@@ -1,0 +1,128 @@
+<!-- Add Sortable.js library from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<!-- Add our custom script for sortable functionality and critical toggle -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Sortable for project reordering
+  const projectsList = document.getElementById('sortable-projects');
+
+  if (projectsList && projectsList.children.length > 0) {
+    const sortable = new Sortable(projectsList, {
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: function(evt) {
+        updateProjectOrder();
+      }
+    });
+
+    // Function to get all projects and their new order
+    function updateProjectOrder() {
+      const projects = document.querySelectorAll('#sortable-projects .project-item');
+      const orderData = [];
+
+      projects.forEach((project, index) => {
+        orderData.push({
+          id: project.dataset.id,
+          order: index + 1
+        });
+      });
+
+      // Send the new order to the server
+      fetch('/api/projects/reorder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            projects: orderData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification('Project order updated successfully', 'success');
+          } else {
+            showNotification('Failed to update project order', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error updating project order:', error);
+          showNotification('Error updating project order', 'error');
+        });
+    }
+
+    // Add event listeners for critical status badges
+    const criticalBadges = document.querySelectorAll('.status-badge.critical, .status-badge.not-critical');
+    criticalBadges.forEach(badge => {
+      badge.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const isCritical = this.classList.contains('critical') && !this.classList.contains('not-critical');
+        const newCriticalState = !isCritical;
+
+        // Update the badge text and classes immediately for better UX
+        if (newCriticalState) {
+          this.textContent = 'Critical';
+          this.classList.remove('not-critical');
+          this.classList.add('critical');
+        } else {
+          this.textContent = 'Not Critical';
+          this.classList.remove('critical');
+          this.classList.add('not-critical');
+        }
+
+        // Send the update to the server
+        fetch('/api/project/toggle_critical', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+              sprintProjectId: id,
+              critical: newCriticalState
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification(
+                newCriticalState ? 'Project marked as critical' : 'Project unmarked as critical',
+                'success'
+              );
+            } else {
+              // Revert the visual change if the server update failed
+              if (!newCriticalState) {
+                this.textContent = 'Critical';
+                this.classList.remove('not-critical');
+                this.classList.add('critical');
+              } else {
+                this.textContent = 'Not Critical';
+                this.classList.remove('critical');
+                this.classList.add('not-critical');
+              }
+              showNotification('Failed to update project status', 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error updating critical status:', error);
+            // Revert the visual change if there was an error
+            if (!newCriticalState) {
+              this.textContent = 'Critical';
+              this.classList.remove('not-critical');
+              this.classList.add('critical');
+            } else {
+              this.textContent = 'Not Critical';
+              this.classList.remove('critical');
+              this.classList.add('not-critical');
+            }
+            showNotification('Error updating project status', 'error');
+          });
+      });
+    });
+  }
+});
+</script>
