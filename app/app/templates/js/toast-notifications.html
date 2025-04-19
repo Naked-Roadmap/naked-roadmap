@@ -1,0 +1,82 @@
+<script>
+// Create a notification function to display toast messages
+function showNotification(message, type) {
+  // Create notification element if it doesn't exist
+  let notification = document.getElementById('toast-notification');
+  if (!notification) {
+    notification = document.createElement('div');
+    notification.id = 'toast-notification';
+    notification.className = 'notification';
+    document.body.appendChild(notification);
+  }
+  
+  // Set notification content and style
+  notification.textContent = message;
+  notification.className = 'notification ' + type;
+  
+  // Add a little CSS if needed
+  if (!document.getElementById('notification-style')) {
+    const style = document.createElement('style');
+    style.id = 'notification-style';
+    style.textContent = `
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+        animation: slideIn 0.3s ease-out forwards;
+        opacity: 0;
+      }
+      .notification.success {
+        background-color: var(--color-success, #10b981);
+      }
+      .notification.error {
+        background-color: var(--color-danger, #ef4444);
+      }
+      .notification.info {
+        background-color: var(--color-info, #60a5fa);
+      }
+      @keyframes slideIn {
+        0% {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Show notification
+  notification.style.display = 'block';
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    notification.classList.add('fade-out');
+    notification.style.animation = 'fadeOut 0.5s ease-in forwards';
+    
+    // Remove after fade out
+    setTimeout(() => {
+      notification.style.display = 'none';
+      notification.classList.remove('fade-out');
+    }, 500);
+  }, 3000);
+}
+
+</script>

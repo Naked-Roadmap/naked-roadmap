@@ -1,0 +1,169 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+  // Add showNotification function at the beginning
+  function showNotification(message, type) {
+    // Create notification element if it doesn't exist
+    let notification = document.getElementById('toast-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'toast-notification';
+      notification.className = 'notification';
+      document.body.appendChild(notification);
+    }
+    
+    // Set notification content and style
+    notification.textContent = message;
+    notification.className = 'notification ' + type;
+    
+    // Add a little CSS if needed
+    if (!document.getElementById('notification-style')) {
+      const style = document.createElement('style');
+      style.id = 'notification-style';
+      style.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 12px 20px;
+          border-radius: 4px;
+          color: white;
+          font-weight: bold;
+          z-index: 1000;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+          animation: slideIn 0.3s ease-out forwards;
+        }
+        .notification.success {
+          background-color: var(--color-success, #10b981);
+        }
+        .notification.error {
+          background-color: var(--color-danger, #ef4444);
+        }
+        .notification.info {
+          background-color: var(--color-info, #60a5fa);
+        }
+        @keyframes slideIn {
+          0% {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeOut {
+          0% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Show notification
+    notification.style.display = 'block';
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      notification.classList.add('fade-out');
+      notification.style.animation = 'fadeOut 0.5s ease-in forwards';
+      
+      // Remove after fade out
+      setTimeout(() => {
+        notification.style.display = 'none';
+        notification.classList.remove('fade-out');
+      }, 500);
+    }, 3000);
+  }
+  
+  // Function to update the critical badge UI
+  function updateCriticalUI(badge, isCritical) {
+    if (isCritical) {
+      badge.textContent = 'Critical';
+      badge.className = 'status-badge critical';
+    } else {
+      badge.textContent = 'Not Critical';
+      badge.className = 'status-badge not-critical';
+    }
+  }
+  
+  // Find all critical badges and add click event listeners
+  const criticalBadges = document.querySelectorAll('.status-badge.critical, .status-badge.not-critical');
+  
+  criticalBadges.forEach(badge => {
+    // Make badges look clickable
+    badge.style.cursor = 'pointer';
+    
+    // Add hover effect
+    badge.addEventListener('mouseover', function() {
+      this.style.opacity = '0.8';
+    });
+    
+    badge.addEventListener('mouseout', function() {
+      this.style.opacity = '1';
+    });
+    
+    // Add click handler
+    badge.addEventListener('click', function() {
+      const id = this.getAttribute('data-id');
+      if (!id) {
+        console.error('Critical badge missing data-id attribute');
+        return;
+      }
+      
+      // Determine current state (is it critical or not)
+      const isCritical = this.classList.contains('critical') && !this.classList.contains('not-critical');
+      const newCriticalState = !isCritical;
+      
+      // Immediately update UI for responsive feel
+      updateCriticalUI(this, newCriticalState);
+      
+      // Send API request to update the database
+      fetch('/api/project/toggle_critical', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        },
+        body: JSON.stringify({
+          sprintProjectId: id,
+          critical: newCriticalState
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          // Show success notification
+          showNotification(
+            newCriticalState ? 'Project marked as critical' : 'Project unmarked as critical',
+            'success'
+          );
+          
+          // No need to update the UI here since we already did it
+        } else {
+          // Revert the UI if there was an error on the server
+          updateCriticalUI(this, isCritical); // back to original state
+          showNotification('Failed to update critical status: ' + (data.message || 'Unknown error'), 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error updating critical status:', error);
+        // Revert the UI
+        updateCriticalUI(this, isCritical); // back to original state
+        showNotification('Error updating critical status', 'error');
+      });
+    });
+  });
+  
+  // Log to confirm the script ran
+  console.log('Critical badges initialized:', criticalBadges.length);
+});
+</script>

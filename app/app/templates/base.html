@@ -36,7 +36,7 @@
           </li>
           <li>
             <a href="{{ url_for('projectspage') }}">
-              <img src="{{ url_for('static', filename='./icons/roadmap.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/flag.svg')}}" style="max-height:20px; margin-right:10px;">
               Roadmap
             </a>
           </li>
@@ -58,7 +58,7 @@
             </a>
           </li>
           <li>
-            <a href="#">
+            <a href="{{ url_for('analytics') }}">
               <img src="{{ url_for('static', filename='./icons/analytics.svg')}}" style="max-height:20px; margin-right:10px;">
               Analytics
             </a>
@@ -71,12 +71,12 @@
         <ul>
           <li>
             <a href="{{url_for('plan_sprint') }}">
-              <img src="{{ url_for('static', filename='./icons/cycle-2.svg')}}" style="max-height:20px; margin-right:10px;"> Plan a Cycle
+              <img src="{{ url_for('static', filename='./icons/circle-dotted.svg')}}" style="max-height:20px; margin-right:10px;"> Plan a Cycle
             </a>
           </li>
           <li>
             <a href="#">
-              Close a Cycle
+              <img src="{{ url_for('static', filename='./icons/circle.svg')}}" style="max-height:20px; margin-right:10px;"> Close a Cycle
             </a>
           </li>
         </ul>
@@ -84,12 +84,12 @@
         <ul>
           <li>
             <a href="{{url_for('plan_sprint') }}">
-              <img src="{{ url_for('static', filename='./icons/cycle-2.svg')}}" style="max-height:20px; margin-right:10px;"> Teams
+              <img src="{{ url_for('static', filename='./icons/teams.svg')}}" style="max-height:20px; margin-right:10px;">  Teams
             </a>
           </li>
           <li>
-            <a href="#">
-              Settings
+            <a href="{{ url_for('settings') }}">
+            <img src="{{ url_for('static', filename='./icons/settings.svg')}}" style="max-height:20px; margin-right:10px;">  Settings
             </a>
           </li>
         </ul>

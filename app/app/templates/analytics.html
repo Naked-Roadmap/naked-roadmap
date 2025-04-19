@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ config.company_name }} - Analytics & Insights{% endblock %}
+
+{% block content %}
+<div class="welcome-banner">
+  <h2>Analytics & Insights</h2>
+  <p>Track team performance, project completion, and resource allocation metrics to optimize planning and improve team efficiency.</p>
+</div>
+
+<!-- Top KPI cards -->
+<section class="kpi-cards">
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <h3>{{ completed_projects }}</h3>
+      <p>Projects Completed</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <h3>{{ commitment_completion|round(1) }}%</h3>
+      <p>Commitment Completion</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <h3>{{ goals_achieved }}</h3>
+      <p>Goals Achieved</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <h3>{{ avg_sprint_duration|round|int }} days</h3>
+      <p>Avg Cycle Duration</p>
+    </div>
+  </div>
+</section>
+
+<!-- Executive Insights -->
+<section class="section">
+  <div class="section-header">
+    <h3>Executive Insights</h3>
+  </div>
+  <div class="executive-insights">
+    <div class="insight-card">
+      <h4>Team Efficiency</h4>
+      <div class="insight-metric">{{ (completed_commitments / total_commitments * 100)|round|int if total_commitments > 0 else 0 }}%</div>
+      <p>Team commitment completion rate indicates {{ 'strong' if commitment_completion >= 80 else 'moderate' if commitment_completion >= 50 else 'weak' }} planning efficiency</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Team Balance</h4>
+      <div class="insight-metric">{{ team_balance|round(1) }}</div>
+      <p>Standard deviation of workload distribution across teams (lower is better balanced)</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Goal Alignment</h4>
+      <div class="insight-metric">{{ (goals_achieved / total_goals * 100)|round|int if total_goals > 0 else 0 }}%</div>
+      <p>Objective completion rate shows {{ 'strong' if (goals_achieved / total_goals * 100 if total_goals > 0 else 0) >= 75 else 'moderate' if (goals_achieved / total_goals * 100 if total_goals > 0 else 0) >= 50 else 'improvement needed for' }} strategic alignment</p>
+    </div>
+
+    <div class="insight-card">
+      <h4>Resource Utilization</h4>
+      <div class="insight-metric">{{ avg_projects_per_goal|round(1) }}</div>
+      <p>Average projects per goal indicates {{ 'focused' if avg_projects_per_goal <= 2 else 'balanced' if avg_projects_per_goal <= 4 else 'potentially scattered' }} resource allocation</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Critical Work Ratio</h4>
+      <div class="insight-metric">{{ critical_percentage|round|int }}%</div>
+      <p>Percentage of sprint work marked as critical; {{ 'balanced priorities' if critical_percentage <= 30 else 'potentially too many critical items' }}</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Cycle Health Score</h4>
+      <div class="insight-metric">{{ cycle_health_score|round|int }}</div>
+      <p>Composite score (0-100) of overall planning and execution efficiency</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Time To Completion</h4>
+      <div class="insight-metric">{{ avg_days_to_complete|round|int }} days</div>
+      <p>Average days to complete commitments; {{ 'excellent' if avg_days_to_complete <= avg_sprint_duration * 0.7 else 'good' if avg_days_to_complete <= avg_sprint_duration else 'could improve' }}</p>
+    </div>
+    
+    <div class="insight-card">
+      <h4>Project Type Ratio</h4>
+      <div class="insight-metric">
+        {% set project_count = 0 %}
+        {% set task_count = 0 %}
+        {% for pt in project_types %}
+          {% if pt.type == 'project' %}
+            {% set project_count = pt.count %}
+          {% elif pt.type == 'task' %}
+            {% set task_count = pt.count %}
+          {% endif %}
+        {% endfor %}
+        {{ project_count }} / {{ task_count }}
+      </div>
+      <p>Projects vs. Tasks ratio shows {{ 'strategic focus' if project_count > task_count else 'tactical focus' }}</p>
+    </div>
+  </div>
+</section>
+
+<!-- Team & Individual Workload Section -->
+<section class="section">
+  <div class="section-header">
+    <h3>Team Workload Distribution</h3>
+  </div>
+  
+  <div class="two-column-section">
+    <div class="column-wide">
+      <div class="data-table-container">
+        <h4>Active Team Workload</h4>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Active Projects</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for team in teams_active %}
+            <tr>
+              <td>{{ team.team|default('Unassigned') }}</td>
+              <td>{{ team.project_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="column-narrow">
+      <div class="data-table-container">
+        <h4>Individual Workload</h4>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Person</th>
+              <th>Active Projects</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in user_active_load %}
+            <tr>
+              <td>{{ item.dri|default('Unassigned') }}</td>
+              <td>{{ item.project_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Project Complexity Analysis -->
+<section class="section">
+  <div class="section-header">
+    <h3>Project Complexity & Workflow Efficiency</h3>
+  </div>
+  <div class="two-column-section">
+    <div class="column-wide">
+      <div class="data-table-container">
+        <h4>Most Complex Projects</h4>
+        <p class="subtitle">Based on discussion volume and collaboration metrics</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Discussion Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in project_complexity %}
+            <tr>
+              <td>{{ project.name }}</td>
+              <td>{{ project.comment_count }} comments</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="column-narrow">
+      <div class="metrics-container">
+        <h4>Workflow Efficiency Metrics</h4>
+        <div class="metrics-list">
+          <div class="metric-row">
+            <div class="metric-label">Avg. Time to Complete:</div>
+            <div class="metric-value">{{ avg_days_to_complete|round|int }} days</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">Avg. Cycle Duration:</div>
+            <div class="metric-value">{{ avg_sprint_duration|round|int }} days</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">Commitments Per Cycle:</div>
+            <div class="metric-value">{{ avg_commitments_per_cycle|round(1) }}</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">Completion Rate:</div>
+            <div class="metric-value">{{ commitment_completion|round(1) }}%</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">Projects Per Goal:</div>
+            <div class="metric-value">{{ avg_projects_per_goal|round(1) }}</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">Critical Work Ratio:</div>
+            <div class="metric-value">{{ critical_percentage|round|int }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Goal Achievement Section -->
+<section class="section">
+  <div class="section-header">
+    <h3>Goal Achievement</h3>
+  </div>
+  
+  <div class="progress-section">
+    <div class="progress-container">
+      <div class="progress-label">Goal Completion Rate</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: {{ (goals_achieved / total_goals * 100)|round|int if total_goals > 0 else 0 }}%">
+          <span class="progress-text">{{ (goals_achieved / total_goals * 100)|round|int if total_goals > 0 else 0 }}%</span>
+        </div>
+      </div>
+      <div class="progress-stats">{{ goals_achieved }} of {{ total_goals }} goals achieved</div>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-label">Commitment Completion Rate</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: {{ commitment_completion|round|int }}%">
+          <span class="progress-text">{{ commitment_completion|round|int }}%</span>
+        </div>
+      </div>
+      <div class="progress-stats">{{ completed_commitments }} of {{ total_commitments }} commitments completed</div>
+    </div>
+  </div>
+</section>
+
+<!-- CSS for the analytics page -->
+<style>
+  .kpi-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .kpi-card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .kpi-icon {
+    background-color: rgba(62, 99, 221, 0.1);
+    color: var(--color-primary);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+  
+  .kpi-content h3 {
+    font-size: 28px;
+    margin-bottom: 0.25rem;
+  }
+  
+  .kpi-content p {
+    font-size: 14px;
+    color: var(--color-gray-600);
+    margin: 0;
+  }
+  
+  .data-table-container {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .data-table th, 
+  .data-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+  
+  .data-table th {
+    font-weight: 600;
+    color: var(--color-gray-700);
+    background-color: var(--color-gray-100);
+  }
+  
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .metrics-container {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .metrics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+  
+  .metric-row:last-child {
+    border-bottom: none;
+  }
+  
+  .metric-label {
+    font-weight: 500;
+    color: var(--color-gray-700);
+  }
+  
+  .metric-value {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+  
+  .executive-insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  
+  .insight-card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .insight-card h4 {
+    font-size: 16px;
+    color: var(--color-gray-700);
+    margin-bottom: 0.75rem;
+  }
+  
+  .insight-metric {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--color-primary);
+  }
+  
+  .insight-card p {
+    font-size: 14px;
+    color: var(--color-gray-600);
+    margin: 0;
+  }
+  
+  .subtitle {
+    font-size: 14px;
+    color: var(--color-gray-600);
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .progress-section {
+    padding: 1.5rem;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .progress-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .progress-container:last-child {
+    margin-bottom: 0;
+  }
+  
+  .progress-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-gray-700);
+  }
+  
+  .progress-bar-container {
+    height: 24px;
+    background-color: var(--color-gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: var(--color-primary);
+    border-radius: 12px;
+    position: relative;
+  }
+  
+  .progress-text {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  
+  .progress-stats {
+    margin-top: 0.5rem;
+    font-size: 14px;
+    color: var(--color-gray-600);
+  }
+  
+  /* Make the insights grid more responsive */
+  @media (max-width: 768px) {
+    .executive-insights {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .executive-insights {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}

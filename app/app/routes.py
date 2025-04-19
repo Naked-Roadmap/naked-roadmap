@@ -1,18 +1,26 @@
 from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint, CommentForm
-from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog
+from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog, AppConfig, get_config, set_config
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
+from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlsplit
 from config import Config
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from . import utils
 from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html
 import bleach
 from sqlalchemy import func
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+import os
+from jinja2 import Template
+import json
 
 @app.context_processor
 def inject_csrf_token():
@@ -1151,3 +1159,694 @@ def toggle_project_critical():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
+        
+########################################################
+### Cycle Closing
+########################################################
+
+@app.route('/api/activate_sprint', methods=['POST'])
+@login_required
+def activate_sprint():
+    """API endpoint to activate a sprint and optionally send notification emails"""
+    try:
+        # Get form data
+        sprint_id = request.form.get('sprint_id')
+        send_email = request.form.get('send_email') == 'on'
+        email_addresses = request.form.get('email_addresses', '')
+        
+        if not sprint_id:
+            return jsonify({'success': False, 'message': 'Sprint ID is required'}), 400
+        
+        # Get the sprint
+        sprint = Sprint.query.get_or_404(sprint_id)
+        
+        # Update the sprint status
+        sprint.status = 'Active'
+        
+        # Create changelog entry
+        changelog = Changelog(
+            change_type='sprint_activation',
+            content=f"Sprint '{sprint.title}' activated by {current_user.username}",
+            # Use the first project's ID for the changelog (or adjust as needed)
+            project_id=SprintProjectMap.query.filter_by(sprint_id=sprint_id).first().project_id,
+            user_id=current_user.id,
+            timestamp=datetime.utcnow()
+        )
+        
+        db.session.add(changelog)
+        db.session.commit()
+        
+        # Send email notification if requested
+        if send_email and email_addresses:
+            send_sprint_notification(sprint_id, email_addresses.split(','))
+        
+        # Return success
+        return jsonify({
+            'success': True,
+            'message': f"Sprint '{sprint.title}' has been activated successfully.",
+            'redirect_url': url_for('index')  # Can be changed to a sprint details page
+        })
+        
+    except Exception as e:
+        print(f"Error activating sprint: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+def send_sprint_notification(sprint_id, recipients):
+    """Send an email notification about the activated sprint"""
+    try:
+        # Get sprint and related data
+        sprint = Sprint.query.get(sprint_id)
+        sprint_projects = (
+            SprintProjectMap.query
+            .filter_by(sprint_id=sprint_id)
+            .order_by(SprintProjectMap.order)
+            .all()
+        )
+        
+        # Analytics data
+        teams = {}
+        dris = {}
+        objective_ids = set()
+        critical_count = 0
+        
+        for entry in sprint_projects:
+            project = entry.project
+            
+            # Count projects by team
+            team = project.team
+            teams[team] = teams.get(team, 0) + 1
+            
+            # Count projects by DRI
+            dri = project.dri
+            dris[dri] = dris.get(dri, 0) + 1
+            
+            # Count objectives
+            if project.objective_id:
+                objective_ids.add(project.objective_id)
+            
+            # Count critical projects
+            if entry.critical:
+                critical_count += 1
+        
+        # Create HTML email content using a template
+        html_content = render_sprint_email_template(sprint, sprint_projects, {
+            'teams': teams,
+            'dris': dris,
+            'objective_count': len(objective_ids),
+            'critical_count': critical_count,
+            'total_projects': len(sprint_projects)
+        })
+        
+        # Send the email
+        send_html_email(
+            subject=f"Sprint Activated: {sprint.title}",
+            recipients=recipients,
+            html_content=html_content
+        )
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error sending sprint notification: {str(e)}")
+        return False
+
+
+def render_sprint_email_template(sprint, sprint_projects, analytics):
+    """Render the HTML email template for sprint notification"""
+    template_str = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Sprint Activated: {{ sprint.title }}</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
+            .header { padding: 20px 0; border-bottom: 1px solid #eee; }
+            .logo { max-height: 40px; margin-bottom: 20px; }
+            .sprint-details { background-color: #f5f7f9; padding: 20px; border-radius: 6px; margin: 20px 0; }
+            .sprint-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1a56db; }
+            .sprint-meta { margin-bottom: 15px; }
+            .projects-list { margin: 30px 0; }
+            .project-item { padding: 15px 0; border-bottom: 1px solid #eee; }
+            .project-title { font-weight: bold; font-size: 18px; }
+            .project-meta { color: #666; font-size: 14px; }
+            .project-goal { background-color: #f0f4ff; padding: 10px; border-radius: 4px; margin-top: 10px; }
+            .critical-badge { background-color: #feefb3; color: #9f6000; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+            .analytics { margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 6px; }
+            .analytics-title { font-size: 20px; margin-bottom: 15px; }
+            .analytics-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
+            .analytics-card { flex: 1; min-width: 120px; background: white; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .analytics-value { font-size: 24px; font-weight: bold; color: #1a56db; }
+            .analytics-label { font-size: 14px; color: #666; }
+            .breakdown-section { margin-top: 20px; }
+            .breakdown-title { font-size: 16px; margin-bottom: 10px; }
+            .breakdown-item { display: flex; align-items: center; margin-bottom: 5px; }
+            .breakdown-label { flex: 1; }
+            .breakdown-value { font-weight: bold; margin-left: 10px; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <img src="cid:logo" alt="Company Logo" class="logo">
+            <h1>Sprint Activated: {{ sprint.title }}</h1>
+        </div>
+        
+        <div class="sprint-details">
+            <div class="sprint-title">{{ sprint.title }}</div>
+            <div class="sprint-meta">
+                <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
+                <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
+                <strong>Projects:</strong> {{ analytics.total_projects }} total ({{ analytics.critical_count }} critical)
+            </div>
+        </div>
+        
+        <h2>Sprint Commitments</h2>
+        <div class="projects-list">
+            {% for entry in sprint_projects %}
+            {% set project = entry.project %}
+            <div class="project-item">
+                <div class="project-title">
+                    {{ project.name }}
+                    {% if entry.critical %}
+                    <span class="critical-badge">CRITICAL</span>
+                    {% endif %}
+                </div>
+                <div class="project-meta">
+                    <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
+                    {% if project.objective %}
+                    | <strong>Objective:</strong> {{ project.objective.title }}
+                    {% endif %}
+                </div>
+                <div class="project-goal">
+                    <strong>Goal:</strong> {{ entry.goal }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="analytics">
+            <div class="analytics-title">Sprint Analytics</div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ analytics.total_projects }}</div>
+                    <div class="analytics-label">Total Projects</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ analytics.objective_count }}</div>
+                    <div class="analytics-label">Objectives Supported</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ analytics.critical_count }}</div>
+                    <div class="analytics-label">Critical Projects</div>
+                </div>
+            </div>
+            
+            <div class="breakdown-section">
+                <div class="breakdown-title">Projects by Team</div>
+                {% for team, count in analytics.teams.items() %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ team }}</div>
+                    <div class="breakdown-value">{{ count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="breakdown-section">
+                <div class="breakdown-title">Projects by DRI</div>
+                {% for dri, count in analytics.dris.items() %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ dri }}</div>
+                    <div class="breakdown-value">{{ count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from the Roadmap Planning Tool. Please do not reply to this email.</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    template = Template(template_str)
+    return template.render(sprint=sprint, sprint_projects=sprint_projects, analytics=analytics)
+
+
+def send_html_email(subject, recipients, html_content):
+    """Send an HTML email with the sprint notification using app configuration"""
+    try:
+        # Get email configuration from the database
+        smtp_server = get_config('smtp_server')
+        smtp_port = int(get_config('smtp_port', 587))
+        sender_email = get_config('smtp_email')
+        sender_password = get_config('smtp_password')
+        email_enabled = get_config('email_enabled') == 'true'
+        
+        if not all([smtp_server, smtp_port, sender_email, sender_password, email_enabled]):
+            print("Email settings are incomplete or email notifications are disabled")
+            return False
+        
+        # Create message
+        msg = MIMEMultipart('related')
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = ', '.join(recipients)
+        
+        # Attach HTML content
+        msg_html = MIMEText(html_content, 'html')
+        msg.attach(msg_html)
+        
+        # Attach company logo for inline display
+        with open('app/static/fig-icon.svg', 'rb') as f:
+            logo_data = f.read()
+            logo_img = MIMEImage(logo_data)
+            logo_img.add_header('Content-ID', '<logo>')
+            logo_img.add_header('Content-Disposition', 'inline', filename='company-logo.svg')
+            msg.attach(logo_img)
+        
+        # Send email
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        
+        print(f"Email sent successfully to {len(recipients)} recipients")
+        return True
+    
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return False
+        
+        
+## ################################
+## Settings Pages
+## ################################
+
+
+@app.route('/settings')
+@login_required
+def settings():
+    """Settings page for application configuration"""
+    # Get all configuration values
+    configs = {}
+    config_records = AppConfig.query.all()
+    
+    for config in config_records:
+        # Don't expose the actual password value to the frontend
+        if config.key == 'smtp_password' and config.value:
+            configs[config.key] = '********'
+        else:
+            configs[config.key] = config.value
+    
+    return render_template('settings.html', 
+                           title='Application Settings', 
+                           configs=configs)
+
+@app.route('/settings/general', methods=['POST'])
+@login_required
+def save_general_settings():
+    """Save general application settings"""
+    try:
+        app_name = request.form.get('app_name')
+        
+        if app_name:
+            set_config('app_name', app_name, 'Application name displayed in the UI')
+        
+        # Get updated configs for the template
+        configs = {config.key: config.value for config in AppConfig.query.all()}
+        
+        return render_template('settings.html', 
+                               title='Application Settings', 
+                               configs=configs, 
+                               success_message='General settings saved successfully.')
+    
+    except Exception as e:
+        # Get configs for the template
+        configs = {config.key: config.value for config in AppConfig.query.all()}
+        
+        return render_template('settings.html', 
+                               title='Application Settings', 
+                               configs=configs, 
+                               error_message=f'Error saving settings: {str(e)}')
+
+@app.route('/settings/email', methods=['POST'])
+@login_required
+def save_email_settings():
+    """Save email configuration settings"""
+    try:
+        smtp_server = request.form.get('smtp_server')
+        smtp_port = request.form.get('smtp_port')
+        smtp_email = request.form.get('smtp_email')
+        smtp_password = request.form.get('smtp_password')
+        email_enabled = 'true' if request.form.get('email_enabled') else 'false'
+        
+        # Update configuration values
+        set_config('smtp_server', smtp_server, 'SMTP server for sending emails')
+        set_config('smtp_port', smtp_port, 'SMTP port')
+        set_config('smtp_email', smtp_email, 'Email address used for sending notifications')
+        
+        # Only update password if it's not the masked value
+        if smtp_password and smtp_password != '********':
+            # In a production environment, you would want to encrypt this
+            set_config('smtp_password', smtp_password, 'Password for the email account')
+        
+        set_config('email_enabled', email_enabled, 'Whether email notifications are enabled')
+        
+        # Get updated configs for the template
+        configs = {}
+        for config in AppConfig.query.all():
+            if config.key == 'smtp_password' and config.value:
+                configs[config.key] = '********'
+            else:
+                configs[config.key] = config.value
+        
+        return render_template('settings.html', 
+                               title='Application Settings', 
+                               configs=configs, 
+                               success_message='Email settings saved successfully.')
+    
+    except Exception as e:
+        # Get configs for the template
+        configs = {}
+        for config in AppConfig.query.all():
+            if config.key == 'smtp_password' and config.value:
+                configs[config.key] = '********'
+            else:
+                configs[config.key] = config.value
+        
+        return render_template('settings.html', 
+                               title='Application Settings', 
+                               configs=configs, 
+                               error_message=f'Error saving settings: {str(e)}')
+
+@app.route('/api/test_email', methods=['POST'])
+@login_required
+def test_email():
+    """Test email configuration by sending a test email"""
+    try:
+        data = request.json
+        recipient_email = data.get('email')
+        
+        if not recipient_email:
+            return jsonify({'success': False, 'message': 'Recipient email is required'})
+        
+        # Get email configuration
+        smtp_server = get_config('smtp_server')
+        smtp_port = get_config('smtp_port')
+        smtp_email = get_config('smtp_email')
+        smtp_password = get_config('smtp_password')
+        email_enabled = get_config('email_enabled') == 'true'
+        
+        if not all([smtp_server, smtp_port, smtp_email, smtp_password, email_enabled]):
+            return jsonify({
+                'success': False, 
+                'message': 'Email settings are incomplete or email notifications are disabled'
+            })
+        
+        # Send test email
+        app_name = get_config('app_name', 'Roadmap Planning Tool')
+        subject = f"Test Email from {app_name}"
+        html_content = f"""
+        <html>
+        <body>
+            <h2>Test Email</h2>
+            <p>This is a test email from {app_name}.</p>
+            <p>If you're receiving this email, your email configuration is working correctly.</p>
+        </body>
+        </html>
+        """
+        
+        # Use the send_html_email function from previous artifact
+        success = send_test_html_email(
+            subject=subject,
+            recipient=recipient_email,
+            html_content=html_content
+        )
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Test email sent successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send test email'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+def send_test_html_email(subject, recipient, html_content):
+    """Send a test HTML email"""
+    try:
+        import smtplib
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        
+        # Get email configuration
+        smtp_server = get_config('smtp_server')
+        smtp_port = int(get_config('smtp_port', 587))
+        sender_email = get_config('smtp_email')
+        sender_password = get_config('smtp_password')
+        
+        if not all([smtp_server, smtp_port, sender_email, sender_password]):
+            return False
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = recipient
+        
+        # Attach HTML content
+        msg_html = MIMEText(html_content, 'html')
+        msg.attach(msg_html)
+        
+        # Send email
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        
+        return True
+    
+    except Exception as e:
+        print(f"Error sending test email: {str(e)}")
+        return False
+
+
+@app.route('/api/check_email_config', methods=['GET'])
+def check_email_config():
+    """Check if email is configured and enabled"""
+    smtp_server = get_config('smtp_server')
+    smtp_port = get_config('smtp_port')
+    smtp_email = get_config('smtp_email')
+    smtp_password = get_config('smtp_password')
+    email_enabled = get_config('email_enabled') == 'true'
+    
+    is_configured = all([smtp_server, smtp_port, smtp_email, smtp_password, email_enabled])
+    
+    return jsonify({
+        'configured': is_configured
+    })
+    
+## ##############################
+## Analytics
+## ##############################
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    """
+    Analytics and insights dashboard for project, team, and goal performance metrics.
+    Provides executives with data to optimize team planning and resource allocation.
+    """
+    # Get team analytics data - active projects
+    teams_active = db.session.query(
+        Project.team, 
+        func.count(Project.id).label('project_count')
+    ).filter(
+        Project.location == 'active'
+    ).group_by(
+        Project.team
+    ).all()
+    
+    # Get team analytics data - completed projects
+    teams_historic = db.session.query(
+        Project.team, 
+        func.count(Project.id).label('project_count')
+    ).filter(
+        Project.location == 'completed'
+    ).group_by(
+        Project.team
+    ).all()
+    
+    # Get user load data (active projects)
+    user_active_load = db.session.query(
+        Project.dri, 
+        func.count(Project.id).label('project_count')
+    ).filter(
+        Project.location == 'active'
+    ).group_by(
+        Project.dri
+    ).all()
+
+    # Get user load data (historic/completed projects)
+    user_historic_load = db.session.query(
+        Project.dri, 
+        func.count(Project.id).label('project_count')
+    ).filter(
+        Project.location == 'completed'
+    ).group_by(
+        Project.dri
+    ).all()
+    
+    # Project completion stats
+    completed_projects = Project.query.filter(Project.location == 'completed').count()
+    total_projects = Project.query.count()
+    
+    # Project type distribution (tasks vs. projects)
+    project_types = db.session.query(
+        Project.type, 
+        func.count(Project.id).label('count')
+    ).group_by(
+        Project.type
+    ).all()
+    
+    # Get sprint/cycle data
+    sprints = Sprint.query.all()
+    avg_sprint_duration = 0
+    if sprints:
+        total_days = sum([(s.date_end - s.date_start).days for s in sprints if s.date_start and s.date_end])
+        avg_sprint_duration = total_days / len(sprints) if len(sprints) > 0 else 0
+    
+    # Commitment completion percentage
+    sprint_projects = SprintProjectMap.query
+    completed_commitments = sprint_projects.filter(SprintProjectMap.status == 'Done').count()
+    total_commitments = sprint_projects.count()
+    commitment_completion = 0
+    if total_commitments > 0:
+        commitment_completion = (completed_commitments / total_commitments) * 100
+    
+    # Calculate average days to complete a commitment
+    completed_commitments_data = db.session.query(SprintProjectMap) \
+        .filter(SprintProjectMap.status == 'Done') \
+        .all()
+    
+    # For each completed commitment, calculate days from addition to completion
+    # This is an approximation since we don't have actual completion dates stored
+    avg_days_to_complete = 0
+    if completed_commitments_data:
+        commitment_durations = []
+        for commitment in completed_commitments_data:
+            sprint = Sprint.query.get(commitment.sprint_id)
+            if sprint and sprint.date_start and sprint.date_end:
+                # Approximate duration as the sprint duration since we don't have exact completion dates
+                duration = (sprint.date_end - sprint.date_start).days
+                commitment_durations.append(duration)
+        
+        if commitment_durations:
+            avg_days_to_complete = sum(commitment_durations) / len(commitment_durations)
+    
+    # Average commitments per cycle
+    avg_commitments_per_cycle = 0
+    cycle_commitments = db.session.query(
+        SprintProjectMap.sprint_id,
+        func.count(SprintProjectMap.id).label('commitment_count')
+    ).group_by(
+        SprintProjectMap.sprint_id
+    ).all()
+    
+    if cycle_commitments:
+        avg_commitments_per_cycle = sum([c.commitment_count for c in cycle_commitments]) / len(cycle_commitments)
+    
+    # Goal achievement stats
+    goals_achieved = Goal.query.filter(Goal.status == 'Achieved').count()
+    total_goals = Goal.query.count()
+    
+    # Average projects per goal
+    avg_projects_per_goal = 0
+    goals_with_projects = db.session.query(
+        Goal.id, 
+        func.count(Project.id).label('project_count')
+    ).join(
+        Project, 
+        Goal.id == Project.objective_id
+    ).group_by(
+        Goal.id
+    ).all()
+    
+    if goals_with_projects:
+        avg_projects_per_goal = sum([g.project_count for g in goals_with_projects]) / len(goals_with_projects)
+    
+    # Critical vs. Non-Critical Project Ratio
+    critical_projects = SprintProjectMap.query.filter(SprintProjectMap.critical == True).count()
+    critical_percentage = (critical_projects / total_commitments * 100) if total_commitments > 0 else 0
+    
+    # Calculate team balance - standard deviation of project distribution
+    team_balance = 0
+    if teams_active:
+        team_counts = [t.project_count for t in teams_active]
+        if team_counts:
+            mean = sum(team_counts) / len(team_counts)
+            variance = sum((count - mean) ** 2 for count in team_counts) / len(team_counts)
+            team_balance = variance ** 0.5  # standard deviation
+    
+    # Get historical data for trends (projects completed by month)
+    current_date = datetime.now()
+    six_months_ago = current_date - timedelta(days=180)
+    
+    monthly_completion = db.session.query(
+        func.strftime('%Y-%m', Project.created).label('month'),
+        func.count(Project.id).label('count')
+    ).filter(
+        Project.location == 'completed',
+        Project.created >= six_months_ago
+    ).group_by('month').all()
+    
+    # Project complexity metrics (using number of comments as a proxy)
+    project_complexity = db.session.query(
+        Project.id,
+        Project.name,
+        func.count(Comment.id).label('comment_count')
+    ).outerjoin(
+        Comment
+    ).group_by(
+        Project.id
+    ).order_by(
+        func.count(Comment.id).desc()
+    ).limit(5).all()
+    
+    # Calculate cycle health score (composite metric)
+    cycle_health_score = 0
+    if total_commitments > 0 and total_goals > 0:
+        cycle_health_score = (
+            (commitment_completion / 100) * 0.6 + 
+            ((goals_achieved / total_goals) * 100 / 100) * 0.4
+        ) * 100
+    
+    return render_template(
+        'analytics.html',
+        title='Analytics & Insights',
+        teams_active=teams_active,
+        teams_historic=teams_historic,
+        user_active_load=user_active_load,
+        user_historic_load=user_historic_load,
+        completed_projects=completed_projects,
+        total_projects=total_projects,
+        project_types=project_types,
+        avg_sprint_duration=avg_sprint_duration,
+        commitment_completion=commitment_completion,
+        completed_commitments=completed_commitments,
+        total_commitments=total_commitments,
+        avg_days_to_complete=avg_days_to_complete,
+        avg_commitments_per_cycle=avg_commitments_per_cycle,
+        goals_achieved=goals_achieved,
+        total_goals=total_goals,
+        avg_projects_per_goal=avg_projects_per_goal,
+        critical_projects=critical_projects,
+        critical_percentage=critical_percentage,
+        team_balance=team_balance,
+        monthly_completion=monthly_completion,
+        project_complexity=project_complexity,
+        cycle_health_score=cycle_health_score
+    )

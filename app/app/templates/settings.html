@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Application Settings {% endblock %}</h1>
+
+{% if success_message %}
+<div class="alert alert-success">
+    {{ success_message }}
+</div>
+{% endif %}
+
+{% if error_message %}
+<div class="alert alert-danger">
+    {{ error_message }}
+</div>
+{% endif %}
+
+<section class="section">
+    <div class="section-header">
+        <h3>General Settings</h3>
+    </div>
+    <div style="padding: 20px;">
+        <form method="post" action="{{ url_for('save_general_settings') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+                <label for="app_name">Application Name</label>
+                <input type="text" id="app_name" name="app_name" class="form-control" value="{{ configs.get('app_name', '') }}">
+                <small class="form-hint">The name displayed in the UI</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save General Settings</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h3>Email Settings</h3>
+    </div>
+    <div style="padding: 20px;">
+        <form method="post" action="{{ url_for('save_email_settings') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+                <label for="smtp_server">SMTP Server</label>
+                <input type="text" id="smtp_server" name="smtp_server" class="form-control" value="{{ configs.get('smtp_server', '') }}">
+                <small class="form-hint">Example: smtp.gmail.com</small>
+            </div>
+            <div class="form-group">
+                <label for="smtp_port">SMTP Port</label>
+                <input type="text" id="smtp_port" name="smtp_port" class="form-control" value="{{ configs.get('smtp_port', '') }}">
+                <small class="form-hint">Example: 587 (for TLS), 465 (for SSL)</small>
+            </div>
+            <div class="form-group">
+                <label for="smtp_email">Email Address</label>
+                <input type="email" id="smtp_email" name="smtp_email" class="form-control" value="{{ configs.get('smtp_email', '') }}">
+                <small class="form-hint">Email address used for sending notifications</small>
+            </div>
+            <div class="form-group">
+                <label for="smtp_password">Password</label>
+                <input type="password" id="smtp_password" name="smtp_password" class="form-control" value="{{ configs.get('smtp_password', '') }}">
+                <small class="form-hint">App password or account password (stored securely)</small>
+            </div>
+            <div class="form-group">
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; margin-bottom: 16px;">
+                    <input type="checkbox" id="email_enabled" name="email_enabled" style="margin-right: 8px;" 
+                           {% if configs.get('email_enabled') == 'true' %}checked{% endif %}>
+                    <label for="email_enabled">Enable email notifications</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                <button type="button" id="test-email-btn" class="btn btn-secondary">Test Email Settings</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Test Email Modal -->
+<div id="testEmailModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Test Email Settings</h3>
+            <span class="close-modal" id="close-test-email-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Send a test email to verify your email settings.</p>
+            <form id="test-email-form">
+                <div class="form-group">
+                    <label for="test_email">Recipient Email</label>
+                    <input type="email" id="test_email" name="test_email" class="form-control" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="send-test-email" class="btn btn-primary">Send Test Email</button>
+            <button type="button" id="cancel-test-email" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Test Email Modal functionality
+    const testEmailBtn = document.getElementById('test-email-btn');
+    const testEmailModal = document.getElementById('testEmailModal');
+    const closeTestEmailModal = document.getElementById('close-test-email-modal');
+    const cancelTestEmailBtn = document.getElementById('cancel-test-email');
+    const sendTestEmailBtn = document.getElementById('send-test-email');
+    
+    function openTestEmailModal() {
+        testEmailModal.style.display = 'block';
+    }
+    
+    function closeTestEmailModal() {
+        testEmailModal.style.display = 'none';
+    }
+    
+    testEmailBtn.addEventListener('click', openTestEmailModal);
+    closeTestEmailModal.addEventListener('click', closeTestEmailModal);
+    cancelTestEmailBtn.addEventListener('click', closeTestEmailModal);
+    
+    // Send Test Email functionality
+    sendTestEmailBtn.addEventListener('click', function() {
+        const testEmail = document.getElementById('test_email').value;
+        
+        if (!testEmail) {
+            alert('Please enter a recipient email address.');
+            return;
+        }
+        
+        fetch('/api/test_email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: testEmail
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Test email sent successfully!');
+                closeTestEmailModal();
+            } else {
+                alert('Error sending test email: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while sending the test email.');
+        });
+    });
+});
+</script>
+{% endblock %}

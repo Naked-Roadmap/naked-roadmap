@@ -142,3 +142,41 @@ class Changelog(db.Model):
     
     def __repr__(self):
         return f'<Changelog {self.id}: {self.change_type} by User {self.user_id} on Project {self.project_id}>'
+        
+        
+class AppConfig(db.Model):
+    """
+    Configuration settings for the application stored as key-value pairs
+    """
+    __tablename__ = 'app_config'
+    
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    key: so.Mapped[str] = so.mapped_column(sa.String(100), index=True, unique=True)
+    value: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    description: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    created: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    updated: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), 
+                                                   onupdate=lambda: datetime.now(timezone.utc))
+    
+    def __repr__(self):
+        return f'<AppConfig {self.key}>'
+    
+# Helper functions to get and set configuration values
+def get_config(key, default=None):
+    """Get a configuration value by key"""
+    config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
+    return config.value if config else default
+
+def set_config(key, value, description=None):
+    """Set a configuration value"""
+    config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
+    if config:
+        config.value = value
+        config.updated = datetime.now(timezone.utc)
+        if description and not config.description:
+            config.description = description
+    else:
+        config = AppConfig(key=key, value=value, description=description)
+        db.session.add(config)
+    db.session.commit()
+    return config
