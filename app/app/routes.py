@@ -763,7 +763,7 @@ def planningStep2CycleSelected(sprint_id):
     projects = (
         Project.query
         .order_by(Project.created.desc())
-        .filter(Project.status != "Completed")
+        .filter(Project.location == "discussion")
         .all()
     )
     goals = (

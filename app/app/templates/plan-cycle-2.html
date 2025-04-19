@@ -277,14 +277,21 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Handle the dropdown selection and form submission
-    const selectSprintForm = document.getElementById('select-sprint-form');
-    const sprintDropdown = document.getElementById('sprint-dropdown');
-    const createSprintForm = document.getElementById('create-sprint-form');
-    const cancelCreateBtn = document.getElementById('cancel-create');
+document.addEventListener('DOMContentLoaded', function() {
+  // Simple notification function implementation
+  function showNotification(message, type) {
+    console.log(`${type.toUpperCase()}: ${message}`);
+    // You can implement a more visual notification here if needed
+  }
 
-    // Handle the select sprint form submission
+  // Handle the dropdown selection and form submission
+  const selectSprintForm = document.getElementById('select-sprint-form');
+  const sprintDropdown = document.getElementById('sprint-dropdown');
+  const createSprintForm = document.getElementById('create-sprint-form');
+  const cancelCreateBtn = document.getElementById('cancel-create');
+
+  // Handle the select sprint form submission
+  if (selectSprintForm) {
     selectSprintForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const selectedValue = sprintDropdown.value;
@@ -298,101 +305,113 @@
         window.location.href = baseUrl + '/' + selectedValue;
       }
     });
+  }
 
-    // Handle the cancel button click
+  // Handle the cancel button click
+  if (cancelCreateBtn) {
     cancelCreateBtn.addEventListener('click', function() {
       createSprintForm.style.display = 'none';
     });
-    
-    // Modal functionality
-    const modal = document.getElementById('projectModal');
-    const closeModalBtn = document.querySelector('.close-modal');
-    
-    // Set up event listeners for discuss buttons
-    document.querySelectorAll('.discuss-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        openProjectModal(projectId, 'discuss');
-      });
+  }
+  
+  // Modal functionality
+  const modal = document.getElementById('projectModal');
+  const closeModalBtn = document.querySelector('.close-modal');
+  
+  // Set up event listeners for discuss buttons
+  document.querySelectorAll('.discuss-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      openProjectModal(projectId, 'discuss');
     });
-    
-    // Set up event listeners for quickview buttons
-    document.querySelectorAll('.quickview-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        openProjectModal(projectId, 'quickview');
-      });
+  });
+  
+  // Set up event listeners for quickview buttons
+  document.querySelectorAll('.quickview-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      openProjectModal(projectId, 'quickview');
     });
-    
-    // Set up event listeners for "add to cycle" buttons
-    document.querySelectorAll('.add-to-cycle-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        openProjectModal(projectId, 'add-to-cycle');
-      });
+  });
+  
+  // Set up event listeners for "add to cycle" buttons
+  document.querySelectorAll('.add-to-cycle-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      openProjectModal(projectId, 'add-to-cycle');
     });
-    
-    // Set up event listeners for "edit goal" buttons
-    document.querySelectorAll('.edit-goal-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        const sprintProjectId = this.getAttribute('data-sprint-project-id');
-        const currentGoal = this.getAttribute('data-goal');
-        openProjectModal(projectId, 'edit-goal', { sprintProjectId, currentGoal });
-      });
+  });
+  
+  // Set up event listeners for "edit goal" buttons
+  document.querySelectorAll('.edit-goal-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      const sprintProjectId = this.getAttribute('data-sprint-project-id');
+      const currentGoal = this.getAttribute('data-goal');
+      openProjectModal(projectId, 'edit-goal', { sprintProjectId, currentGoal });
     });
-    
-    // Set up event listeners for "move to backlog" buttons
-    document.querySelectorAll('.move-to-backlog-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        moveProjectToBacklog(projectId);
-      });
+  });
+  
+  // Set up event listeners for "move to backlog" buttons
+  document.querySelectorAll('.move-to-backlog-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      moveProjectToBacklog(projectId);
     });
-    
-    // Set up event listeners for "move to discussion" buttons
-    document.querySelectorAll('.move-to-discussion-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const projectId = this.getAttribute('data-project-id');
-        moveProjectToDiscussion(projectId);
-      });
+  });
+  
+  // Set up event listeners for "move to discussion" buttons
+  document.querySelectorAll('.move-to-discussion-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const projectId = this.getAttribute('data-project-id');
+      moveProjectToDiscussion(projectId);
     });
+  });
 
-    // Close modal when clicking the × button
+  // Close modal when clicking the × button
+  if (closeModalBtn) {
     closeModalBtn.addEventListener('click', function() {
       closeModal();
     });
+  }
 
-    // Close modal when clicking outside the modal
+  // Close modal when clicking outside the modal
+  if (modal) {
     window.addEventListener('click', function(event) {
       if (event.target === modal) {
         closeModal();
       }
     });
+  }
 
-    // Handle "Move to Sprint" button
-    const moveToSprintBtn = document.getElementById('btn-move-sprint');
-    const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
-    const cancelBtn = document.getElementById('btn-cancel');
-    const sprintGoalContainer = document.getElementById('sprint-goal-container');
-    const standardActions = document.getElementById('standard-actions');
-    const addToSprintActions = document.getElementById('add-to-sprint-actions');
-    const editGoalActions = document.getElementById('edit-goal-actions');
-    
-    // Move to Sprint button
+  // Handle "Move to Sprint" button
+  const moveToSprintBtn = document.getElementById('btn-move-sprint');
+  const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
+  const cancelBtn = document.getElementById('btn-cancel');
+  const sprintGoalContainer = document.getElementById('sprint-goal-container');
+  const standardActions = document.getElementById('standard-actions');
+  const addToSprintActions = document.getElementById('add-to-sprint-actions');
+  const editGoalActions = document.getElementById('edit-goal-actions');
+  
+  // Move to Sprint button
+  if (moveToSprintBtn) {
     moveToSprintBtn.addEventListener('click', function() {
       // Show sprint goal input and confirm/cancel buttons
       sprintGoalContainer.style.display = 'block';
       standardActions.style.display = 'none';
       addToSprintActions.style.display = 'block';
     });
+  }
 
-    // Cancel button for sprint goal
+  // Cancel button for sprint goal
+  if (cancelBtn) {
     cancelBtn.addEventListener('click', function() {
       resetModalButtons();
     });
+  }
 
-    // Confirm Sprint button
+  // Confirm Sprint button
+  if (confirmSprintBtn) {
     confirmSprintBtn.addEventListener('click', function() {
       const projectId = modal.dataset.projectId;
       const sprintGoal = document.getElementById('sprint-goal').value;
@@ -405,27 +424,39 @@
       // Submit the data to move the project to sprint
       moveProjectToSprint(projectId, sprintGoal);
     });
-    
-    // Edit Project button
-    document.getElementById('btn-edit').addEventListener('click', function() {
+  }
+  
+  // Edit Project button
+  const btnEdit = document.getElementById('btn-edit');
+  if (btnEdit) {
+    btnEdit.addEventListener('click', function() {
       const projectId = modal.dataset.projectId;
       window.location.href = `/project/${projectId}/edit/`;
     });
+  }
 
-    // Move to Backlog button
-    document.getElementById('btn-move-backlog').addEventListener('click', function() {
+  // Move to Backlog button
+  const btnMoveBacklog = document.getElementById('btn-move-backlog');
+  if (btnMoveBacklog) {
+    btnMoveBacklog.addEventListener('click', function() {
       const projectId = modal.dataset.projectId;
       moveProjectToBacklog(projectId);
     });
-    
-    // Move to Discussion button
-    document.getElementById('btn-move-discussion').addEventListener('click', function() {
+  }
+  
+  // Move to Discussion button
+  const btnMoveDiscussion = document.getElementById('btn-move-discussion');
+  if (btnMoveDiscussion) {
+    btnMoveDiscussion.addEventListener('click', function() {
       const projectId = modal.dataset.projectId;
       moveProjectToDiscussion(projectId);
     });
-    
-    // Update Goal button
-    document.getElementById('btn-update-goal').addEventListener('click', function() {
+  }
+  
+  // Update Goal button
+  const btnUpdateGoal = document.getElementById('btn-update-goal');
+  if (btnUpdateGoal) {
+    btnUpdateGoal.addEventListener('click', function() {
       const projectId = modal.dataset.projectId;
       const sprintProjectId = document.getElementById('sprint-project-id').value;
       const sprintGoal = document.getElementById('sprint-goal').value;
@@ -437,260 +468,407 @@
       
       updateProjectGoal(projectId, sprintProjectId, sprintGoal);
     });
-    
-    // Cancel Goal Edit button
-    document.getElementById('btn-cancel-goal-edit').addEventListener('click', function() {
+  }
+  
+  // Cancel Goal Edit button
+  const btnCancelGoalEdit = document.getElementById('btn-cancel-goal-edit');
+  if (btnCancelGoalEdit) {
+    btnCancelGoalEdit.addEventListener('click', function() {
       resetModalButtons();
+    });
+  }
+
+  // Function to toggle critical status UI
+  function updateCriticalUI(badge, isCritical) {
+    if (isCritical) {
+      badge.textContent = 'Critical';
+      badge.className = 'status-badge critical';
+    } else {
+      badge.textContent = 'Not Critical';
+      badge.className = 'status-badge not-critical';
+    }
+  }
+
+  // Add event listeners for critical status badges
+  const criticalBadges = document.querySelectorAll('.status-badge.critical, .status-badge.not-critical');
+  criticalBadges.forEach(badge => {
+    badge.addEventListener('click', function() {
+      const id = this.dataset.id;
+      const isCritical = this.classList.contains('critical') && !this.classList.contains('not-critical');
+      const newCriticalState = !isCritical;
+
+      // Store original state in case we need to revert
+      const originalState = isCritical;
+      
+      // Update UI immediately for better user experience
+      updateCriticalUI(this, newCriticalState);
+
+      // Send the update to the server
+      fetch('/api/project/toggle_critical', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            sprintProjectId: id,
+            critical: newCriticalState
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification(
+              newCriticalState ? 'Project marked as critical' : 'Project unmarked as critical',
+              'success'
+            );
+          } else {
+            // Revert the visual change if the server update failed
+            updateCriticalUI(this, originalState);
+            showNotification('Failed to update project status', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error updating critical status:', error);
+          // Revert the visual change if there was an error
+          updateCriticalUI(this, originalState);
+          showNotification('Error updating project status', 'error');
+        });
     });
   });
 
-  // Function to open the modal and load project details
-  function openProjectModal(projectId, mode, options = {}) {
-    const modal = document.getElementById('projectModal');
-    modal.dataset.projectId = projectId;
+  // Initialize Sortable for project reordering
+  const projectsList = document.getElementById('sortable-projects');
+  if (projectsList && projectsList.children.length > 0 && typeof Sortable !== 'undefined') {
+    const sortable = new Sortable(projectsList, {
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: function(evt) {
+        updateProjectOrder();
+      }
+    });
 
-    // Reset the modal to default state first
-    resetModalButtons();
-    
-    // Configure modal based on mode
-    if (mode === 'edit-goal') {
-      document.getElementById('modal-title').textContent = "Edit Sprint Goal";
-      document.getElementById('sprint-goal-container').style.display = 'block';
-      document.getElementById('sprint-goal').value = options.currentGoal || '';
-      document.getElementById('sprint-project-id').value = options.sprintProjectId || '';
-      document.getElementById('standard-actions').style.display = 'none';
-      document.getElementById('edit-goal-actions').style.display = 'block'; 
-    } else if (mode === 'add-to-cycle') {
-      document.getElementById('modal-title').textContent = "Add to Sprint";
-      document.getElementById('sprint-goal-container').style.display = 'block';
-      document.getElementById('standard-actions').style.display = 'none';
-      document.getElementById('add-to-sprint-actions').style.display = 'block';
-    } else if (mode === 'quickview') {
-      document.getElementById('modal-title').textContent = "Project Quick View";
-      document.getElementById('btn-move-discussion').style.display = 'inline-block';
-    } else {
-      document.getElementById('modal-title').textContent = "Project Details";
+    // Function to get all projects and their new order
+    function updateProjectOrder() {
+      const projects = document.querySelectorAll('#sortable-projects .project-item');
+      const orderData = [];
+
+      projects.forEach((project, index) => {
+        orderData.push({
+          id: project.dataset.id,
+          order: index + 1
+        });
+      });
+
+      // Send the new order to the server
+      fetch('/api/projects/reorder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            projects: orderData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification('Project order updated successfully', 'success');
+          } else {
+            showNotification('Failed to update project order', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error updating project order:', error);
+          showNotification('Error updating project order', 'error');
+        });
     }
-
-    // Show the modal
-    modal.style.display = 'block';
-
-    // Fetch project details via AJAX
-    fetchProjectDetails(projectId);
   }
 
-  // Function to close the modal
-  function closeModal() {
-    const modal = document.getElementById('projectModal');
-    modal.style.display = 'none';
-    resetModalButtons();
-
-    // Clear the sprint goal input
-    document.getElementById('sprint-goal').value = '';
-    document.getElementById('sprint-project-id').value = '';
-  }
-
-  // Reset modal buttons to their default state
-  function resetModalButtons() {
-    document.getElementById('sprint-goal-container').style.display = 'none';
-    document.getElementById('standard-actions').style.display = 'block';
-    document.getElementById('add-to-sprint-actions').style.display = 'none';
-    document.getElementById('edit-goal-actions').style.display = 'none';
-    document.getElementById('btn-move-discussion').style.display = 'none';
-  }
-
-  // Function to fetch project details from server
-  function fetchProjectDetails(projectId) {
-    fetch(`/api/project/${projectId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(project => {
-        // Populate modal with project details
-        document.getElementById('modal-project-title').textContent = project.name;
-        document.getElementById('modal-project-details').textContent = project.details || 'No details provided';
-        document.getElementById('modal-project-context').textContent = project.context || 'No context provided';
-        document.getElementById('modal-project-requirements').textContent = project.requirements || 'No requirements specified';
-        document.getElementById('modal-project-dri').textContent = project.dri || 'Unassigned';
-        document.getElementById('modal-project-created').textContent = project.created || '';
-        
-        // Show/hide move to discussion button based on location
-        if (project.location === 'sprint') {
-          document.getElementById('btn-move-discussion').style.display = 'inline-block';
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching project details:', error);
-        alert('Failed to load project details. Please try again.');
-        closeModal();
-      });
-  }
-
-  // Function to move project to sprint
-  function moveProjectToSprint(projectId, sprintGoal) {
-    const selectedSprintId = {{ selectedsprint.id }};
-    
-    fetch('/api/project/commit_to_sprint', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({
-          projectId: projectId,
-          sprintId: selectedSprintId,
-          goal: sprintGoal
-        })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          // Close the modal and refresh the page to show updated data
-          closeModal();
-          window.location.reload();
-        } else {
-          alert(result.message || 'Failed to move project to sprint.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request.');
-      });
-  }
-
-  // Function to move project to backlog
-  function moveProjectToBacklog(projectId) {
-    const data = {
-      projectId: projectId,
-      location: 'backlog'
-    };
-
-    fetch('/api/project/move', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          // Close the modal and refresh the page to show updated data
-          closeModal();
-          window.location.reload();
-        } else {
-          alert(result.message || 'Failed to move project to backlog.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request.');
-      });
-  }
-  
-  // Function to move project to discussion
-  function moveProjectToDiscussion(projectId) {
-    const data = {
-      projectId: projectId,
-      location: 'discussion'
-    };
-
-    fetch('/api/project/move', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          // Close the modal and refresh the page to show updated data
-          closeModal();
-          window.location.reload();
-        } else {
-          alert(result.message || 'Failed to move project to discussion.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request.');
-      });
-  }
-  
-  // Function to update project sprint goal
-  function updateProjectGoal(projectId, sprintProjectId, sprintGoal) {
-    const selectedSprintId = {{ selectedsprint.id }};
-    
-    fetch('/api/project/commit_to_sprint', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({
-          projectId: projectId,
-          sprintId: selectedSprintId,
-          goal: sprintGoal,
-          sprintProjectId: sprintProjectId
-        })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          // Close the modal and refresh the page to show updated data
-          closeModal();
-          window.location.reload();
-        } else {
-          alert(result.message || 'Failed to update sprint goal.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request.');
-      });
-  }
-</script>
-
-<script>
-  // Get references to the button and div elements
+  // Get references to the button and div elements for sprint toggle
   const toggleButton = document.getElementById('toggleSelectSprint');
   const sprintSelectionDiv = document.querySelector('.sprint-selection-option');
 
-  // Add click event listener to the button
-  toggleButton.addEventListener('click', function() {
-    // Toggle the display property of the div
-    if (sprintSelectionDiv.style.display === 'none') {
-      sprintSelectionDiv.style.display = 'block';
-    } else {
-      sprintSelectionDiv.style.display = 'none';
-    }
-  });
+  // Add click event listener to the sprint toggle button
+  if (toggleButton && sprintSelectionDiv) {
+    toggleButton.addEventListener('click', function() {
+      // Toggle the display property of the div
+      if (sprintSelectionDiv.style.display === 'none') {
+        sprintSelectionDiv.style.display = 'block';
+      } else {
+        sprintSelectionDiv.style.display = 'none';
+      }
+    });
+  }
+});
+
+// Function to open the modal and load project details
+function openProjectModal(projectId, mode, options = {}) {
+  const modal = document.getElementById('projectModal');
+  if (!modal) return;
+  
+  modal.dataset.projectId = projectId;
+
+  // Reset the modal to default state first
+  resetModalButtons();
+  
+  // Configure modal based on mode
+  if (mode === 'edit-goal') {
+    document.getElementById('modal-title').textContent = "Edit Sprint Goal";
+    document.getElementById('sprint-goal-container').style.display = 'block';
+    document.getElementById('sprint-goal').value = options.currentGoal || '';
+    document.getElementById('sprint-project-id').value = options.sprintProjectId || '';
+    document.getElementById('standard-actions').style.display = 'none';
+    document.getElementById('edit-goal-actions').style.display = 'block'; 
+  } else if (mode === 'add-to-cycle') {
+    document.getElementById('modal-title').textContent = "Add to Sprint";
+    document.getElementById('sprint-goal-container').style.display = 'block';
+    document.getElementById('standard-actions').style.display = 'none';
+    document.getElementById('add-to-sprint-actions').style.display = 'block';
+  } else if (mode === 'quickview') {
+    document.getElementById('modal-title').textContent = "Project Quick View";
+    document.getElementById('btn-move-discussion').style.display = 'inline-block';
+  } else {
+    document.getElementById('modal-title').textContent = "Project Details";
+  }
+
+  // Show the modal
+  modal.style.display = 'block';
+
+  // Fetch project details via AJAX
+  fetchProjectDetails(projectId);
+}
+
+// Function to close the modal
+function closeModal() {
+  const modal = document.getElementById('projectModal');
+  if (!modal) return;
+  
+  modal.style.display = 'none';
+  resetModalButtons();
+
+  // Clear the sprint goal input
+  const sprintGoal = document.getElementById('sprint-goal');
+  const sprintProjectId = document.getElementById('sprint-project-id');
+  
+  if (sprintGoal) sprintGoal.value = '';
+  if (sprintProjectId) sprintProjectId.value = '';
+}
+
+// Reset modal buttons to their default state
+function resetModalButtons() {
+  const sprintGoalContainer = document.getElementById('sprint-goal-container');
+  const standardActions = document.getElementById('standard-actions');
+  const addToSprintActions = document.getElementById('add-to-sprint-actions');
+  const editGoalActions = document.getElementById('edit-goal-actions');
+  const btnMoveDiscussion = document.getElementById('btn-move-discussion');
+  
+  if (sprintGoalContainer) sprintGoalContainer.style.display = 'none';
+  if (standardActions) standardActions.style.display = 'block';
+  if (addToSprintActions) addToSprintActions.style.display = 'none';
+  if (editGoalActions) editGoalActions.style.display = 'none';
+  if (btnMoveDiscussion) btnMoveDiscussion.style.display = 'none';
+}
+
+// Function to fetch project details from server
+function fetchProjectDetails(projectId) {
+  fetch(`/api/project/${projectId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(project => {
+      // Populate modal with project details
+      const modalTitle = document.getElementById('modal-project-title');
+      const modalDetails = document.getElementById('modal-project-details');
+      const modalContext = document.getElementById('modal-project-context');
+      const modalRequirements = document.getElementById('modal-project-requirements');
+      const modalDri = document.getElementById('modal-project-dri');
+      const modalCreated = document.getElementById('modal-project-created');
+      const btnMoveDiscussion = document.getElementById('btn-move-discussion');
+      
+      if (modalTitle) modalTitle.textContent = project.name;
+      if (modalDetails) modalDetails.textContent = project.details || 'No details provided';
+      if (modalContext) modalContext.textContent = project.context || 'No context provided';
+      if (modalRequirements) modalRequirements.textContent = project.requirements || 'No requirements specified';
+      if (modalDri) modalDri.textContent = project.dri || 'Unassigned';
+      if (modalCreated) modalCreated.textContent = project.created || '';
+      
+      // Show/hide move to discussion button based on location
+      if (project.location === 'sprint' && btnMoveDiscussion) {
+        btnMoveDiscussion.style.display = 'inline-block';
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching project details:', error);
+      alert('Failed to load project details. Please try again.');
+      closeModal();
+    });
+}
+
+// Function to move project to sprint
+function moveProjectToSprint(projectId, sprintGoal) {
+  const selectedSprintId = typeof selectedsprint !== 'undefined' ? selectedsprint.id : null;
+  
+  if (!selectedSprintId) {
+    console.error('Selected sprint ID is not available');
+    alert('Error: Could not determine the current sprint.');
+    return;
+  }
+  
+  fetch('/api/project/commit_to_sprint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        projectId: projectId,
+        sprintId: selectedSprintId,
+        goal: sprintGoal
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(result => {
+      if (result.success) {
+        // Close the modal and refresh the page to show updated data
+        closeModal();
+        window.location.reload();
+      } else {
+        alert(result.message || 'Failed to move project to sprint.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing your request.');
+    });
+}
+
+// Function to move project to backlog
+function moveProjectToBacklog(projectId) {
+  const data = {
+    projectId: projectId,
+    location: 'backlog'
+  };
+
+  fetch('/api/project/move', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(result => {
+      if (result.success) {
+        // Close the modal and refresh the page to show updated data
+        closeModal();
+        window.location.reload();
+      } else {
+        alert(result.message || 'Failed to move project to backlog.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing your request.');
+    });
+}
+
+// Function to move project to discussion
+function moveProjectToDiscussion(projectId) {
+  const data = {
+    projectId: projectId,
+    location: 'discussion'
+  };
+
+  fetch('/api/project/move', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(result => {
+      if (result.success) {
+        // Close the modal and refresh the page to show updated data
+        closeModal();
+        window.location.reload();
+      } else {
+        alert(result.message || 'Failed to move project to discussion.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing your request.');
+    });
+}
+
+// Function to update project sprint goal
+function updateProjectGoal(projectId, sprintProjectId, sprintGoal) {
+  const selectedSprintId = typeof selectedsprint !== 'undefined' ? selectedsprint.id : null;
+  
+  if (!selectedSprintId) {
+    console.error('Selected sprint ID is not available');
+    alert('Error: Could not determine the current sprint.');
+    return;
+  }
+  
+  fetch('/api/project/commit_to_sprint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        projectId: projectId,
+        sprintId: selectedSprintId,
+        goal: sprintGoal,
+        sprintProjectId: sprintProjectId
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(result => {
+      if (result.success) {
+        // Close the modal and refresh the page to show updated data
+        closeModal();
+        window.location.reload();
+      } else {
+        alert(result.message || 'Failed to update sprint goal.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing your request.');
+    });
+}
 </script>
 
 {% include './js/sortable.html' %}
