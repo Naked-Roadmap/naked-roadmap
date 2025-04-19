@@ -12,6 +12,7 @@ from flask_wtf.csrf import generate_csrf
 from . import utils
 from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html
 import bleach
+from sqlalchemy import func
 
 @app.context_processor
 def inject_csrf_token():
@@ -26,10 +27,15 @@ def index():
     projects = (
         Project.query
         .order_by(Project.created.desc())
-        .all()
+        .limit(5)
     )
     goals = (
-        Goal.query
+        db.session.query(
+            Goal,
+            func.count(Project.id).label('active_project_count')
+        )
+        .outerjoin(Project, (Project.objective_id == Goal.id) & (Project.status == 'Active'))
+        .group_by(Goal.id)
         .order_by(Goal.created.desc())
         .all()
     )
@@ -69,10 +75,12 @@ def project(project_id):
     # Get cycle commitment entries for this project
     cycles = SprintProjectMap.query.filter_by(project_id=project_id).order_by(SprintProjectMap.added.desc()).all()
     
+    active_goals = Goal.query.filter_by(status='Active').all()
+    
     # Initialize comment form
     form = CommentForm()
     
-    return render_template('project.html', project=project, comments=comments, changelogs=changelogs, form=form, cycles=cycles)
+    return render_template('project.html', project=project, comments=comments, changelogs=changelogs, form=form, cycles=cycles, active_goals=active_goals)
     
 @app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
 @login_required
@@ -163,6 +171,77 @@ def edit_project(project_id):
         form.launch.data = project.launch
 
     return render_template('edit.html', project=project, form=form)
+    
+@app.route('/projects/<int:project_id>/associate-objective', methods=['POST'])
+@login_required
+def associate_objective(project_id):
+    project = Project.query.get_or_404(project_id)
+    
+    # Check for remove association request
+    if 'remove_association' in request.form:
+        # Get the objective name for the changelog before removing it
+        objective_name = project.objective.title if project.objective else "Unknown objective"
+        
+        # Remove the association
+        project.objective_id = None
+        project.objective = None
+        
+        # Create a changelog entry
+        changelog = Changelog(
+            project_id=project.id,
+            user_id=current_user.id,
+            change_type='objective_removed',
+            content=f"Removed association with objective: {objective_name}"
+        )
+        db.session.add(changelog)
+        db.session.commit()
+        
+        flash('Objective association removed.', 'success')
+        return redirect(url_for('project', project_id=project.id))
+    
+    # Handle new or updated association
+    objective_id = request.form.get('objective_id')
+    if objective_id:
+        objective = Goal.query.get(objective_id)
+        if objective:
+            # Check if this is a new association or update
+            if project.objective_id != objective.id:
+                # Store old objective name for changelog if updating
+                old_objective = "None"
+                if project.objective:
+                    old_objective = project.objective.title
+                
+                # Update the association
+                project.objective_id = objective.id
+                project.objective = objective
+                
+                # Create a changelog entry
+                if old_objective == "None":
+                    change_type = 'objective_added'
+                    content = f"Added association with objective: {objective.title}"
+                else:
+                    change_type = 'objective_changed'
+                    content = f"Changed objective from '{old_objective}' to '{objective.title}'"
+                
+                changelog = Changelog(
+                    project_id=project.id,
+                    user_id=current_user.id,
+                    change_type=change_type,
+                    content=content
+                )
+                db.session.add(changelog)
+                db.session.commit()
+                
+                flash('Project linked to objective successfully.', 'success')
+            else:
+                # No change was made
+                flash('No changes to objective association.', 'info')
+        else:
+            flash('Selected objective not found.', 'error')
+    else:
+        flash('No objective selected.', 'warning')
+    
+    return redirect(url_for('project', project_id=project.id))
 
 @app.route('/project/<int:project_id>/delete', methods=['POST'])
 @login_required
@@ -688,7 +767,15 @@ def planningStep2CycleSelected(sprint_id):
         .all()
     )
     goals = (
-        Goal.query
+        db.session.query(
+            Goal,
+            func.count(SprintProjectMap.id).label('sprint_project_count')
+        )
+        .outerjoin(Project, Project.objective_id == Goal.id)
+        .outerjoin(SprintProjectMap, (SprintProjectMap.project_id == Project.id) & 
+                                     (SprintProjectMap.sprint_id == sprint_id))
+        .filter(Goal.status == 'Active')
+        .group_by(Goal.id)
         .order_by(Goal.created.desc())
         .all()
     )

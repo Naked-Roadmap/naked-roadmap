@@ -30,9 +30,32 @@
 
                     <div class="section-header" style="padding:0px 0px 20px;">
                         <div>
-                            <div class="timeline-title">👨‍💻 <strong>Owner:</strong> {{ project.dri }}<br>
+                            <div class="timeline-title">
+                                👨‍💻 <strong>Owner:</strong> {{ project.dri }}<br>
                                 🤝 <strong>Team:</strong> {{ project.team }} <br>
-                                📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}
+                                📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}<br>
+
+                                <!-- Goal/Objective Association -->
+                                {% if project.objective %}
+                                🎯 <strong>Objective:</strong> {{ project.objective.title }}
+                                <a href="#" class="btn-text" data-toggle="modal" data-target="#objectiveModal">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2">
+                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                    </svg>
+                                    Edit
+                                </a><br>
+                                <div class="objective-details">{{ project.objective.details }}</div>
+                                {% else %}
+                                🎯 <strong>Objective:</strong>
+                                <a href="#" class="btn-text" data-toggle="modal" data-target="#objectiveModal">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus-circle">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                    Link to Objective
+                                </a>
+                                {% endif %}
                             </div>
 
                         </div>
@@ -58,40 +81,24 @@
                         </div>
                     </div>
 
-                    <div class="project-item">
-                        <div class="project-header">
-                            <h5>Context and Background</h5>
-                        </div>
-                        <div class="project-meta">
-                            {{ project.context }}
-                        </div>
+                    <div class="project-details-section">
+                        <h5>Context and Background</h5>
+                        <p>{{ project.context }}</p>
                     </div>
 
-                    <div class="project-item">
-                        <div class="project-header">
-                            <h5>Reason for Prioritization</h5>
-                        </div>
-                        <div class="project-meta">
-                            {{ project.why }}
-                        </div>
+                    <div class="project-details-section">
+                        <h5>Reason for Prioritization</h5>
+                        <p>{{ project.why }}</p>
                     </div>
 
-                    <div class="project-item">
-                        <div class="project-header">
-                            <h5>Requirements</h5>
-                        </div>
-                        <div class="project-meta">
-                            {{ project.requirements }}
-                        </div>
+                    <div class="project-details-section">
+                        <h5>Requirements</h5>
+                        <p>{{ project.requirements }}</p>
                     </div>
 
-                    <div class="project-item">
-                        <div class="project-header">
-                            <h5>Launch Plan</h5>
-                        </div>
-                        <div class="project-meta">
-                            {{ project.launch }}
-                        </div>
+                    <div class="project-details-section">
+                        <h5>Launch Plan</h5>
+                        <p>{{ project.launch }}</p>
                     </div>
 
                 </div>
@@ -223,4 +230,94 @@
         });
     });
 </script>
+
+<!-- Objective Association Modal -->
+<div class="modal fade" id="objectiveModal" tabindex="-1" role="dialog" aria-labelledby="objectiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="objectiveModalLabel">
+                    {% if project.objective %}Edit{% else %}Add{% endif %} Project Objective
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="objectiveForm" action="{{ url_for('associate_objective', project_id=project.id) }}" method="POST">
+                    <div class="form-group">
+                        <label for="objectiveSelect">Select an Objective:</label>
+                        <select class="form-control" id="objectiveSelect" name="objective_id" onchange="showObjectiveDetails()">
+                            <option value="">-- Select an Objective --</option>
+                            {% for goal in active_goals %}
+                                <option value="{{ goal.id }}" 
+                                    data-details="{{ goal.details }}" 
+                                    data-title="{{ goal.title }}" 
+                                    {% if project.objective and project.objective.id == goal.id %}selected{% endif %}>
+                                    {{ goal.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="selectedObjectiveDetails" class="selected-objective-container" 
+                        {% if not project.objective %}style="display:none;"{% endif %}>
+                        <h6 id="selectedObjectiveTitle">
+                            {% if project.objective %}{{ project.objective.title }}{% endif %}
+                        </h6>
+                        <p id="selectedObjectiveText">
+                            {% if project.objective %}{{ project.objective.details }}{% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="form-actions mt-3">
+                        <button type="submit" class="btn-primary" id="confirmAssociationBtn" 
+                            {% if not project.objective %}disabled{% endif %}>
+                            Confirm Association
+                        </button>
+                        {% if project.objective %}
+                            <button type="button" class="btn-danger" onclick="removeAssociation()">
+                                Remove Association
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showObjectiveDetails() {
+        const selectElement = document.getElementById('objectiveSelect');
+        const detailsContainer = document.getElementById('selectedObjectiveDetails');
+        const titleElement = document.getElementById('selectedObjectiveTitle');
+        const textElement = document.getElementById('selectedObjectiveText');
+        const confirmBtn = document.getElementById('confirmAssociationBtn');
+        
+        if (selectElement.value) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            titleElement.textContent = selectedOption.getAttribute('data-title');
+            textElement.textContent = selectedOption.getAttribute('data-details');
+            detailsContainer.style.display = 'block';
+            confirmBtn.disabled = false;
+        } else {
+            detailsContainer.style.display = 'none';
+            confirmBtn.disabled = true;
+        }
+    }
+    
+    function removeAssociation() {
+        if (confirm('Are you sure you want to remove this association?')) {
+            const form = document.getElementById('objectiveForm');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'remove_association';
+            hiddenInput.value = 'true';
+            form.appendChild(hiddenInput);
+            form.submit();
+        }
+    }
+</script>
+
 {% endblock %}

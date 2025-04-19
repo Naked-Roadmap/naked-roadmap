@@ -124,16 +124,21 @@
     </div>
 
     <div class="goals-list">
-      {% for goal in goals %}
+      {% for goal_data in goals %}
       <div class="goal-item">
-        <h4>{{ goal.title }}</h4>
-        <p>{{ goal.details }}</p>
-      </div>
+        <h4>{{ goal_data.Goal.title }} 
+            <span class="project-count-badge">{{ goal_data.active_project_count }} project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
+        </h4>
+        <p>{{ goal_data.Goal.details }}</p>
+    </div>
       {% endfor %}
     </div>
   </div>
 </section>
 
+<div style="width:100%; border-bottom:1px solid #e4e6eb;margin-bottom:20px;padding: 0px 20px;">
+  <h2>Activity</h2>
+</div>
 
 <!-- ---------------------------------- -->
 <!-- Three Column Section -->
@@ -159,7 +164,7 @@
   <div class="column-narrow section">
     <div class="section-header">
       <h3>Recently Added Projects</h3>
-      <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
+      <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add New Project">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -168,10 +173,10 @@
     </div>
 
     <div class="goals-list">
-      {% for goal in goals %}
+      {% for project in projects %}
       <div class="goal-item">
-        <h4>{{ goal.title }}</h4>
-        <p>{{ goal.details }}</p>
+        <h4>{{ project.name }}</h4>
+        <p>{{ project.context|truncate(200,true,'...') }}</p>
       </div>
       {% endfor %}
     </div>
@@ -181,20 +186,16 @@
   <div class="column-narrow section">
     <div class="section-header">
       <h3>Recent Changes</h3>
-      <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </a>
     </div>
 
-    <div class="goals-list">
-      {% for goal in goals %}
-      <div class="goal-item">
-        <h4>{{ goal.title }}</h4>
-        <p>{{ goal.details }}</p>
-      </div>
+      <div class="goals-list">
+      {% for change in changes %}
+      {% set project = change.project %}
+      {% set user = change.user %}
+        <div class="goal-item">
+          <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
+          <p>{{ change.content }}</p>
+        </div>
       {% endfor %}
     </div>
   </div>

@@ -119,13 +119,18 @@
       </a>
     </div>
     <div class="goals-list">
-      {% for goal in goals %}
-      <div class="goal-item">
-        <h4>{{ goal.title }}</h4>
-        <p>{{ goal.details }}</p>
-      </div>
-      {% endfor %}
+    {% for goal_data in goals %}
+    <div class="goal-item">
+      <h4 style="display:flex; justify-content: space-between;">
+        {{ goal_data.Goal.title }}
+        <span class='project-count-badge {% if goal_data.sprint_project_count == 0 %}' style='background-color:#a10000; color:white;{% endif %}'>
+          {{ goal_data.sprint_project_count }} commitment{% if goal_data.sprint_project_count != 1 %}s{% endif %}
+        </span>
+      </h4>
+      <p>{{ goal_data.Goal.details }}</p>
     </div>
+    {% endfor %}
+  </div>
   </section>
 
 </section>

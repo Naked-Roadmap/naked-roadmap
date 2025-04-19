@@ -50,12 +50,17 @@ class Project(db.Model):
     location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
     type: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
     status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
-
+    # Foreign keys
+    objective_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=True)
+    # Relationships
+    objective = db.relationship('Goal', backref=db.backref('projects', lazy='dynamic'))
+    
     def __repr__(self):
-        return '<Project {}>'.format(self.body)
+        return '<Project {}>'.format(self.name)
         
 # TODO: Rename to be Objectives
 class Goal(db.Model):
+    __tablename__ = "goal"
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
     title: so.Mapped[str] = so.mapped_column(sa.TEXT())
@@ -64,6 +69,9 @@ class Goal(db.Model):
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
     status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
     completed: so.Mapped[datetime] = so.mapped_column(nullable=True)
+    
+    def __repr__(self):
+        return '<Goal {}>'.format(self.title)
     
     def __repr__(self):
         return '<Request {}>'.format(self.body)

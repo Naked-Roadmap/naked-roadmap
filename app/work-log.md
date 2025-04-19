@@ -1,16 +1,19 @@
 ## Requirements
+Index:
+TODO: If no active cycle, then use last completed on dashboard
+
 Projects Pages
-TODO: On Dashboard, show recent comments as well
-<!-- TODO: Fix the star/critical functionality on planning page -->
+TODO: Projects as tasks vs. projects
+
+Planning Pages:
+TODO: Test further. Some workflows and path updates are not working. I.e., moving projects and locations back and forth, updating the date field on committment
+TODO: Modify commitment status on a sprint page, index page
 TODO: Fix links on the planning page discussion section
 TODO: Fix links on the planning page commitments section
 TODO: Send email when planning is complete
-TODO: Sent sprint as active when complete
-TODO: If no active cycle, then use last completed on dashboard
-TODO: Make sure objectives on the planning page show the number of projects supporting them.
-TODO: Fix styles for create page. 
-TODO: Projects as tasks vs. projects
-TODO: On the project page, ability to attach a project to a goal.
+TODO: Sent sprint as active when planning is complete
+
+Sprints:
 TODO: Only one sprint active. The rest as upcoming or completed.
 TODO: Sort sprint projects
 TODO: Add cycle commitment outcomes per project alongside goals.
@@ -18,11 +21,15 @@ TODO: Send "Planned cycle email"
 TODO: Send "Retro'd cycle email"
 TODO: Add in "critical" toggle for sprint projects, and reason for critical
 TODO: Collected & prioritized single stack roadmap section
-TODO: Associate projects to goals.
+
 Goals Page:
 TODO: Goals order
 TODO: Edit or delete comment on project only if you're the owner of the comment.
 TODO: Add in an org configuration page outside of the app config.
+
+Other:
+TODO: Add Teams Page, create and list teams
+TODO: Update project edit with team dropdown
 
 ## Analytics
 TODO: Team Load (active projects)
@@ -32,6 +39,7 @@ TODO: Number of projects completed
 TODO: Commitment Completion %
 TODO: Number of cycles run
 TODO: Number of goals achieved
+TODO: Projects associated with a goal
 
 ## Nice to Have
 TODO: Different types of users:
@@ -53,6 +61,12 @@ TODO: Create community discourse as part of implementation of marketing site to 
 -- DONE: % completed of sprint bar.
 -- DONE: Add discussion per project
 -- DONE: Add in changelog per project
+-- DONE: Fix the star/critical functionality on planning page
+-- DONE: Fix styles for create page. 
+-- DONE: On Dashboard, show recent comments as well
+-- DONE: On the project page, ability to attach a project to a goal.
+-- DONE: Make sure objectives on the planning page show the number of projects supporting them.
+-- DONE: Associate projects to goals.
 
 ## Reminders:
 
@@ -61,6 +75,7 @@ TODO: Create community discourse as part of implementation of marketing site to 
 - flask db init
 - flask db migrate -m "comment"
 - flask db upgrade
+- flask db stamp head for failed migrations
 
 (venv) $ flask shell
 >>> db
