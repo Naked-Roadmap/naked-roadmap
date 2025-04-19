@@ -34,6 +34,20 @@
                                 👨‍💻 <strong>Owner:</strong> {{ project.dri }}<br>
                                 🤝 <strong>Team:</strong> {{ project.team }} <br>
                                 📆 <strong>Started:</strong> {{ project.created.strftime('%b %d, %Y') }}<br>
+                                🏷️ <strong>Type:</strong> 
+<div class="project-type-toggle d-inline-block ml-2">
+    <label class="switch">
+        <input type="checkbox" id="projectTypeToggle" 
+               {% if project.type == 'task' %}checked{% endif %}
+               data-project-id="{{ project.id }}"
+               onchange="updateProjectType(this)">
+        <div class="slider round">
+            <span class="option option-left">Project</span>
+            <span class="option option-right">Task</span>
+            <span class="slide-indicator"></span>
+        </div>
+    </label>
+</div><br>
 
                                 <!-- Goal/Objective Association -->
                                 {% if project.objective %}
@@ -250,18 +264,14 @@
                         <select class="form-control" id="objectiveSelect" name="objective_id" onchange="showObjectiveDetails()">
                             <option value="">-- Select an Objective --</option>
                             {% for goal in active_goals %}
-                                <option value="{{ goal.id }}" 
-                                    data-details="{{ goal.details }}" 
-                                    data-title="{{ goal.title }}" 
-                                    {% if project.objective and project.objective.id == goal.id %}selected{% endif %}>
-                                    {{ goal.title }}
-                                </option>
+                            <option value="{{ goal.id }}" data-details="{{ goal.details }}" data-title="{{ goal.title }}" {% if project.objective and project.objective.id == goal.id %}selected{% endif %}>
+                                {{ goal.title }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
-                    
-                    <div id="selectedObjectiveDetails" class="selected-objective-container" 
-                        {% if not project.objective %}style="display:none;"{% endif %}>
+
+                    <div id="selectedObjectiveDetails" class="selected-objective-container" {% if not project.objective %}style="display:none;" {% endif %}>
                         <h6 id="selectedObjectiveTitle">
                             {% if project.objective %}{{ project.objective.title }}{% endif %}
                         </h6>
@@ -269,16 +279,15 @@
                             {% if project.objective %}{{ project.objective.details }}{% endif %}
                         </p>
                     </div>
-                    
+
                     <div class="form-actions mt-3">
-                        <button type="submit" class="btn-primary" id="confirmAssociationBtn" 
-                            {% if not project.objective %}disabled{% endif %}>
+                        <button type="submit" class="btn-primary" id="confirmAssociationBtn" {% if not project.objective %}disabled{% endif %}>
                             Confirm Association
                         </button>
                         {% if project.objective %}
-                            <button type="button" class="btn-danger" onclick="removeAssociation()">
-                                Remove Association
-                            </button>
+                        <button type="button" class="btn-danger" onclick="removeAssociation()">
+                            Remove Association
+                        </button>
                         {% endif %}
                     </div>
                 </form>
@@ -294,7 +303,7 @@
         const titleElement = document.getElementById('selectedObjectiveTitle');
         const textElement = document.getElementById('selectedObjectiveText');
         const confirmBtn = document.getElementById('confirmAssociationBtn');
-        
+
         if (selectElement.value) {
             const selectedOption = selectElement.options[selectElement.selectedIndex];
             titleElement.textContent = selectedOption.getAttribute('data-title');
@@ -306,7 +315,7 @@
             confirmBtn.disabled = true;
         }
     }
-    
+
     function removeAssociation() {
         if (confirm('Are you sure you want to remove this association?')) {
             const form = document.getElementById('objectiveForm');
@@ -319,5 +328,130 @@
         }
     }
 </script>
+
+<script>
+function updateProjectType(checkbox) {
+    const projectId = checkbox.getAttribute('data-project-id');
+    const type = checkbox.checked ? 'task' : 'project';
+    
+    // Prepare headers
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Try to get CSRF token if available
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+    
+    // Send AJAX request to update the project type
+    fetch(`/project/${projectId}/update_type`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ type: type })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Project type updated successfully:', data);
+        // No need to do anything else since the UI is already updated
+    })
+    .catch(error => {
+        console.error('Error updating project type:', error);
+        // Revert UI changes on error
+        checkbox.checked = !checkbox.checked;
+        alert('Failed to update project type. Please try again.');
+    });
+}
+
+// Helper function to get CSRF token with fallbacks
+function getCsrfToken() {
+    // Try to get from meta tag
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag) {
+        return metaTag.getAttribute('content');
+    }
+    
+    // Try to get from form if using Flask-WTF
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    if (csrfInput) {
+        return csrfInput.value;
+    }
+    
+    // If using Flask with session CSRF
+    const csrfInputFlask = document.querySelector('input[name="_csrf_token"]');
+    if (csrfInputFlask) {
+        return csrfInputFlask.value;
+    }
+    
+    console.warn('CSRF token not found, request may fail');
+    return null;
+}
+</script>
+{# <script>
+function updateProjectType(checkbox) {
+    const projectId = checkbox.getAttribute('data-project-id');
+    const type = checkbox.checked ? 'task' : 'project';
+    
+    // Prepare headers
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Try to get CSRF token if available
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+    
+    console.log('Sending request to update project type:', type);
+    
+    // Send AJAX request to update the project type
+    fetch(`/project/${projectId}/update_type`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ type: type })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        // Clone the response so we can log it and still use it
+        const clone = response.clone();
+        clone.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                const data = JSON.parse(text);
+                console.log('Parsed JSON:', data);
+            } catch (e) {
+                console.log('Failed to parse JSON:', e);
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success handler received:', data);
+        // Don't need to do anything else here - the UI update already happened
+        return data;
+    })
+    .catch(error => {
+        console.error('Error handler triggered:', error);
+        // Only revert UI and show error for actual failures
+        if (error.message && (error.message.includes('status') || 
+                              error.message.includes('JSON') || 
+                              error.message.includes('parse'))) {
+            // Revert UI changes on error
+            checkbox.checked = !checkbox.checked;
+            alert('Failed to update project type. Please try again.');
+        }
+    });
+}</script> #}
 
 {% endblock %}

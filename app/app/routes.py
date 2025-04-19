@@ -172,6 +172,46 @@ def edit_project(project_id):
 
     return render_template('edit.html', project=project, form=form)
     
+@app.route('/project/<int:project_id>/update_type', methods=['POST'])
+def update_project_type(project_id):
+    if request.method == 'POST':
+        data = request.get_json()
+        project_type = data.get('type')
+        
+        if project_type not in ['project', 'task']:
+            return jsonify({'error': 'Invalid project type'}), 400
+        
+        project = Project.query.get_or_404(project_id)
+        old_type = project.type if project.type else 'Not set'
+        project.type = project_type
+        db.session.commit()
+        
+        try:
+            # Create changelog entry using the correct fields from your model
+            user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
+            
+            # Ensure we have a user_id since it's not nullable
+            if user_id is None:
+                # You might want to use a system user ID or handle this differently
+                # depending on your application's requirements
+                return jsonify({'success': True, 'type': project_type, 'warning': 'No user detected, changelog not created'})
+            
+            changelog = Changelog(
+                project_id=project_id,
+                change_type='edit',  # This is 'change_type' in your model
+                content=f'Project type changed from "{old_type}" to "{project_type}"',  # This is 'content' in your model
+                user_id=user_id
+                # timestamp will be automatically set by the default
+            )
+            db.session.add(changelog)
+            db.session.commit()
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Error creating changelog: {str(e)}")
+            # Don't roll back the project change even if changelog fails
+        
+        return jsonify({'success': True, 'type': project_type})
+    
 @app.route('/projects/<int:project_id>/associate-objective', methods=['POST'])
 @login_required
 def associate_objective(project_id):
