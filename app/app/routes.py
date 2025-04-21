@@ -11,7 +11,7 @@ from config import Config
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from . import utils
-from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html
+from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html, sanitize_text 
 import bleach
 from sqlalchemy import func
 import smtplib
@@ -102,14 +102,7 @@ def edit_project(project_id):
     
     form = CreateProject()
     
-    if request.method == 'POST':
-        # Check for CSRF token validity
-        if not form.validate_on_submit():
-            if request.is_xhr:  # For AJAX requests (autosave)
-                return jsonify({'success': False, 'message': 'CSRF validation failed'})
-            flash('Form validation failed. Please try again.', 'error')
-            return render_template('edit.html', project=project, form=form)
-        
+    if request.method == 'POST' and form.validate_on_submit():
         # Track what changed
         changes = []
         if project.name != form.name.data:
@@ -129,11 +122,11 @@ def edit_project(project_id):
         if project.launch != form.launch.data:
             changes.append(f"Launch updated")
         
-        # Sanitize HTML input to prevent XSS attacks
+        # Sanitize all inputs consistently
         sanitized_data = {
-            'name': bleach.clean(form.name.data, strip=True),
-            'dri': bleach.clean(form.dri.data, strip=True),
-            'team': bleach.clean(form.team.data, strip=True),
+            'name': sanitize_text(form.name.data),
+            'dri': sanitize_text(form.dri.data),
+            'team': sanitize_text(form.team.data),
             'context': clean_html(form.context.data),
             'why': clean_html(form.why.data),
             'requirements': clean_html(form.requirements.data),
@@ -149,9 +142,12 @@ def edit_project(project_id):
         # Create changelog entry if changes were made and not an autosave
         if changes and not is_autosave:
             change_content = ", ".join(changes)
+            # Sanitize the change content before storing
+            sanitized_change_content = sanitize_text(change_content)
+            
             changelog = Changelog(
                 change_type='edit',
-                content=change_content,
+                content=sanitized_change_content,
                 project_id=project_id,
                 user_id=current_user.id,
                 timestamp=datetime.utcnow()
@@ -180,46 +176,6 @@ def edit_project(project_id):
 
     return render_template('edit.html', project=project, form=form)
     
-@app.route('/project/<int:project_id>/update_type', methods=['POST'])
-def update_project_type(project_id):
-    if request.method == 'POST':
-        data = request.get_json()
-        project_type = data.get('type')
-        
-        if project_type not in ['project', 'task']:
-            return jsonify({'error': 'Invalid project type'}), 400
-        
-        project = Project.query.get_or_404(project_id)
-        old_type = project.type if project.type else 'Not set'
-        project.type = project_type
-        db.session.commit()
-        
-        try:
-            # Create changelog entry using the correct fields from your model
-            user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
-            
-            # Ensure we have a user_id since it's not nullable
-            if user_id is None:
-                # You might want to use a system user ID or handle this differently
-                # depending on your application's requirements
-                return jsonify({'success': True, 'type': project_type, 'warning': 'No user detected, changelog not created'})
-            
-            changelog = Changelog(
-                project_id=project_id,
-                change_type='edit',  # This is 'change_type' in your model
-                content=f'Project type changed from "{old_type}" to "{project_type}"',  # This is 'content' in your model
-                user_id=user_id
-                # timestamp will be automatically set by the default
-            )
-            db.session.add(changelog)
-            db.session.commit()
-        except Exception as e:
-            # Log the error but don't fail the request
-            print(f"Error creating changelog: {str(e)}")
-            # Don't roll back the project change even if changelog fails
-        
-        return jsonify({'success': True, 'type': project_type})
-    
 @app.route('/projects/<int:project_id>/associate-objective', methods=['POST'])
 @login_required
 def associate_objective(project_id):
@@ -229,6 +185,7 @@ def associate_objective(project_id):
     if 'remove_association' in request.form:
         # Get the objective name for the changelog before removing it
         objective_name = project.objective.title if project.objective else "Unknown objective"
+        objective_name = sanitize_text(objective_name)
         
         # Remove the association
         project.objective_id = None
@@ -257,7 +214,10 @@ def associate_objective(project_id):
                 # Store old objective name for changelog if updating
                 old_objective = "None"
                 if project.objective:
-                    old_objective = project.objective.title
+                    old_objective = sanitize_text(project.objective.title)
+                
+                # Sanitize the objective title for the changelog
+                objective_title = sanitize_text(objective.title)
                 
                 # Update the association
                 project.objective_id = objective.id
@@ -266,10 +226,10 @@ def associate_objective(project_id):
                 # Create a changelog entry
                 if old_objective == "None":
                     change_type = 'objective_added'
-                    content = f"Added association with objective: {objective.title}"
+                    content = f"Added association with objective: {objective_title}"
                 else:
                     change_type = 'objective_changed'
-                    content = f"Changed objective from '{old_objective}' to '{objective.title}'"
+                    content = f"Changed objective from '{old_objective}' to '{objective_title}'"
                 
                 changelog = Changelog(
                     project_id=project.id,
@@ -303,18 +263,19 @@ def delete_project(project_id):
     
     
 @app.route('/create', methods=['GET', 'POST'])
-@login_required  # Make sure this is required to track the user
+@login_required
 def createProject():
     form = CreateProject()
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
+        # Sanitize all inputs consistently
         projectDetails = Project(
-            name=form.name.data,
-            dri=form.dri.data,
-            team=form.team.data,
-            context=form.context.data,
-            why=form.why.data,
-            requirements=form.requirements.data,
-            launch=form.launch.data, 
+            name=sanitize_text(form.name.data),
+            dri=sanitize_text(form.dri.data),
+            team=sanitize_text(form.team.data),
+            context=clean_html(form.context.data),
+            why=clean_html(form.why.data),
+            requirements=clean_html(form.requirements.data),
+            launch=clean_html(form.launch.data), 
         )
 
         db.session.add(projectDetails)
@@ -323,14 +284,14 @@ def createProject():
         # Create changelog entry
         changelog = Changelog(
             change_type='create',
-            content=f"Project '{form.name.data}' created",
+            content=f"Project '{sanitize_text(form.name.data)}' created",
             project_id=projectDetails.id,
             user_id=current_user.id
         )
         db.session.add(changelog)
         db.session.commit()
         
-        flash('Congratulations, project created!')
+        flash('Project created successfully!')
         return redirect(url_for('index'))
         
     return render_template('create.html', form=form)
@@ -636,8 +597,11 @@ def add_comment(project_id):
     form = CommentForm()
     
     if form.validate_on_submit():
+        # Sanitize comment content
+        sanitized_content = sanitize_text(form.content.data)
+        
         comment = Comment(
-            content=form.content.data,
+            content=sanitized_content,
             project_id=project_id,
             user_id=current_user.id
         )
@@ -1148,7 +1112,8 @@ def toggle_project_critical():
             status_text = "critical" if critical_status else "non-critical"
             changelog = Changelog(
                 change_type='critical_status_change',
-                content=f"Project marked as {status_text}",
+                # Sanitize the content text
+                content=sanitize_text(f"Project marked as {status_text}"),
                 project_id=sprint_project.project_id,
                 user_id=current_user.id
             )
@@ -1850,3 +1815,43 @@ def analytics():
         project_complexity=project_complexity,
         cycle_health_score=cycle_health_score
     )
+    
+@app.route('/project/<int:project_id>/update_type', methods=['POST'])
+def update_project_type(project_id):
+    if request.method == 'POST':
+        data = request.get_json()
+        project_type = data.get('type')
+        
+        if project_type not in ['project', 'task']:
+            return jsonify({'error': 'Invalid project type'}), 400
+        
+        project = Project.query.get_or_404(project_id)
+        old_type = project.type if project.type else 'Not set'
+        project.type = project_type
+        db.session.commit()
+        
+        try:
+            # Create changelog entry using the correct fields from your model
+            user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
+            
+            # Ensure we have a user_id since it's not nullable
+            if user_id is None:
+                # You might want to use a system user ID or handle this differently
+                # depending on your application's requirements
+                return jsonify({'success': True, 'type': project_type, 'warning': 'No user detected, changelog not created'})
+            
+            changelog = Changelog(
+                project_id=project_id,
+                change_type='edit',  # This is 'change_type' in your model
+                content=f'Project type changed from "{old_type}" to "{project_type}"',  # This is 'content' in your model
+                user_id=user_id
+                # timestamp will be automatically set by the default
+            )
+            db.session.add(changelog)
+            db.session.commit()
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Error creating changelog: {str(e)}")
+            # Don't roll back the project change even if changelog fails
+        
+        return jsonify({'success': True, 'type': project_type})

@@ -9,6 +9,7 @@ ALLOWED_TAGS = [
     'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
 ]
 
+# Remove style from allowed attributes to prevent style-based XSS attacks
 ALLOWED_ATTRIBUTES = {
     'a': ['href', 'title', 'target'],
     'abbr': ['title'],
@@ -17,22 +18,38 @@ ALLOWED_ATTRIBUTES = {
     'table': ['width', 'border', 'cellspacing', 'cellpadding'],
     'td': ['colspan', 'rowspan', 'width'],
     'th': ['colspan', 'rowspan', 'width'],
-    '*': ['class', 'id', 'style']  # Still allow style as an attribute
+    # Remove '*': ['class', 'id', 'style'] which allowed style on all elements
+    '*': ['class', 'id']  # Only allow class and id on all elements
 }
 
-# For backward compatibility - create a function to clean HTML with style support
+# Safe URL schemes for links
+ALLOWED_PROTOCOLS = ['http', 'https', 'mailto', 'tel']
+
 def clean_html(html_content):
     """
-    Clean HTML content with bleach, maintaining style attributes
+    Clean HTML content with bleach, removing potentially dangerous attributes
     """
-    # First clean with allowed tags and attributes (which includes style attr)
+    if html_content is None:
+        return ""
+        
+    # Clean with allowed tags and attributes, explicitly restricting protocols
     cleaned_html = bleach.clean(
         html_content,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
+        protocols=ALLOWED_PROTOCOLS,
         strip=True
     )
     return cleaned_html
+
+# Helper function to sanitize text fields (no HTML allowed)
+def sanitize_text(text):
+    """
+    Sanitize plain text fields by removing all HTML tags
+    """
+    if text is None:
+        return ""
+    return bleach.clean(text, tags=[], strip=True)
 
 # Add a method to check user permissions (implement according to your authorization model)
 def user_can_edit_project(self, project):

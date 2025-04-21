@@ -51,14 +51,14 @@
 
                                 <!-- Goal/Objective Association -->
                                 {% if project.objective %}
-                                🎯 <strong>Objective:</strong> {{ project.objective.title }}
+                                🎯 <strong>Objective:</strong> {{ project.objective.title|safe }}
                                 <a href="#" class="btn-text" data-toggle="modal" data-target="#objectiveModal">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2">
                                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                     </svg>
                                     Edit
                                 </a><br>
-                                <div class="objective-details">{{ project.objective.details }}</div>
+                                <div class="objective-details">{{ project.objective.details|safe }}</div>
                                 {% else %}
                                 🎯 <strong>Objective:</strong>
                                 <a href="#" class="btn-text" data-toggle="modal" data-target="#objectiveModal">
@@ -97,22 +97,22 @@
 
                     <div class="project-details-section">
                         <h5>Context and Background</h5>
-                        <p>{{ project.context }}</p>
+                        <p>{{ project.context|safe }}</p>
                     </div>
 
                     <div class="project-details-section">
                         <h5>Reason for Prioritization</h5>
-                        <p>{{ project.why }}</p>
+                        <p>{{ project.why|safe }}</p>
                     </div>
 
                     <div class="project-details-section">
                         <h5>Requirements</h5>
-                        <p>{{ project.requirements }}</p>
+                        <p>{{ project.requirements|safe }}</p>
                     </div>
 
                     <div class="project-details-section">
                         <h5>Launch Plan</h5>
-                        <p>{{ project.launch }}</p>
+                        <p>{{ project.launch|safe }}</p>
                     </div>
 
                 </div>
