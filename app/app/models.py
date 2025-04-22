@@ -12,29 +12,98 @@ from app import login
 def load_user(id):
     return db.session.get(User, int(id))
 
+# User-Role association table with named constraints
+user_roles = db.Table('user_roles',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', name='fk_user_roles_user_id'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id', name='fk_user_roles_role_id'), primary_key=True)
+)
+
+class Role(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
+    description: so.Mapped[str] = so.mapped_column(sa.String(255))
+    
+    # Define permissions as a relationship to users
+    # users: so.WriteOnlyMapped['User'] = so.relationship(
+    #     secondary=user_roles,
+    #     back_populates='roles'
+    # )
+    
+    def __repr__(self):
+        return f'<Role {self.name}>'
+
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
-    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')
+    # posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')
+    
+    # Add roles relationship
+    roles = db.relationship('Role', secondary=user_roles, lazy='dynamic',
+                          backref=db.backref('users', lazy='dynamic'))
+    
     def __repr__(self):
         return '<User {}>'.format(self.username)
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+    
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-class Post(db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    created: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
-    content: so.Mapped[str] = so.mapped_column(sa.TEXT())
-    title: so.Mapped[str] = so.mapped_column(sa.TEXT())
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
-    author: so.Mapped[User] = so.relationship(back_populates='posts')
-
-    def __repr__(self):
-        return '<Post {}>'.format(self.body)
+    
+    # Role-based authorization methods
+    def has_role(self, role_name):
+        """Check if user has a specific role"""
+        return self.roles.filter_by(name=role_name).first() is not None
+    
+    def is_admin(self):
+        """Check if user is an admin"""
+        return self.has_role('admin')
+    
+    # Permission checking methods
+    def can_view_project(self, project):
+        """Check if user can view a project"""
+        # Admins can view all projects
+        if self.is_admin():
+            return True
+        
+        # Project owners can view their projects
+        if project.user_id == self.id:
+            return True
+        
+        # DRIs can view their projects
+        if project.dri == self.username:
+            return True
+        
+        return False
+    
+    def can_edit_project(self, project):
+        """Check if user can edit a project"""
+        # Admins can edit all projects
+        if self.is_admin():
+            return True
+        
+        # Project owners can edit their projects
+        if project.user_id == self.id:
+            return True
+        
+        # DRIs can edit their projects
+        if project.dri == self.username:
+            return True
+        
+        return False
+    
+    def can_delete_project(self, project):
+        """Check if user can delete a project"""
+        # Only admins and owners can delete projects
+        if self.is_admin():
+            return True
+            
+        if project.user_id == self.id:
+            return True
+        
+        return False
 
 class Project(db.Model):
     __tablename__ = "project"
@@ -50,10 +119,19 @@ class Project(db.Model):
     location: so.Mapped[str] = so.mapped_column(sa.TEXT(),  nullable=True, default="discussion")
     type: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
     status: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True, default="Active")
+    # Add ownership and visibility fields
+    # user_id: db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    user_id: so.Mapped[Optional[int]] = so.mapped_column(
+        sa.ForeignKey('user.id', name='fk_project_user_id'), 
+        index=True,
+        nullable=True  # Make nullable for existing records
+    )
+    is_public: so.Mapped[bool] = so.mapped_column(default=True, nullable=True)  # Control visibility
     # Foreign keys
     objective_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=True)
     # Relationships
     objective = db.relationship('Goal', backref=db.backref('projects', lazy='dynamic'))
+    # owner = db.relationship('User', foreign_keys=[user_id], backref='owned_projects')
     
     def __repr__(self):
         return '<Project {}>'.format(self.name)

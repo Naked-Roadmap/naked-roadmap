@@ -1,6 +1,6 @@
 from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint, CommentForm
-from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog, AppConfig, get_config, set_config
+from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog, AppConfig, get_config, set_config, Role
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from . import utils
 from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html, sanitize_text 
+from .auth import admin_required, project_access_required, project_edit_required
 import bleach
 from sqlalchemy import func
 import smtplib
@@ -21,6 +22,27 @@ from email.mime.image import MIMEImage
 import os
 from jinja2 import Template
 import json
+
+"""
+Notes on Route Decorators:
+    @login_required # Should be used everywhere if login needed.
+    @admin_required # Admin pages, i.e., settings page
+        
+    ### Authorization on routes:
+    ### VIEW
+    if not current_user.can_view_project(project):
+        flash('You do not have permission to view this project.', 'danger')
+        return redirect(url_for('index'))
+    ### EDIT
+    if not current_user.can_edit_project(project):
+        flash('You do not have permission to edit this project.', 'danger')
+        return redirect(url_for('project', project_id=project_id))
+    ### DELETE
+    if not current_user.can_delete_project(project):
+        flash('You do not have permission to delete this project.', 'danger')
+        return redirect(url_for('project', project_id=project_id))
+"""
+
 
 @app.context_processor
 def inject_csrf_token():
@@ -71,6 +93,7 @@ def index():
     return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today, comments=comments, changes=changes)
     
 @app.route('/project/<int:project_id>')
+@login_required
 def project(project_id):
     project = Project.query.filter_by(id=project_id).first_or_404()
     
@@ -276,6 +299,7 @@ def createProject():
             why=clean_html(form.why.data),
             requirements=clean_html(form.requirements.data),
             launch=clean_html(form.launch.data), 
+            user_id=current_user.id 
         )
 
         db.session.add(projectDetails)
@@ -297,6 +321,7 @@ def createProject():
     return render_template('create.html', form=form)
 
 @app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
+@login_required
 def edit(project_id):
     project = (
         Project.query
@@ -323,6 +348,7 @@ def edit(project_id):
     return render_template('edit.html', project=project, form=form)
 
 @app.route('/<int:project_id>/delete', methods=('POST',))
+@login_required
 def delete(project_id):
     deleteProject = db.session.query(Project).filter(Project.id==project_id).first()
     db.session.delete(deleteProject)
@@ -332,6 +358,7 @@ def delete(project_id):
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
+@login_required
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -350,6 +377,7 @@ def login():
     return render_template('login.html', title='Sign In', form=form)
     
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
@@ -364,6 +392,13 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        
+        # Assign default role
+        default_role = Role.query.filter_by(name='team_member').first()
+        if default_role:
+            user.roles.append(default_role)
+            db.session.commit()
+            
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
@@ -392,6 +427,7 @@ def projectspage():
 ########################################################
 
 @app.route('/goals', methods=['GET', 'POST'])
+@login_required
 def createGoal():
     form = CreateGoal()
     if form.validate_on_submit():
@@ -431,6 +467,7 @@ def editGoal():
 ########################################################
 
 @app.route('/sprint', methods=['GET', 'POST'])
+@login_required
 def createSprint():
     form = CreateSprint()
     
@@ -488,6 +525,7 @@ def add_to_cycle(project_id, sprint_id):
 ########################################################
 
 @app.route('/api/project/<int:project_id>', methods=['GET'])
+@login_required
 def api_get_project(project_id):
     project = (
         Project.query
@@ -663,6 +701,7 @@ def delete_comment(comment_id):
 ########################################################
 
 @app.route('/cycles/', methods=['GET', 'POST'])
+@login_required
 def show_cycles():
     cycles = (
         Sprint.query
@@ -689,6 +728,7 @@ def show_cycles():
     
     
 @app.route('/cycles/details/<int:cycle_id>', methods=['GET', 'POST'])
+@login_required
 def show_cycle_details():
     cycles = (
         Sprint.query
@@ -771,6 +811,7 @@ def plan_sprint():
     )
 
 @app.route('/planning/cycle/<int:sprint_id>', methods=['GET'])
+@login_required
 def planningStep2CycleSelected(sprint_id):
     projects = (
         Project.query
@@ -825,6 +866,7 @@ def planningStep2CycleSelected(sprint_id):
     )
     
 @app.route('/planning/cycle/create', methods=['GET', 'POST'])
+@login_required
 def planningStep2CycleCreation():
     form = CreateSprint()
     
@@ -850,6 +892,7 @@ def planningStep2CycleCreation():
 ########################################################
 
 @app.route('/api/sprint/<int:sprint_id>', methods=['GET'])
+@login_required
 def api_get_sprint(sprint_id):
     """API endpoint to get sprint details including associated projects"""
     sprint = Sprint.query.get_or_404(sprint_id)
@@ -1414,6 +1457,7 @@ def send_html_email(subject, recipients, html_content):
 
 @app.route('/settings')
 @login_required
+@admin_required
 def settings():
     """Settings page for application configuration"""
     # Get all configuration values
@@ -1427,7 +1471,7 @@ def settings():
         else:
             configs[config.key] = config.value
     
-    return render_template('settings.html', 
+    return render_template('settings/settings.html', 
                            title='Application Settings', 
                            configs=configs)
 
@@ -1507,6 +1551,42 @@ def save_email_settings():
                                title='Application Settings', 
                                configs=configs, 
                                error_message=f'Error saving settings: {str(e)}')
+
+@app.route('/settings/users')
+@login_required
+@admin_required
+def admin_users():
+    users = User.query.all()
+    roles = Role.query.all()
+    return render_template('settings/users.html', users=users, roles=roles)
+
+@app.route('/settings/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_edit_user(user_id):
+    """Admin interface to edit user roles"""
+    user = User.query.get_or_404(user_id)
+    roles = Role.query.all()
+    
+    if request.method == 'POST':
+        # Update user roles
+        new_role_ids = request.form.getlist('roles')
+        
+        # Clear existing roles
+        user.roles = []
+        for role_id in new_role_ids:
+            role = Role.query.get(int(role_id))
+            if role:
+                user.roles.append(role)
+                
+        db.session.commit()
+        flash(f'User {user.username} updated successfully', 'success')
+        return redirect(url_for('admin_users'))
+        
+    return render_template('settings/edit_user.html', user=user, roles=roles)
+
+
+
 
 @app.route('/api/test_email', methods=['POST'])
 @login_required
@@ -1600,6 +1680,7 @@ def send_test_html_email(subject, recipient, html_content):
 
 
 @app.route('/api/check_email_config', methods=['GET'])
+@login_required
 def check_email_config():
     """Check if email is configured and enabled"""
     smtp_server = get_config('smtp_server')
@@ -1817,6 +1898,7 @@ def analytics():
     )
     
 @app.route('/project/<int:project_id>/update_type', methods=['POST'])
+@login_required
 def update_project_type(project_id):
     if request.method == 'POST':
         data = request.get_json()

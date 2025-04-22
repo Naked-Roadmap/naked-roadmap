@@ -17,7 +17,7 @@
 <section class="two-column-section">
   <div class="column-wide section">
     <div class="section-header">
-      <h3>Current Cycle</h3>
+      <h3>Current Cycle: {{ sprints[0].title }}</h3>
       <span class="status-badge status-planned">
         {% if sprints|length > 0 %}
         {{ sprints[0].date_start.strftime('%b %d, %Y') }} &rarr; {{ sprints[0].date_end.strftime('%b %d, %Y') }}

@@ -17,13 +17,13 @@ This document tracks security vulnerabilities identified in the Naked Roadmap ap
   - Implement consistent HTML sanitization across all inputs
   - Remove style attribute allowance from `clean_html` function in `utils.py`
   - Improve XSS validation beyond simple regex in `CreateProject`
-- **Status**: 🔴 Not Started
+- **Status**: DONE
 
 ### 3. SQL Injection Vulnerabilities
 - **Location**: `functions.py` in `get_post` function, string formatting in SQL queries
 - **Risk**: Attackers could execute arbitrary SQL commands against the database
 - **Remediation**: Use parameterized queries consistently for all database operations
-- **Status**: 🔴 Not Started
+- **Status**: DONE
 
 ### 4. Inadequate Authentication and Authorization Controls
 - **Location**: Missing `@login_required` decorators, placeholder `user_can_edit_project` function in `utils.py`
@@ -32,7 +32,7 @@ This document tracks security vulnerabilities identified in the Naked Roadmap ap
   - Implement proper RBAC (Role-Based Access Control)
   - Apply `@login_required` consistently
   - Replace placeholder authorization with real checks
-- **Status**: 🔴 Not Started
+- **Status**: DONE
 
 ## High Issues
 
