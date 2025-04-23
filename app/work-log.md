@@ -1,23 +1,20 @@
 ## Requirements
 Index:
-TODO: If no active cycle, then use last completed on dashboard
+TODO: Fix styles for toggle
 
 Projects Pages
 
 Planning Pages:
-TODO: Test further. Some workflows and path updates are not working. I.e., moving projects and locations back and forth, updating the date field on committment
-TODO: Modify commitment status on a sprint page, index page
+TODO: Test further. Some workflows and path updates are not working. I.e., moving projects and locations back and forth, updating the date field on commitment
 TODO: Fix links on the planning page discussion section
 TODO: Fix links on the planning page commitments section
 TODO: Send email when planning is complete
-TODO: Sent sprint as active when planning is complete
-TODO: Only one sprint active. The rest as upcoming or completed.
 TODO: Group sprint projects by team (see details column)
 TODO: Add cycle commitment outcomes per project alongside goals.
 TODO: Send "Planned cycle email"
 TODO: Send "Retro'd cycle email"
-TODO: Add in "critical" toggle for sprint projects, and reason for critical
 TODO: Collected & prioritized single stack roadmap section
+<!-- TODO: Modify commitment status on a sprint page, index page -->
 
 Goals Page:
 TODO: Goals order
@@ -65,6 +62,9 @@ TODO: Create community discourse as part of implementation of marketing site to 
 -- DONE: Make sure objectives on the planning page show the number of projects supporting them.
 -- DONE: Associate projects to goals.
 -- DONE: Projects as tasks vs. projects
+-- DONE: If no active cycle, then use last completed on dashboard
+-- DONE: Sent sprint as active when planning is complete
+-- DONE: Add in "critical" toggle for sprint projects, and reason for critical
 
 ## Reminders:
 

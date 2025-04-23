@@ -17,81 +17,88 @@
 <body>
   <div class="app-container">
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <a href="{{ url_for('index')}}" class="logo">
           <img src="{{ url_for('static', filename='fig-icon.svg')}}" style="max-height:40px; margin-right:10px;">
           <span>Naked Roadmap</span>
         </a>
+        <!-- Toggle button for mobile/narrow view -->
+        <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle sidebar">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  </button>
       </div>
 
       <nav class="sidebar-nav">
-        <h6 style="margin:0px 20px; padding-bottom:10px;">View</h6>
+        <h6 style="margin:0px 20px; padding-bottom:10px;" class="nav-section-title">View</h6>
         <ul>
           <li>
-            <a href="{{ url_for('index') }}" class="active">
+            <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">
               <img src="{{ url_for('static', filename='./icons/dashboard.svg')}}" style="max-height:20px; margin-right:10px;">
-              Dashboard
+              <span>Dashboard</span>
             </a>
           </li>
           <li>
-            <a href="{{ url_for('projectspage') }}">
+            <a href="{{ url_for('projectspage') }}" class="{{ 'active' if request.endpoint == 'projectspage' else '' }}">
               <img src="{{ url_for('static', filename='./icons/flag.svg')}}" style="max-height:20px; margin-right:10px;">
-              Roadmap
+              <span>Roadmap</span>
             </a>
           </li>
           <li>
-            <a href="{{ url_for('createGoal') }}">
+            <a href="{{ url_for('createGoal') }}" class="{{ 'active' if request.endpoint == 'createGoal' else '' }}">
               <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
-              Objectives
+              <span>Objectives</span>
             </a>
           </li>
           <li>
-            <a href="{{ url_for('show_cycles') }}">
-              <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;"> Cycles
+            <a href="{{ url_for('show_cycles') }}" class="{{ 'active' if request.endpoint == 'show_cycles' else '' }}">
+              <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;">
+              <span>Cycles</span>
             </a>
           </li>
           <li>
-            <a href="#">
+            <a href="#" class="{{ 'active' if request.endpoint == 'retrospectives' else '' }}">
               <img src="{{ url_for('static', filename='./icons/retrospectives.svg')}}" style="max-height:20px; margin-right:10px;">
-              Retrospectives
+              <span>Retrospectives</span>
             </a>
           </li>
           <li>
-            <a href="{{ url_for('analytics') }}">
+            <a href="{{ url_for('analytics') }}" class="{{ 'active' if request.endpoint == 'analytics' else '' }}">
               <img src="{{ url_for('static', filename='./icons/analytics.svg')}}" style="max-height:20px; margin-right:10px;">
-              Analytics
+              <span>Analytics</span>
             </a>
-          </li>
-          <li>
-            <hr>
           </li>
         </ul>
-        <h6 style="margin:0px 20px; padding-bottom:10px;">Do</h6>
+        <h6 style="margin:0px 20px; padding-bottom:10px;" class="nav-section-title">Do</h6>
         <ul>
           <li>
-            <a href="{{url_for('plan_sprint') }}">
-              <img src="{{ url_for('static', filename='./icons/circle-dotted.svg')}}" style="max-height:20px; margin-right:10px;"> Plan a Cycle
+            <a href="{{url_for('plan_sprint') }}" class="{{ 'active' if request.endpoint == 'plan_sprint' else '' }}">
+              <img src="{{ url_for('static', filename='./icons/circle-dotted.svg')}}" style="max-height:20px; margin-right:10px;">
+              <span>Plan a Cycle</span>
             </a>
           </li>
           <li>
-            <a href="#">
-              <img src="{{ url_for('static', filename='./icons/circle.svg')}}" style="max-height:20px; margin-right:10px;"> Close a Cycle
+            <a href="#" class="{{ 'active' if request.endpoint == 'close_cycle' else '' }}">
+              <img src="{{ url_for('static', filename='./icons/circle.svg')}}" style="max-height:20px; margin-right:10px;">
+              <span>Close a Cycle</span>
             </a>
           </li>
         </ul>
         {% if current_user.is_authenticated and current_user.is_admin() %}
-        <h6 style="margin:0px 20px; padding-bottom:10px;">Configure</h6>
+        <h6 style="margin:0px 20px; padding-bottom:10px;" class="nav-section-title">Configure</h6>
         <ul>
           <li>
-            <a href="{{ url_for('admin_users') }}">
+            <a href="{{ url_for('admin_users') }}" class="{{ 'active' if request.endpoint == 'admin_users' else '' }}">
               <img src="{{ url_for('static', filename='./icons/teams.svg')}}" style="max-height:20px; margin-right:10px;">
-              Users
+              <span>Users</span>
             </a>
           </li>
           <li>
-            <a href="{{ url_for('settings') }}">
-              <img src="{{ url_for('static', filename='./icons/settings.svg')}}" style="max-height:20px; margin-right:10px;"> Settings
+            <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
+              <img src="{{ url_for('static', filename='./icons/settings.svg')}}" style="max-height:20px; margin-right:10px;">
+              <span>Settings</span>
             </a>
           </li>
         </ul>
@@ -104,7 +111,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          Login
+          <span>Login</span>
         </a>
         <div class="theme-switch">
           <svg class="theme-switch-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -151,7 +158,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          Logout
+          <span>Logout</span>
         </a>
         {% endif %}
       </div>
@@ -159,7 +166,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-
       {% with messages = get_flashed_messages() %}
       {% if messages %}
       <div class="flash-messages">
@@ -185,9 +191,41 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-  <!-- Dark Mode Toggle Script -->
+  <!-- Custom scripts for sidebar toggle and dark mode -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Sidebar toggle functionality
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      const storedSidebarState = localStorage.getItem('sidebarCollapsed');
+      
+      // Set initial state based on stored preference or default to expanded
+      if (storedSidebarState === 'true') {
+        sidebar.classList.add('collapsed');
+      }
+      
+      // Handle sidebar toggle click
+      sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        // Store the preference
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+      });
+      
+      // Auto-collapse on smaller screens
+      function checkWindowSize() {
+        if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
+          sidebar.classList.add('collapsed');
+          localStorage.setItem('sidebarCollapsed', 'true');
+        }
+      }
+      
+      // Check on load
+      checkWindowSize();
+      
+      // Check on resize
+      window.addEventListener('resize', checkWindowSize);
+      
+      // Dark Mode Toggle Script
       const themeToggle = document.getElementById('theme-toggle');
       const themeText = document.querySelector('.theme-switch-text');
       const themeIcon = document.querySelector('.theme-switch-icon');

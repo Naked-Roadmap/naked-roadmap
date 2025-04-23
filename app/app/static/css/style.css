@@ -151,8 +151,8 @@ a:hover {
   list-style: none;
   padding: 0;
   margin: 0;
-  margin-left: 20px;
-  border-left: 1px solid gray;
+  margin-left: 2px;
+  /* border-left: 1px solid gray; */
 }
 
 .sidebar-nav li {
@@ -606,83 +606,83 @@ body.dark-mode .project-item:hover {
 
 /* Toggle Switch Styling with Text */
 .project-type-toggle {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
 }
 
 .switch {
-    position: relative;
-    display: inline-block;
-    width: 140px;
-    height: 30px;
+  position: relative;
+  display: inline-block;
+  width: 140px;
+  height: 30px;
 }
 
 .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #f0f0f0;
-    border-radius: 30px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-    transition: .4s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 10px;
-    overflow: hidden;
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #f0f0f0;
+  border-radius: 30px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: .4s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  overflow: hidden;
 }
 
 .option {
-    z-index: 1;
-    font-size: 13px;
-    font-weight: 500;
-    width: 50%;
-    text-align: center;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 500;
+  width: 50%;
+  text-align: center;
 }
 
 .option-left {
-    color: #007bff;
+  color: #007bff;
 }
 
 .option-right {
-    color: #888;
+  color: #888;
 }
 
 .slide-indicator {
-    position: absolute;
-    height: 24px;
-    width: 65px;
-    left: 3px;
-    border-radius: 20px;
-    background-color: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: .4s;
+  position: absolute;
+  height: 24px;
+  width: 65px;
+  left: 3px;
+  border-radius: 20px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: .4s;
 }
 
-input:checked + .slider .option-left {
-    color: #888;
+input:checked+.slider .option-left {
+  color: #888;
 }
 
-input:checked + .slider .option-right {
-    color: #007bff;
+input:checked+.slider .option-right {
+  color: #007bff;
 }
 
-input:checked + .slider .slide-indicator {
-    transform: translateX(69px);
+input:checked+.slider .slide-indicator {
+  transform: translateX(69px);
 }
 
-input:focus + .slider {
-    box-shadow: 0 0 1px #007bff, inset 0 1px 3px rgba(0,0,0,0.1);
+input:focus+.slider {
+  box-shadow: 0 0 1px #007bff, inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 input:checked+.toggle-slider {
@@ -841,6 +841,7 @@ color: var(--color-primary);
   border-radius: var(--border-radius-lg);
   margin-bottom: var(--spacing-6);
   overflow: hidden;
+  box-shadow: #ededed 0px 0px 15px;
 }
 
 .section-header {
@@ -1560,6 +1561,128 @@ color: var(--color-primary);
   color: var(--color-gray-900);
 }
 
+css/* Updated styles for the sidebar toggle button */
+
+/* Make the toggle button always visible */
+.sidebar-toggle-btn {
+  display: block; /* Changed from 'none' to 'block' */
+  background: none;
+  border: none;
+  color: var(--color-white);
+  cursor: pointer;
+  padding: 5px;
+  position: absolute;
+  right: 15px;
+  top: 20px;
+  z-index: 100; /* Ensure button stays above other elements */
+  transition: transform 0.3s ease;
+}
+
+/* Style the toggle button icon */
+.sidebar-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+/* Rotate icon when sidebar is collapsed */
+.sidebar.collapsed .sidebar-toggle-btn svg {
+  transform: rotate(180deg);
+}
+
+/* Update sidebar header to accommodate button */
+.sidebar-header {
+  padding: var(--spacing-6) var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-800);
+  position: relative; /* Ensure proper positioning context */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Adjust logo positioning */
+.logo {
+  max-width: 80%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed Sidebar Styles */
+.sidebar.collapsed {
+  width: 60px;
+  transition: width 0.3s ease;
+}
+
+.sidebar {
+  transition: width 0.3s ease;
+}
+
+/* Hide text when collapsed */
+.sidebar.collapsed .logo span,
+.sidebar.collapsed .sidebar-nav a span,
+.sidebar.collapsed .nav-section-title,
+.sidebar.collapsed .user-info span,
+.sidebar.collapsed .btn-login span,
+.sidebar.collapsed .btn-logout span,
+.sidebar.collapsed .theme-switch-text {
+  display: none;
+}
+
+/* Center icons when collapsed */
+.sidebar.collapsed .sidebar-nav a {
+  justify-content: center;
+  padding: var(--spacing-3);
+}
+
+.sidebar.collapsed .sidebar-nav a svg,
+.sidebar.collapsed .sidebar-nav a img {
+  margin-right: 0;
+}
+
+/* Adjust footer items when collapsed */
+.sidebar.collapsed .sidebar-footer {
+  padding: var(--spacing-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar.collapsed .user-avatar {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .theme-switch {
+  justify-content: center;
+  margin: var(--spacing-3) 0;
+}
+
+.sidebar.collapsed .theme-switch-icon {
+  margin-right: 0;
+}
+
+/* Hover expansion effect */
+.sidebar.collapsed .sidebar-nav li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Improved active state styling */
+.sidebar-nav a.active {
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--color-primary);
+  font-weight: 600;
+}
+
+.sidebar.collapsed .sidebar-nav a.active {
+  border-left: none;
+  border-right: 3px solid var(--color-primary);
+}
+
+
+
+
+
 .sprint-goal-container {
   margin-top: var(--spacing-4);
   padding: var(--spacing-3);
@@ -1806,3 +1929,5 @@ color: var(--color-primary);
       margin-top: 4px;
       margin-left: 18px;
     }
+
+  }

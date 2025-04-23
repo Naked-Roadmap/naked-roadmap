@@ -5,11 +5,17 @@
 {% block title %}{{ config.company_name }} Roadmap - Dashboard{% endblock %}
 
 {% block content %}
+
+<div style="margin-bottom:30px;">
+  <h2><span style="font-size:25px; background: #000000; background: linear-gradient(to right, #000000 0%, #A8468D 50%, #5F4CD9 95%); -webkit-background-clip: text;-webkit-text-fill-color: transparent;">Hi, {{ current_user.username }}<br>Here's what's going on today:</span></h2>
+</div>
+
+{# 
 <div class="welcome-banner">
-  <h2>Welcome, {{ current_user.username }}</h2>
+  <h2>Hi, {{ current_user.username }}</h2>
   <p>Manage your team's product roadmap with ease.<br>
     This is your planning area. Move projects from the discussion area into the sprint or into the backlog.</p>
-</div>
+</div> #}
 
 <!-- ---------------------------------- -->
 <!-- Current Sprint and Goals -->

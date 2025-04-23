@@ -10,29 +10,29 @@ This document tracks security vulnerabilities identified in the Naked Roadmap ap
 - **Remediation**: Replace hardcoded secrets with environment variables or secure secret management
 - **Status**: 🔴 Not Started
 
-### 2. Cross-Site Scripting (XSS) Vulnerabilities
+<!-- ### 2. Cross-Site Scripting (XSS) Vulnerabilities
 - **Location**: Inconsistent sanitization across routes, especially in `edit_project` vs. `createProject` functions
 - **Risk**: Attackers could inject malicious scripts, steal cookies, or perform actions on behalf of users
 - **Remediation**: 
   - Implement consistent HTML sanitization across all inputs
   - Remove style attribute allowance from `clean_html` function in `utils.py`
   - Improve XSS validation beyond simple regex in `CreateProject`
-- **Status**: DONE
+- **Status**: DONE -->
 
-### 3. SQL Injection Vulnerabilities
+<!-- ### 3. SQL Injection Vulnerabilities
 - **Location**: `functions.py` in `get_post` function, string formatting in SQL queries
 - **Risk**: Attackers could execute arbitrary SQL commands against the database
 - **Remediation**: Use parameterized queries consistently for all database operations
-- **Status**: DONE
+- **Status**: DONE -->
 
-### 4. Inadequate Authentication and Authorization Controls
+<!-- ### 4. Inadequate Authentication and Authorization Controls
 - **Location**: Missing `@login_required` decorators, placeholder `user_can_edit_project` function in `utils.py`
 - **Risk**: Unauthorized access to projects and functionality
 - **Remediation**: 
   - Implement proper RBAC (Role-Based Access Control)
   - Apply `@login_required` consistently
   - Replace placeholder authorization with real checks
-- **Status**: DONE
+- **Status**: DONE -->
 
 ## High Issues
 
