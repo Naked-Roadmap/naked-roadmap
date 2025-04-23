@@ -179,9 +179,22 @@ class SprintProjectMap(db.Model):
     project = db.relationship("Project", backref="sprint_mappings")
     sprint = db.relationship("Sprint", backref="project_mappings")
     critical: so.Mapped[bool] = so.mapped_column(default=False, nullable=True)
+    status_comment: so.Mapped[str] = so.mapped_column(sa.TEXT(), nullable=True)
+    status_updated: so.Mapped[datetime] = so.mapped_column(nullable=True)
+    status_updated_by: so.Mapped[int] = so.mapped_column(sa.Integer(), nullable=True)
+    
+    # Relationship defined without foreign key constraint
+    # This avoids migration issues but still provides the ORM relationship
+    status_user = db.relationship(
+        "User", 
+        primaryjoin="SprintProjectMap.status_updated_by == User.id",
+        foreign_keys=[status_updated_by],
+        post_update=True,  # Use post_update to avoid circular dependency issues
+        uselist=False
+    )
     
     def __repr__(self):
-        return '<Sprint/Project Map {}>'.format(self.body)
+        return f'<Sprint/Project Map {self.id}: {self.project.name} - {self.status}>'
 
 class Comment(db.Model):
     __tablename__ = 'comments'

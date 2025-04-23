@@ -17,13 +17,27 @@
 <section class="two-column-section">
   <div class="column-wide section">
     <div class="section-header">
-      <h3>Current Cycle: {{ sprints[0].title }}</h3>
-      <span class="status-badge status-planned">
-        {% if sprints|length > 0 %}
-        {{ sprints[0].date_start.strftime('%b %d, %Y') }} &rarr; {{ sprints[0].date_end.strftime('%b %d, %Y') }}
+      <h3>
+        Current Cycle:
+        {% if active_sprint %}
+        {{ active_sprint.title }}
+      {% if active_sprint_count > 1 %}
+        <a href="{{ url_for('show_cycles') }}" class="btn-text" style="font-size: 0.8em; margin-left: 10px;">
+          See other active cycles ({{ active_sprint_count - 1 }})
+        </a>
         {% endif %}
+        {% else %}
+        No Active Cycle
+        {% endif %}
+      </h3>
+      <span class="status-badge status-planned">
+        {% if active_sprint %}
+        {{ active_sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ active_sprint.date_end.strftime('%b %d, %Y') }}
+    {% endif %}
       </span>
     </div>
+
+
 
     <div class="sprint-projects">
       <div class="dual-timelines">
@@ -51,9 +65,9 @@
         <div class="timeline-box">
           <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
 
-          {% set sprint = sprints[0] %}
-          {% set start_date = sprint.date_start %}
-          {% set end_date = sprint.date_end %}
+          {% if active_sprint %}
+          {% set start_date = active_sprint.date_start %}
+          {% set end_date = active_sprint.date_end %}
           {% set today_date = today.date() %}
 
           {% set total_days = (end_date - start_date).days %}
@@ -73,43 +87,49 @@
               {% set days_remaining = total_days - days_elapsed %}
               {% if days_remaining > 0 %}
               {{ days_remaining }} days remaining
-                {% elif days_remaining == 0 %}
-                    Last day of sprint
-                {% else %}
-                    Sprint ended
-                {% endif %}
+          {% elif days_remaining == 0 %}
+          Last day of sprint
+          {% else %}
+          Sprint ended
+          {% endif %}
             </span>
           </div>
+          {% else %}
+          <div class="timeline-progress-full">
+            <div class="timeline-progress" style="width: 0%;"></div>
+            <span class="timeline-text">No active sprint</span>
+          </div>
+          {% endif %}
         </div>
       </div>
+    </div>
 
-      <hr>
+    <hr>
 
-      <div class="timeline-title">👨‍💻 Projects</div>
+    <div class="timeline-title">👨‍💻 Projects</div>
 
-      {% for entry in sprintlog %}
-      {% set project = entry.project %}
-      <div class="project-item">
-        <div class="project-header">
-          <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
-          <span class="status-badge 
+    {% for entry in sprintlog %}
+    {% set project = entry.project %}
+    <div class="project-item">
+      <div class="project-header">
+        <h5><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h5>
+        <span class="status-badge 
           {% if entry.status == 'In Progress' %}status-in-progress
           {% elif entry.status == 'Done' %}status-complete
           {% elif entry.status == 'Blocked' %}status-blocked
           {% else %}status-planned{% endif %}">
-            {{ entry.status|default('Planned') }}
-          </span>
-        </div>
-        <div class="project-meta">
-          <p>
-            <strong>Goal:</strong> {{ entry.goal }}
-            <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
-          </p>
-        </div>
+          {{ entry.status|default('Planned') }}
+        </span>
       </div>
-      {% endfor %}
-
+      <div class="project-meta">
+        <p>
+          <strong>Goal:</strong> {{ entry.goal }}
+          <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
+        </p>
+      </div>
     </div>
+    {% endfor %}
+
   </div>
 
   <div class="column-narrow section">
@@ -126,11 +146,11 @@
     <div class="goals-list">
       {% for goal_data in goals %}
       <div class="goal-item">
-        <h4>{{ goal_data.Goal.title }} 
-            <span class="project-count-badge">{{ goal_data.active_project_count }} project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
+        <h4>{{ goal_data.Goal.title }}
+          <span class="project-count-badge">{{ goal_data.active_project_count }} project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
         </h4>
         <p>{{ goal_data.Goal.details }}</p>
-    </div>
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -153,14 +173,14 @@
       <h3>Recent Comments</h3>
     </div>
 
-      <div class="goals-list">
+    <div class="goals-list">
       {% for comment in comments %}
       {% set project = comment.project %}
       {% set user = comment.user %}
-        <div class="goal-item">
-          <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-          <p>{{ comment.content }}</p>
-        </div>
+      <div class="goal-item">
+        <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
+        <p>{{ comment.content }}</p>
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -192,14 +212,14 @@
       <h3>Recent Changes</h3>
     </div>
 
-      <div class="goals-list">
+    <div class="goals-list">
       {% for change in changes %}
       {% set project = change.project %}
       {% set user = change.user %}
-        <div class="goal-item">
-          <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-          <p>{{ change.content }}</p>
-        </div>
+      <div class="goal-item">
+        <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
+        <p>{{ change.content }}</p>
+      </div>
       {% endfor %}
     </div>
   </div>

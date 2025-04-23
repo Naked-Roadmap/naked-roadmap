@@ -50,15 +50,41 @@ def inject_csrf_token():
 
 @app.route('/')
 @app.route('/index')
-@login_required # If you want to toggle someone forced to log in to see roadmap, you can use this. 
+@login_required
 def index():
-    # if not current_user.is_verified:
-    #     return redirect(url_for("auth.verify"))
-    projects = (
-        Project.query
-        .order_by(Project.created.desc())
-        .limit(5)
+    # Get the oldest active sprint first
+    active_sprint = (
+        Sprint.query
+        .filter(Sprint.status == 'Active')
+        .order_by(Sprint.date_start.asc())
+        .first()
     )
+    
+    # If no active sprint, get the most recent one
+    if not active_sprint:
+        active_sprint = (
+            Sprint.query
+            .order_by(Sprint.date_start.desc())
+            .first()
+        )
+    
+    # Count active sprints to determine if we should show the "see other active cycles" link
+    active_sprint_count = (
+        Sprint.query
+        .filter(Sprint.status == 'Active')
+        .count()
+    )
+    
+    # Get sprint commitments for the active sprint
+    sprintlog = []
+    if active_sprint:
+        sprintlog = (
+            SprintProjectMap.query
+            .filter(SprintProjectMap.sprint_id == active_sprint.id)
+            .order_by(SprintProjectMap.order.asc())
+            .all()
+        )
+    
     goals = (
         db.session.query(
             Goal,
@@ -69,16 +95,15 @@ def index():
         .order_by(Goal.created.desc())
         .all()
     )
+    
+    # Get all sprints for reference
     sprints = (
         Sprint.query
         .order_by(Sprint.date_start.desc())
         .all()
     )
-    sprintlog = (
-        SprintProjectMap.query
-        .order_by(SprintProjectMap.order.asc())
-        .all()
-    )
+    
+    # Get recent comments and changes
     comments = (
         Comment.query
         .order_by(Comment.created_at.desc())
@@ -89,8 +114,30 @@ def index():
         .order_by(Changelog.timestamp.desc())
         .limit(5)
     )
+    
+    # Recent projects
+    projects = (
+        Project.query
+        .order_by(Project.created.desc())
+        .limit(5)
+    )
+    
     today = datetime.now()
-    return render_template('index.html', title='Home', projects=projects, goals=goals, config=Config, sprints=sprints, sprintlog=sprintlog, datetime=datetime, today=today, comments=comments, changes=changes)
+    return render_template(
+        'index.html', 
+        title='Home', 
+        projects=projects, 
+        goals=goals, 
+        config=Config, 
+        sprints=sprints,
+        active_sprint=active_sprint,
+        active_sprint_count=active_sprint_count,
+        sprintlog=sprintlog, 
+        datetime=datetime, 
+        today=today, 
+        comments=comments, 
+        changes=changes
+    )
     
 @app.route('/project/<int:project_id>')
 @login_required
@@ -1937,3 +1984,156 @@ def update_project_type(project_id):
             # Don't roll back the project change even if changelog fails
         
         return jsonify({'success': True, 'type': project_type})
+        
+        
+        
+# ######################
+# Sprint Management
+# ######################
+
+@app.route('/sprint/<int:sprint_id>')
+@login_required
+def sprint_detail(sprint_id):
+    # Get the requested sprint
+    sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # Get sprint commitments for this sprint
+    sprintlog = (
+        SprintProjectMap.query
+        .filter(SprintProjectMap.sprint_id == sprint_id)
+        .order_by(SprintProjectMap.order.asc())
+        .all()
+    )
+    
+    # Calculate sprint progress
+    total_days = (sprint.date_end - sprint.date_start).days
+    if total_days <= 0:
+        total_days = 1
+    
+    today_date = datetime.now().date()
+    days_elapsed = (today_date - sprint.date_start).days
+    percentage_time = (days_elapsed / total_days) * 100
+    
+    if percentage_time > 100:
+        percentage_time = 100
+    elif percentage_time < 0:
+        percentage_time = 0
+    
+    # Calculate completion progress
+    done_count = len([entry for entry in sprintlog if entry.status == "Done"])
+    total_count = len(sprintlog)
+    percentage_projects = (done_count / total_count) * 100 if total_count > 0 else 0
+    
+    # Get comments and changes related to this sprint
+    # Projects in this sprint
+    sprint_project_ids = [entry.project_id for entry in sprintlog]
+    
+    comments = []
+    changes = []
+    
+    if sprint_project_ids:
+        comments = (
+            Comment.query
+            .filter(Comment.project_id.in_(sprint_project_ids))
+            .order_by(Comment.created_at.desc())
+            .limit(10)
+            .all()
+        )
+        
+        changes = (
+            Changelog.query
+            .filter(Changelog.project_id.in_(sprint_project_ids))
+            .order_by(Changelog.timestamp.desc())
+            .limit(10)
+            .all()
+        )
+    
+    return render_template(
+        'sprint-detail.html',
+        title=f'Sprint: {sprint.title}',
+        sprint=sprint,
+        sprintlog=sprintlog,
+        today=datetime.now(),
+        datetime=datetime,
+        percentage_time=percentage_time,
+        percentage_projects=percentage_projects,
+        total_days=total_days,
+        days_elapsed=days_elapsed,
+        done_count=done_count,
+        total_count=total_count,
+        comments=comments,
+        changes=changes
+    )
+
+# Route to close a sprint
+@app.route('/sprint/<int:sprint_id>/close', methods=['POST'])
+@login_required
+@admin_required  # Only admins can close a sprint
+def close_sprint(sprint_id):
+    sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # Update sprint status to completed
+    sprint.status = 'Completed'
+    
+    # Create a changelog entry
+    sprintlog = SprintProjectMap.query.filter_by(sprint_id=sprint_id).first()
+    
+    if sprintlog:
+        # Use the first project for the changelog
+        changelog = Changelog(
+            change_type='sprint_completion',
+            content=f"Sprint '{sprint.title}' marked as completed by {current_user.username}",
+            project_id=sprintlog.project_id,
+            user_id=current_user.id,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(changelog)
+    
+    db.session.commit()
+    
+    flash(f"Sprint '{sprint.title}' has been closed successfully.", 'success')
+    return redirect(url_for('show_cycles'))
+
+# Route to update commitment status
+@app.route('/sprint/<int:sprint_id>/commitment/<int:commitment_id>/update', methods=['POST'])
+@login_required
+def update_commitment_status(sprint_id, commitment_id):
+    commitment = SprintProjectMap.query.get_or_404(commitment_id)
+    
+    # Verify this commitment belongs to the specified sprint
+    if commitment.sprint_id != sprint_id:
+        flash('Invalid commitment for this sprint.', 'danger')
+        return redirect(url_for('sprint_detail', sprint_id=sprint_id))
+    
+    # Get the new status and comment
+    new_status = request.form.get('status')
+    comment = request.form.get('comment', '')
+    
+    # Validate the status
+    valid_statuses = ['Planned', 'In Progress', 'Done', 'Blocked', 'Cancelled']
+    if new_status not in valid_statuses:
+        flash('Invalid status value.', 'danger')
+        return redirect(url_for('sprint_detail', sprint_id=sprint_id))
+    
+    # Update the commitment
+    old_status = commitment.status
+    commitment.status = new_status
+    commitment.status_comment = comment
+    commitment.status_updated = datetime.utcnow()
+    commitment.status_updated_by = current_user.id
+    
+    # Create a changelog entry
+    project = Project.query.get(commitment.project_id)
+    changelog = Changelog(
+        change_type='commitment_status_change',
+        content=f"Commitment status for '{project.name}' changed from '{old_status}' to '{new_status}' with comment: {comment}",
+        project_id=commitment.project_id,
+        user_id=current_user.id,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(changelog)
+    
+    db.session.commit()
+    
+    flash('Commitment status updated successfully!', 'success')
+    return redirect(url_for('sprint_detail', sprint_id=sprint_id))

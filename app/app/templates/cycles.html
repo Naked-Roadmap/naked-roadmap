@@ -55,8 +55,8 @@
   <section class="section tabbed-section">
     <div class="tabs">
       <button class="tab-btn active" data-tab="active">Active ({% set active_count = cycles|selectattr('status', '==', "Active")|list|length %}{{ active_count }})</button>
-      <button class="tab-btn" data-tab="achieved">Upcoming ({% set upcoming_count = cycles|selectattr('status', '==', "Upcoming")|list|length %}{{ upcoming_count }})</button>
-      <button class="tab-btn" data-tab="completed">Completed ({% set completed_count = cycles|selectattr('status', '==', "Completed")|list|length %}{{ completed_count }})</button>
+      <button class="tab-btn" data-tab="upcoming">Upcoming ({% set upcoming_count = cycles|selectattr('status', '==', "Upcoming")|list|length %}{{ upcoming_count }})</button>
+      <button class="tab-btn" data-tab="ended">Ended ({% set completed_count = cycles|selectattr('status', '==', "Completed")|list|length %}{{ completed_count }})</button>
     </div>
 
     <!-- ---------------------- -->
@@ -67,42 +67,28 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Objective</th>
-              <th>Created By</th>
+              <th>Cycle</th>
+              <th>Timeline</th>
               <th>Status</th>
-              <th>End Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for cycle in cycles|selectattr('status', '==', "Active") %}
             <tr>
-              <td><strong>{{ cycle.title }}</strong><br>{{cycle.details}}</td>
-              <td>{{ cycle.requested_by }} <span class="team-tag">{{ cycle.team }}</span></td>
-              <td>{{ cycle.created }}</td>
+              <td><strong>{{ cycle.title }}</strong></td>
+              <td>{{ cycle.date_start.strftime('%b %d, %Y') }} - {{ cycle.date_end.strftime('%b %d, %Y') }}</td>
               <td>
-                <span class="priority-indicator 
-                {% if cycle.priority == 'High' %}priority-high
-                {% elif cycle.priority == 'Medium' %}priority-medium
-                {% else %}priority-low{% endif %}">
-                  {{ cycle.priority|default('Medium') }}
+                <span class="status-badge status-in-progress">
+                  Active
                 </span>
               </td>
               <td>
                 <div class="action-buttons">
-                  <a href="#" class="btn-icon edit-goal-btn" data-toggle="modal" data-target="#editGoalModal" data-id="{{ cycle.id }}" data-title="{{ cycle.title }}" data-details="{{ cycle.details }}" data-requested_by="{{ cycle.requested_by }}">
-                    <!-- Edit SVG icon -->
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                  <a href="{{ url_for('sprint_detail', sprint_id=cycle.id) }}" class="btn-text">
+                    View Details
                   </a>
-                  <a href="#" class="btn-icon" title="Move to discussion">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  </a>
+                  <!-- Other actions as needed -->
                 </div>
               </td>
             </tr>
@@ -120,41 +106,28 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Objective</th>
-              <th>Created By</th>
+              <th>Cycle</th>
+              <th>Timeline</th>
               <th>Status</th>
-              <th>End Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% for goal in goals|selectattr('status', '==', "Achieved") %}
+            {% for cycle in cycles|selectattr('status', '==', "Upcoming") %}
             <tr>
-              <td><strong>{{ goal.title }}</strong><br>{{goal.details}}</td>
-              <td>{{ goal.requested_by }} <span class="team-tag">{{ goal.team }}</span></td>
-              <td>{{ goal.created }}</td>
+              <td><strong>{{ cycle.title }}</strong></td>
+              <td>{{ cycle.date_start.strftime('%b %d, %Y') }} - {{ cycle.date_end.strftime('%b %d, %Y') }}</td>
               <td>
-                <span class="priority-indicator 
-                {% if goal.priority == 'High' %}priority-high
-                {% elif goal.priority == 'Medium' %}priority-medium
-                {% else %}priority-low{% endif %}">
-                  {{ goal.priority|default('Medium') }}
+                <span class="status-badge status-in-progress">
+                  Active
                 </span>
               </td>
               <td>
                 <div class="action-buttons">
-                  <a href="{{ url_for('editGoal', goal_id=goal.id) }}" class="btn-icon" title="Edit project">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                  <a href="{{ url_for('sprint_detail', sprint_id=cycle.id) }}" class="btn-text">
+                    View Details
                   </a>
-                  <a href="#" class="btn-icon" title="Move to discussion">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  </a>
+                  <!-- Other actions as needed -->
                 </div>
               </td>
             </tr>
@@ -165,48 +138,35 @@
     </div>
 
     <!-- ---------------------- -->
-    <!-- Cancelled Tab -->
+    <!-- Ended Tab -->
     <!-- ---------------------- -->
-    <div class="tab-content" id="completed-tab">
+    <div class="tab-content" id="ended-tab">
       <div class="table-responsive">
         <table class="table">
           <thead>
             <tr>
-              <th>Objective</th>
-              <th>Created By</th>
+              <th>Cycle</th>
+              <th>Timeline</th>
               <th>Status</th>
-              <th>End Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% for goal in goals|selectattr('status', '==', "Cancelled") %}
+            {% for cycle in cycles|selectattr('status', '==', "Completed") %}
             <tr>
-              <td><strong>{{ goal.title }}</strong><br>{{goal.details}}</td>
-              <td>{{ goal.requested_by }} <span class="team-tag">{{ goal.team }}</span></td>
-              <td>{{ goal.created }}</td>
+              <td><strong>{{ cycle.title }}</strong></td>
+              <td>{{ cycle.date_start.strftime('%b %d, %Y') }} - {{ cycle.date_end.strftime('%b %d, %Y') }}</td>
               <td>
-                <span class="priority-indicator 
-                {% if goal.priority == 'High' %}priority-high
-                {% elif goal.priority == 'Medium' %}priority-medium
-                {% else %}priority-low{% endif %}">
-                  {{ goal.priority|default('Medium') }}
+                <span class="status-badge status-in-progress">
+                  Active
                 </span>
               </td>
               <td>
                 <div class="action-buttons">
-                  <a href="{{ url_for('editGoal', goal_id=goal.id) }}" class="btn-icon" title="Edit project">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                  <a href="{{ url_for('sprint_detail', sprint_id=cycle.id) }}" class="btn-text">
+                    View Details
                   </a>
-                  <a href="#" class="btn-icon" title="Move to discussion">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  </a>
+                  <!-- Other actions as needed -->
                 </div>
               </td>
             </tr>

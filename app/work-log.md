@@ -90,6 +90,10 @@ To freeze and install requirements:
 $ pipreqs . 
 $ pip install -r requirements.txt
 
+or
+
+pip freeze > requirements.txt
+
 
 Fixing migrations:
 $ flask db stamp head
