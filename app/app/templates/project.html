@@ -124,7 +124,7 @@
                     {% for cycle in cycles %}
                     {% set sprint = cycle.sprint %}
                     <div class="cycle-details">
-                        <h5>{{ sprint.title }} </h5>
+                        <h5><a href="{{ url_for('sprint_detail', sprint_id=sprint.id) }}">{{ sprint.title }}</a> </h5>
                         <p> <span class="status-badge status-planned" style="margin-right:10px;">
                                 {{ sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ sprint.date_end.strftime('%b %d, %Y') }}
                             </span> <span class="status-badge 

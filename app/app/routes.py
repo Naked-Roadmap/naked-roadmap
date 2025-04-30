@@ -2047,6 +2047,20 @@ def sprint_detail(sprint_id):
             .limit(10)
             .all()
         )
+        
+    goals = (
+        db.session.query(
+            Goal,
+            func.count(SprintProjectMap.id).label('sprint_project_count')
+        )
+        .outerjoin(Project, Project.objective_id == Goal.id)
+        .outerjoin(SprintProjectMap, (SprintProjectMap.project_id == Project.id) & 
+                                     (SprintProjectMap.sprint_id == sprint_id))
+        .filter(Goal.status == 'Active')
+        .group_by(Goal.id)
+        .order_by(Goal.created.desc())
+        .all()
+    )
     
     return render_template(
         'sprint-detail.html',
@@ -2062,7 +2076,8 @@ def sprint_detail(sprint_id):
         done_count=done_count,
         total_count=total_count,
         comments=comments,
-        changes=changes
+        changes=changes,
+        goals=goals
     )
 
 # Route to close a sprint

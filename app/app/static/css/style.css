@@ -842,6 +842,7 @@ color: var(--color-primary);
   margin-bottom: var(--spacing-6);
   overflow: hidden;
   box-shadow: #ededed 0px 0px 15px;
+  border: #e0e0e0 1px solid;
 }
 
 .section-header {
@@ -1299,6 +1300,7 @@ color: var(--color-primary);
 .container-progress {
   height: 100%;
   background-color: rgb(116, 194, 92);
+  background: linear-gradient(to right, #117728 0%, #6aa728 50%);
   border-radius: 9px;
   transition: width 0.5s ease-in-out;
   min-width: 40px;
@@ -1309,6 +1311,7 @@ color: var(--color-primary);
   background-color: #3498db;
   border-radius: 9px;
   transition: width 0.5s ease-in-out;
+  background: linear-gradient(to right, #1e6390 0%, #3498db 50%);
 }
 
 .progress-text,

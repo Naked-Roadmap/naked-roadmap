@@ -10,7 +10,9 @@ body {
   background-color: #F8F5F1;
   color: black;
 }
-
+p {
+  margin-bottom:20px;
+}
 .header {
   display: flex;
   flex-direction: column;

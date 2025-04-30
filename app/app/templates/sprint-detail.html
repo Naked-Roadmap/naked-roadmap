@@ -25,9 +25,10 @@
 <!-- ---------------------------------- -->
 <!-- Sprint Progress and Stats -->
 <!-- ---------------------------------- -->
-<section class="section">
+<section class="two-column-section">
+    <div class="column-narrow section">
     <div class="section-header">
-        <h3>Sprint Progress</h3>
+        <h3>Progress</h3>
         <span class="sprint-dates">
             {{ sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ sprint.date_end.strftime('%b %d, %Y') }}
       ({{ total_days }} days)
@@ -64,6 +65,35 @@
             </div>
         </div>
     </div>
+    </div>
+    <div class="column-narrow section">
+        <div class="section-header">
+        <h3>Objectives</h3>
+        </div>
+            <div class="goals-list">
+    {% if goals|count > 0 %}
+    {% for goal_data in goals %}
+    {% if goal_data.sprint_project_count > 0 %}
+    <div class="goal-item">
+      <h4 style="display:flex; justify-content: space-between;">
+        {{ goal_data.Goal.title }}
+        <span class='project-count-badge {% if goal_data.sprint_project_count == 0 %}' style='background-color:#a10000; color:white;{% endif %}'>
+          {{ goal_data.sprint_project_count }} commitment{% if goal_data.sprint_project_count != 1 %}s{% endif %}
+        </span>
+      </h4>
+      <p>{{ goal_data.Goal.details }}</p>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <div class="goal-item">
+        No objectives supported by this sprint.
+    </div>
+    {% endif %}
+  </div>
+    </div>
+    
+    
 </section>
 
 <!-- ---------------------------------- -->
@@ -71,7 +101,7 @@
 <!-- ---------------------------------- -->
 <section class="section">
     <div class="section-header">
-        <h3>Sprint Commitments</h3>
+        <h3>Commitments</h3>
         <a href="{{ url_for('plan_sprint') }}" class="btn-icon" title="Plan Sprint">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -108,8 +138,10 @@
                     <strong>Goal:</strong> {{ entry.goal }}
                     <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
                     {% if entry.status_comment %}
-                    <br><strong>Status Comment:</strong> {{ entry.status_comment }}
-          {% endif %}
+                    <br><strong>Status:</strong> {{ entry.status_comment }}
+                    {% else %}
+                    <br><strong>Status:</strong> --
+                    {% endif %}
                 </p>
             </div>
         </div>
