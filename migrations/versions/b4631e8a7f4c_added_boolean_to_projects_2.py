@@ -7,6 +7,8 @@ Create Date: 2025-04-10 14:25:13.222025
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
+from sqlalchemy.engine.reflection import Inspector
 
 
 # revision identifiers, used by Alembic.
@@ -23,9 +25,17 @@ def upgrade():
     except Exception:
         # Table doesn't exist, so skip this step
         pass
-    with op.batch_alter_table('project', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('backlog', sa.Boolean(), nullable=True))
-        batch_op.add_column(sa.Column('discussion', sa.Boolean(), nullable=True))
+    # First check if the column exists
+    
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('project')]
+    
+    # Only add the column if it doesn't exist
+    if 'backlog' not in columns:
+        with op.batch_alter_table('project', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('backlog', sa.Boolean(), nullable=True))
+    batch_op.add_column(sa.Column('discussion', sa.Boolean(), nullable=True))
 
     # ### end Alembic commands ###
 
