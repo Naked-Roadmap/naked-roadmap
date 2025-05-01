@@ -43,6 +43,11 @@ Notes on Route Decorators:
         return redirect(url_for('project', project_id=project_id))
 """
 
+
+########################################################
+### Decorators
+########################################################
+
 @app.before_request
 def validate_request_size():
     """
@@ -65,6 +70,96 @@ def uri_too_long(error):
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
     
+########################################################
+### Logging in and Out
+########################################################
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+        
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).where(User.username == form.username.data))
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+            
+        login_user(user, remember=form.remember_me.data)
+        
+        # Use the safe redirect function instead of directly using 'next'
+        next_page = get_safe_redirect()
+        return redirect(next_page)
+        
+    return render_template('login.html', title='Sign In', form=form)
+
+def is_safe_url(target):
+    """
+    Validates if a URL is safe to redirect to by checking if it's relative
+    or matches the current host.
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    
+    # Only allow redirects to the same host or relative URLs
+    return test_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc and \
+           test_url.path != '/login'  # Prevent redirect loops to login
+           
+def get_safe_redirect():
+    """
+    Gets the 'next' parameter and validates it's safe.
+    Returns a safe URL, defaulting to the index page.
+    """
+    next_url = request.args.get('next')
+    
+    # Basic checks for potential redirect loops or excessive length
+    if not next_url:
+        return url_for('index')
+    
+    # Check for redirect loops by limiting the number of 'next=' occurrences
+    if next_url.count('next=') > 1 or len(next_url) > 2000:
+        return url_for('index')
+    
+    # Validate that the URL is safe
+    if not is_safe_url(next_url):
+        return url_for('index')
+        
+    return next_url
+    
+@app.route('/logout')
+def logout():
+    logout_user()
+    
+    next_page = get_safe_redirect()
+    return redirect(next_page or url_for('index'))
+    
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        
+        # Assign default role
+        default_role = Role.query.filter_by(name='team_member').first()
+        if default_role:
+            user.roles.append(default_role)
+            db.session.commit()
+            
+        flash('Congratulations, you are now a registered user!')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
+    
+########################################################
+### Index
+########################################################
 
 @app.route('/')
 @app.route('/index')
@@ -157,6 +252,10 @@ def index():
         changes=changes
     )
     
+########################################################
+### Managing Projects
+########################################################
+
 @app.route('/project/<int:project_id>')
 @login_required
 def project(project_id):
@@ -264,6 +363,33 @@ def edit_project(project_id):
 
     return render_template('edit.html', project=project, form=form)
     
+@app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
+@login_required
+def edit(project_id):
+    project = (
+        Project.query
+        .filter_by(id=project_id)
+        .first()
+    )
+    form = CreateProject()
+    if request.method == 'POST':
+        Project.query.filter_by(id=project_id).update(dict( 
+            name=form.name.data,
+            dri=form.dri.data,
+            team=form.team.data,
+            context=form.context.data,
+            why=form.why.data,
+            requirements=form.requirements.data,
+            launch=form.launch.data
+        )
+        )
+        db.session.commit()
+        
+        flash('Congratulations, project edited!')
+        return redirect(url_for('index'))
+
+    return render_template('edit.html', project=project, form=form)
+    
 @app.route('/projects/<int:project_id>/associate-objective', methods=['POST'])
 @login_required
 def associate_objective(project_id):
@@ -349,6 +475,15 @@ def delete_project(project_id):
     flash('Project deleted successfully!', 'success')
     return redirect(url_for('dashboard'))
     
+@app.route('/<int:project_id>/delete', methods=('POST',))
+@login_required
+def delete(project_id):
+    deleteProject = db.session.query(Project).filter(Project.id==project_id).first()
+    db.session.delete(deleteProject)
+    db.session.commit()
+    # db.session.scalar(Project.query.filter_by(id=project_id).delete())
+    flash('Project was successfully deleted!')
+    return redirect(url_for('index'))
     
 @app.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -385,134 +520,8 @@ def createProject():
         
     return render_template('create.html', form=form)
 
-@app.route('/project/<int:project_id>/edit/', methods=('GET', 'POST'))
-@login_required
-def edit(project_id):
-    project = (
-        Project.query
-        .filter_by(id=project_id)
-        .first()
-    )
-    form = CreateProject()
-    if request.method == 'POST':
-        Project.query.filter_by(id=project_id).update(dict( 
-            name=form.name.data,
-            dri=form.dri.data,
-            team=form.team.data,
-            context=form.context.data,
-            why=form.why.data,
-            requirements=form.requirements.data,
-            launch=form.launch.data
-        )
-        )
-        db.session.commit()
-        
-        flash('Congratulations, project edited!')
-        return redirect(url_for('index'))
-
-    return render_template('edit.html', project=project, form=form)
-
-@app.route('/<int:project_id>/delete', methods=('POST',))
-@login_required
-def delete(project_id):
-    deleteProject = db.session.query(Project).filter(Project.id==project_id).first()
-    db.session.delete(deleteProject)
-    db.session.commit()
-    # db.session.scalar(Project.query.filter_by(id=project_id).delete())
-    flash('Project was successfully deleted!')
-    return redirect(url_for('index'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-        
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = db.session.scalar(
-            sa.select(User).where(User.username == form.username.data))
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-            
-        login_user(user, remember=form.remember_me.data)
-        
-        # Use the safe redirect function instead of directly using 'next'
-        next_page = get_safe_redirect()
-        return redirect(next_page)
-        
-    return render_template('login.html', title='Sign In', form=form)
-
-def is_safe_url(target):
-    """
-    Validates if a URL is safe to redirect to by checking if it's relative
-    or matches the current host.
-    """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    
-    # Only allow redirects to the same host or relative URLs
-    return test_url.scheme in ('http', 'https') and \
-           ref_url.netloc == test_url.netloc and \
-           test_url.path != '/login'  # Prevent redirect loops to login
-           
-def get_safe_redirect():
-    """
-    Gets the 'next' parameter and validates it's safe.
-    Returns a safe URL, defaulting to the index page.
-    """
-    next_url = request.args.get('next')
-    
-    # Basic checks for potential redirect loops or excessive length
-    if not next_url:
-        return url_for('index')
-    
-    # Check for redirect loops by limiting the number of 'next=' occurrences
-    if next_url.count('next=') > 1 or len(next_url) > 2000:
-        return url_for('index')
-    
-    # Validate that the URL is safe
-    if not is_safe_url(next_url):
-        return url_for('index')
-        
-    return next_url
-    
-@app.route('/logout')
-def logout():
-    logout_user()
-    
-    next_page = get_safe_redirect()
-    return redirect(next_page or url_for('index'))
-    
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        
-        # Assign default role
-        default_role = Role.query.filter_by(name='team_member').first()
-        if default_role:
-            user.roles.append(default_role)
-            db.session.commit()
-            
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
-    
-    
-
-########################################################
-### Managing Projects
-########################################################
-
 @app.route('/projects')
-@login_required # If you want to toggle someone forced to log in to see roadmap, you can use this. 
+@login_required 
 def projectspage():
     # if not current_user.is_verified:
     #     return redirect(url_for("auth.verify"))
@@ -522,10 +531,82 @@ def projectspage():
         .all()
     )
     return render_template('projects.html', title='Projects', projects=projects)
+
+
+########################################################
+### Commenting on Projects
+########################################################
+
+@app.route('/project/<int:project_id>/add_comment', methods=['POST'])
+@login_required
+def add_comment(project_id):
+    project = Project.query.filter_by(id=project_id).first_or_404()
+    form = CommentForm()
+    
+    if form.validate_on_submit():
+        # Sanitize comment content
+        sanitized_content = sanitize_text(form.content.data)
+        
+        comment = Comment(
+            content=sanitized_content,
+            project_id=project_id,
+            user_id=current_user.id
+        )
+        
+        db.session.add(comment)
+        db.session.commit()
+        
+        flash('Comment added successfully!', 'success')
+    else:
+        flash('Error adding comment. Please check your input.', 'danger')
+    
+    return redirect(url_for('project', project_id=project_id))
+
+@app.route('/comment/<int:comment_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_comment(comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first_or_404()
+    
+    # Check if current user is the author of the comment
+    if comment.user_id != current_user.id:
+        flash('You do not have permission to edit this comment.', 'danger')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    form = CommentForm()
+    
+    if request.method == 'GET':
+        form.content.data = comment.content
+    
+    if form.validate_on_submit():
+        comment.content = form.content.data
+        db.session.commit()
+        
+        flash('Comment updated successfully!', 'success')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    return render_template('edit_comment.html', form=form, comment=comment)
+
+@app.route('/comment/<int:comment_id>/delete', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first_or_404()
+    
+    # Check if current user is the author of the comment
+    if comment.user_id != current_user.id:
+        flash('You do not have permission to delete this comment.', 'danger')
+        return redirect(url_for('project', project_id=comment.project_id))
+    
+    project_id = comment.project_id
+    
+    db.session.delete(comment)
+    db.session.commit()
+    
+    flash('Comment deleted successfully!', 'success')
+    return redirect(url_for('project', project_id=project_id))
     
     
 ########################################################
-### Managing Objectives
+### Managing Objectives & Goals
 ########################################################
 
 @app.route('/goals', methods=['GET', 'POST'])
@@ -729,75 +810,6 @@ def api_move_project():
         }), 500
         
         
-        
-@app.route('/project/<int:project_id>/add_comment', methods=['POST'])
-@login_required
-def add_comment(project_id):
-    project = Project.query.filter_by(id=project_id).first_or_404()
-    form = CommentForm()
-    
-    if form.validate_on_submit():
-        # Sanitize comment content
-        sanitized_content = sanitize_text(form.content.data)
-        
-        comment = Comment(
-            content=sanitized_content,
-            project_id=project_id,
-            user_id=current_user.id
-        )
-        
-        db.session.add(comment)
-        db.session.commit()
-        
-        flash('Comment added successfully!', 'success')
-    else:
-        flash('Error adding comment. Please check your input.', 'danger')
-    
-    return redirect(url_for('project', project_id=project_id))
-
-@app.route('/comment/<int:comment_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_comment(comment_id):
-    comment = Comment.query.filter_by(id=comment_id).first_or_404()
-    
-    # Check if current user is the author of the comment
-    if comment.user_id != current_user.id:
-        flash('You do not have permission to edit this comment.', 'danger')
-        return redirect(url_for('project', project_id=comment.project_id))
-    
-    form = CommentForm()
-    
-    if request.method == 'GET':
-        form.content.data = comment.content
-    
-    if form.validate_on_submit():
-        comment.content = form.content.data
-        db.session.commit()
-        
-        flash('Comment updated successfully!', 'success')
-        return redirect(url_for('project', project_id=comment.project_id))
-    
-    return render_template('edit_comment.html', form=form, comment=comment)
-
-@app.route('/comment/<int:comment_id>/delete', methods=['POST'])
-@login_required
-def delete_comment(comment_id):
-    comment = Comment.query.filter_by(id=comment_id).first_or_404()
-    
-    # Check if current user is the author of the comment
-    if comment.user_id != current_user.id:
-        flash('You do not have permission to delete this comment.', 'danger')
-        return redirect(url_for('project', project_id=comment.project_id))
-    
-    project_id = comment.project_id
-    
-    db.session.delete(comment)
-    db.session.commit()
-    
-    flash('Comment deleted successfully!', 'success')
-    return redirect(url_for('project', project_id=project_id))
-    
-    
 ########################################################
 ### Manage Cycles
 ########################################################
