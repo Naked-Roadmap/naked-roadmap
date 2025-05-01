@@ -1329,126 +1329,12 @@ def send_sprint_notification(sprint_id, recipients):
 
 def render_sprint_email_template(sprint, sprint_projects, analytics):
     """Render the HTML email template for sprint notification"""
-    template_str = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Sprint Activated: {{ sprint.title }}</title>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
-            .header { padding: 20px 0; border-bottom: 1px solid #eee; }
-            .logo { max-height: 40px; margin-bottom: 20px; }
-            .sprint-details { background-color: #f5f7f9; padding: 20px; border-radius: 6px; margin: 20px 0; }
-            .sprint-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1a56db; }
-            .sprint-meta { margin-bottom: 15px; }
-            .projects-list { margin: 30px 0; }
-            .project-item { padding: 15px 0; border-bottom: 1px solid #eee; }
-            .project-title { font-weight: bold; font-size: 18px; }
-            .project-meta { color: #666; font-size: 14px; }
-            .project-goal { background-color: #f0f4ff; padding: 10px; border-radius: 4px; margin-top: 10px; }
-            .critical-badge { background-color: #feefb3; color: #9f6000; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
-            .analytics { margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 6px; }
-            .analytics-title { font-size: 20px; margin-bottom: 15px; }
-            .analytics-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
-            .analytics-card { flex: 1; min-width: 120px; background: white; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .analytics-value { font-size: 24px; font-weight: bold; color: #1a56db; }
-            .analytics-label { font-size: 14px; color: #666; }
-            .breakdown-section { margin-top: 20px; }
-            .breakdown-title { font-size: 16px; margin-bottom: 10px; }
-            .breakdown-item { display: flex; align-items: center; margin-bottom: 5px; }
-            .breakdown-label { flex: 1; }
-            .breakdown-value { font-weight: bold; margin-left: 10px; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <img src="cid:logo" alt="Company Logo" class="logo">
-            <h1>Sprint Activated: {{ sprint.title }}</h1>
-        </div>
-        
-        <div class="sprint-details">
-            <div class="sprint-title">{{ sprint.title }}</div>
-            <div class="sprint-meta">
-                <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
-                <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
-                <strong>Projects:</strong> {{ analytics.total_projects }} total ({{ analytics.critical_count }} critical)
-            </div>
-        </div>
-        
-        <h2>Sprint Commitments</h2>
-        <div class="projects-list">
-            {% for entry in sprint_projects %}
-            {% set project = entry.project %}
-            <div class="project-item">
-                <div class="project-title">
-                    {{ project.name }}
-                    {% if entry.critical %}
-                    <span class="critical-badge">CRITICAL</span>
-                    {% endif %}
-                </div>
-                <div class="project-meta">
-                    <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
-                    {% if project.objective %}
-                    | <strong>Objective:</strong> {{ project.objective.title }}
-                    {% endif %}
-                </div>
-                <div class="project-goal">
-                    <strong>Goal:</strong> {{ entry.goal }}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <div class="analytics">
-            <div class="analytics-title">Sprint Analytics</div>
-            
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ analytics.total_projects }}</div>
-                    <div class="analytics-label">Total Projects</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ analytics.objective_count }}</div>
-                    <div class="analytics-label">Objectives Supported</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ analytics.critical_count }}</div>
-                    <div class="analytics-label">Critical Projects</div>
-                </div>
-            </div>
-            
-            <div class="breakdown-section">
-                <div class="breakdown-title">Projects by Team</div>
-                {% for team, count in analytics.teams.items() %}
-                <div class="breakdown-item">
-                    <div class="breakdown-label">{{ team }}</div>
-                    <div class="breakdown-value">{{ count }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="breakdown-section">
-                <div class="breakdown-title">Projects by DRI</div>
-                {% for dri, count in analytics.dris.items() %}
-                <div class="breakdown-item">
-                    <div class="breakdown-label">{{ dri }}</div>
-                    <div class="breakdown-value">{{ count }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated notification from the Roadmap Planning Tool. Please do not reply to this email.</p>
-        </div>
-    </body>
-    </html>
-    """
-    
-    template = Template(template_str)
-    return template.render(sprint=sprint, sprint_projects=sprint_projects, analytics=analytics)
+    return render_template(
+        'emails/sprint_activated.html',
+        sprint=sprint,
+        sprint_projects=sprint_projects,
+        analytics=analytics
+    )
 
 
 def send_html_email(subject, recipients, html_content):
@@ -1475,13 +1361,7 @@ def send_html_email(subject, recipients, html_content):
         msg_html = MIMEText(html_content, 'html')
         msg.attach(msg_html)
         
-        # Attach company logo for inline display
-        with open('app/static/fig-icon.svg', 'rb') as f:
-            logo_data = f.read()
-            logo_img = MIMEImage(logo_data)
-            logo_img.add_header('Content-ID', '<logo>')
-            logo_img.add_header('Content-Disposition', 'inline', filename='company-logo.svg')
-            msg.attach(logo_img)
+        # No longer trying to attach a logo
         
         # Send email
         with smtplib.SMTP(smtp_server, smtp_port) as server:
@@ -2363,7 +2243,6 @@ def close_cycle(sprint_id):
         change_count=change_count
     )
 
-# Helper function to send sprint closeout notification email
 def send_sprint_closeout_notification(sprint_id, recipients):
     """Send an email notification about the closed sprint"""
     try:
@@ -2414,143 +2293,9 @@ def send_sprint_closeout_notification(sprint_id, recipients):
 
 def render_sprint_closeout_email_template(sprint, sprint_projects, analytics):
     """Render the HTML email template for sprint closeout notification"""
-    template_str = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Sprint Completed: {{ sprint.title }}</title>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
-            .header { padding: 20px 0; border-bottom: 1px solid #eee; }
-            .logo { max-height: 40px; margin-bottom: 20px; }
-            .sprint-details { background-color: #f5f7f9; padding: 20px; border-radius: 6px; margin: 20px 0; }
-            .sprint-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1a56db; }
-            .sprint-meta { margin-bottom: 15px; }
-            .projects-list { margin: 30px 0; }
-            .project-item { padding: 15px 0; border-bottom: 1px solid #eee; }
-            .project-title { font-weight: bold; font-size: 18px; }
-            .project-meta { color: #666; font-size: 14px; }
-            .project-goal { background-color: #f0f4ff; padding: 10px; border-radius: 4px; margin-top: 10px; }
-            .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-            .status-complete { background-color: #d1fae5; color: #065f46; }
-            .status-not-complete { background-color: #fee2e2; color: #991b1b; }
-            .status-cancelled { background-color: #e5e7eb; color: #4b5563; }
-            .status-blocked { background-color: #fef3c7; color: #92400e; }
-            .status-deferred { background-color: #dbeafe; color: #1e40af; }
-            .analytics { margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 6px; }
-            .analytics-title { font-size: 20px; margin-bottom: 15px; }
-            .analytics-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
-            .analytics-card { flex: 1; min-width: 120px; background: white; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .analytics-value { font-size: 24px; font-weight: bold; color: #1a56db; }
-            .analytics-label { font-size: 14px; color: #666; }
-            .breakdown-section { margin-top: 20px; }
-            .breakdown-title { font-size: 16px; margin-bottom: 10px; }
-            .breakdown-item { display: flex; align-items: center; margin-bottom: 5px; }
-            .breakdown-label { flex: 1; }
-            .breakdown-value { font-weight: bold; margin-left: 10px; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <img src="cid:logo" alt="Company Logo" class="logo">
-            <h1>Sprint Completed: {{ sprint.title }}</h1>
-        </div>
-        
-        <div class="sprint-details">
-            <div class="sprint-title">{{ sprint.title }}</div>
-            <div class="sprint-meta">
-                <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
-                <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
-                <strong>Completion Rate:</strong> {{ "%.1f"|format(analytics.completion_percentage) }}% ({{ analytics.completed_commitments }} of {{ analytics.total_commitments }})
-            </div>
-            {% if sprint.goals %}
-            <div class="sprint-retrospective">
-                <h3>Sprint Retrospective</h3>
-                <p>{{ sprint.goals }}</p>
-            </div>
-            {% endif %}
-        </div>
-        
-        <h2>Sprint Commitments</h2>
-        <div class="projects-list">
-            {% for entry in sprint_projects %}
-            {% set project = entry.project %}
-            {% if project %}
-            <div class="project-item">
-                <div class="project-title">
-                    {{ project.name }}
-                    <span class="status-badge {% if entry.status == 'Completed' %}status-complete
-                       {% elif entry.status == 'Not Completed' %}status-not-complete
-                       {% elif entry.status == 'Cancelled' %}status-cancelled
-                       {% elif entry.status == 'Blocked' %}status-blocked
-                       {% elif entry.status == 'Deferred' %}status-deferred{% endif %}">
-                        {{ entry.status }}
-                    </span>
-                </div>
-                <div class="project-meta">
-                    <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
-                    {% if project.objective %}
-                    | <strong>Objective:</strong> {{ project.objective.title }}
-                    {% endif %}
-                </div>
-                <div class="project-goal">
-                    <strong>Goal:</strong> {{ entry.goal }}
-                    {% if entry.status_comment %}
-                    <br><strong>Final Status:</strong> {{ entry.status_comment }}
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
-        
-        <div class="analytics">
-            <div class="analytics-title">Sprint Analytics</div>
-            
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ analytics.total_commitments }}</div>
-                    <div class="analytics-label">Total Commitments</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ analytics.completed_commitments }}</div>
-                    <div class="analytics-label">Completed</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-value">{{ "%.1f"|format(analytics.completion_percentage) }}%</div>
-                    <div class="analytics-label">Completion Rate</div>
-                </div>
-            </div>
-            
-            <div class="breakdown-section">
-                <div class="breakdown-title">Projects by Team</div>
-                {% for team, count in analytics.teams.items() %}
-                <div class="breakdown-item">
-                    <div class="breakdown-label">{{ team }}</div>
-                    <div class="breakdown-value">{{ count }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="breakdown-section">
-                <div class="breakdown-title">Projects by DRI</div>
-                {% for dri, count in analytics.dris.items() %}
-                <div class="breakdown-item">
-                    <div class="breakdown-label">{{ dri }}</div>
-                    <div class="breakdown-value">{{ count }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated notification from the Roadmap Planning Tool. Please do not reply to this email.</p>
-        </div>
-    </body>
-    </html>
-    """
-    
-    template = Template(template_str)
-    return template.render(sprint=sprint, sprint_projects=sprint_projects, analytics=analytics)
+    return render_template(
+        'emails/sprint_completed.html',
+        sprint=sprint,
+        sprint_projects=sprint_projects,
+        analytics=analytics
+    )

@@ -1,0 +1,83 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Sprint Activated: {{ sprint.title }}{% endblock %}
+
+{% block additional_styles %}
+.critical-badge { background-color: #feefb3; color: #9f6000; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+{% endblock %}
+
+{% block header_title %}Sprint Activated: {{ sprint.title }}{% endblock %}
+
+{% block content %}
+<div class="sprint-details">
+    <div class="sprint-title">{{ sprint.title }}</div>
+    <div class="sprint-meta">
+        <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
+        <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
+        <strong>Projects:</strong> {{ analytics.total_projects }} total ({{ analytics.critical_count }} critical)
+    </div>
+</div>
+
+<h2>Sprint Commitments</h2>
+<div class="projects-list">
+    {% for entry in sprint_projects %}
+    {% set project = entry.project %}
+    <div class="project-item">
+        <div class="project-title">
+            {{ project.name }}
+            {% if entry.critical %}
+            <span class="critical-badge">CRITICAL</span>
+            {% endif %}
+        </div>
+        <div class="project-meta">
+            <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
+            {% if project.objective %}
+            | <strong>Objective:</strong> {{ project.objective.title }}
+            {% endif %}
+        </div>
+        <div class="project-goal">
+            <strong>Goal:</strong> {{ entry.goal }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="analytics">
+    <div class="analytics-title">Sprint Analytics</div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="analytics-value">{{ analytics.total_projects }}</div>
+            <div class="analytics-label">Total Projects</div>
+        </div>
+        <div class="analytics-card">
+            <div class="analytics-value">{{ analytics.objective_count }}</div>
+            <div class="analytics-label">Objectives Supported</div>
+        </div>
+        <div class="analytics-card">
+            <div class="analytics-value">{{ analytics.critical_count }}</div>
+            <div class="analytics-label">Critical Projects</div>
+        </div>
+    </div>
+    
+    <div class="breakdown-section">
+        <div class="breakdown-title">Projects by Team</div>
+        {% for team, count in analytics.teams.items() %}
+        <div class="breakdown-item">
+            <div class="breakdown-label">{{ team }}</div>
+            <div class="breakdown-value">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="breakdown-section">
+        <div class="breakdown-title">Projects by DRI</div>
+        {% for dri, count in analytics.dris.items() %}
+        <div class="breakdown-item">
+            <div class="breakdown-label">{{ dri }}</div>
+            <div class="breakdown-value">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

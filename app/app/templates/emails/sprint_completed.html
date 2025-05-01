@@ -1,0 +1,103 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Sprint Completed: {{ sprint.title }}{% endblock %}
+
+{% block additional_styles %}
+.status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.status-complete { background-color: #d1fae5; color: #065f46; }
+.status-not-complete { background-color: #fee2e2; color: #991b1b; }
+.status-cancelled { background-color: #e5e7eb; color: #4b5563; }
+.status-blocked { background-color: #fef3c7; color: #92400e; }
+.status-deferred { background-color: #dbeafe; color: #1e40af; }
+{% endblock %}
+
+{% block header_title %}Sprint Completed: {{ sprint.title }}{% endblock %}
+
+{% block content %}
+<div class="sprint-details">
+    <div class="sprint-title">{{ sprint.title }}</div>
+    <div class="sprint-meta">
+        <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
+        <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
+        <strong>Completion Rate:</strong> {{ "%.1f"|format(analytics.completion_percentage) }}% ({{ analytics.completed_commitments }} of {{ analytics.total_commitments }})
+    </div>
+    {% if sprint.goals %}
+    <div class="sprint-retrospective">
+        <h3>Sprint Retrospective</h3>
+        <p>{{ sprint.goals }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<h2>Sprint Commitments</h2>
+<div class="projects-list">
+    {% for entry in sprint_projects %}
+    {% set project = entry.project %}
+    {% if project %}
+    <div class="project-item">
+        <div class="project-title">
+            {{ project.name }}
+            <span class="status-badge {% if entry.status == 'Completed' %}status-complete
+               {% elif entry.status == 'Not Completed' %}status-not-complete
+               {% elif entry.status == 'Cancelled' %}status-cancelled
+               {% elif entry.status == 'Blocked' %}status-blocked
+               {% elif entry.status == 'Deferred' %}status-deferred{% endif %}">
+                {{ entry.status }}
+            </span>
+        </div>
+        <div class="project-meta">
+            <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
+            {% if project.objective %}
+            | <strong>Objective:</strong> {{ project.objective.title }}
+            {% endif %}
+        </div>
+        <div class="project-goal">
+            <strong>Goal:</strong> {{ entry.goal }}
+            {% if entry.status_comment %}
+            <br><strong>Final Status:</strong> {{ entry.status_comment }}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<div class="analytics">
+    <div class="analytics-title">Sprint Analytics</div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="analytics-value">{{ analytics.total_commitments }}</div>
+            <div class="analytics-label">Total Commitments</div>
+        </div>
+        <div class="analytics-card">
+            <div class="analytics-value">{{ analytics.completed_commitments }}</div>
+            <div class="analytics-label">Completed</div>
+        </div>
+        <div class="analytics-card">
+            <div class="analytics-value">{{ "%.1f"|format(analytics.completion_percentage) }}%</div>
+            <div class="analytics-label">Completion Rate</div>
+        </div>
+    </div>
+    
+    <div class="breakdown-section">
+        <div class="breakdown-title">Projects by Team</div>
+        {% for team, count in analytics.teams.items() %}
+        <div class="breakdown-item">
+            <div class="breakdown-label">{{ team }}</div>
+            <div class="breakdown-value">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="breakdown-section">
+        <div class="breakdown-title">Projects by DRI</div>
+        {% for dri, count in analytics.dris.items() %}
+        <div class="breakdown-item">
+            <div class="breakdown-label">{{ dri }}</div>
+            <div class="breakdown-value">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
