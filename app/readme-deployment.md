@@ -68,7 +68,7 @@ cd /opt/naked-roadmap
 
 ```bash
 # Using git
-git clone your_repository_url .
+git clone https://github.com/Naked-Roadmap/naked-roadmap.git .
 
 # OR using SCP from your local machine
 scp -r ./* root@your_droplet_ip:/opt/naked-roadmap/
@@ -130,6 +130,7 @@ server {
 5. Enable the site and restart Nginx:
 
 ```bash
+sudo ufw allow 'Nginx HTTP'
 ln -s /etc/nginx/sites-available/naked-roadmap /etc/nginx/sites-enabled/
 nginx -t
 systemctl restart nginx

@@ -7,7 +7,7 @@ services:
       - "5000:5000"
     environment:
       - SECRET_KEY=${SECRET_KEY:-yoursecretkeyhere}
-      - DATABASE_URL=sqlite:///app.db
+      - DATABASE_URL=sqlite:///instance/app.db
       - FLASK_APP=app.py
       - FLASK_ENV=production
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
@@ -22,3 +22,4 @@ services:
 
 volumes:
   app_data:
+    driver: local

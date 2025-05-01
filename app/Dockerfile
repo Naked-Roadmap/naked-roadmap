@@ -25,10 +25,14 @@ RUN pip install --no-cache-dir gunicorn
 # Copy application code
 COPY . .
 
+# Create instance directory for SQLite database
+RUN mkdir -p /app/instance && \
+    chmod 777 /app/instance
+
 # Make the startup script executable
 RUN chmod +x start.py
 
-# Create non-root user and switch to it
+# Create non-root user and give appropriate permissions
 RUN useradd -m appuser
 RUN chown -R appuser:appuser /app
 USER appuser

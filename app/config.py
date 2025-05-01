@@ -4,6 +4,10 @@ from pathlib import Path
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+# Ensure instance directory exists
+instance_dir = os.path.join(basedir, 'instance')
+os.makedirs(instance_dir, exist_ok=True)
+
 # Create a .env file if it doesn't exist
 env_file = Path(os.path.join(basedir, '.env'))
 if not env_file.exists():
@@ -14,7 +18,7 @@ if not env_file.exists():
     with open(env_file, 'w') as f:
         f.write(f"SECRET_KEY={generated_key}\n")
         f.write("# Add other environment variables below\n")
-        f.write("# DATABASE_URL=sqlite:///app.db\n")
+        f.write("# DATABASE_URL=sqlite:///instance/app.db\n")
         f.write("# SMTP_SERVER=smtp.example.com\n")
         f.write("# SMTP_PORT=587\n")
         f.write("# SMTP_USERNAME=your_username\n")
@@ -56,9 +60,9 @@ class Config:
     # This ensures a new random key is used if env var is not set
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
     
-    # Database configuration
+    # Database configuration - Note the path is now explicitly in the instance folder
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'app.db')
+        'sqlite:///' + os.path.join(instance_dir, 'app.db')
     
     # Company customizations
     company_name = os.environ.get('COMPANY_NAME') or "Naked Roadmap"
@@ -71,25 +75,3 @@ class Config:
     MAIL_USERNAME = os.environ.get('SMTP_USERNAME')
     MAIL_PASSWORD = os.environ.get('SMTP_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_SENDER')
-
-
-# 
-# 
-#     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-#     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-#         'sqlite:///' + os.path.join(basedir, 'app.db')
-#         
-#     # ####################################
-#     #
-#     # CUSTOMIZATIONS
-#     # Use this section to set global variables to customize your
-#     # deployment of the Naked Roadmap.
-#     #
-#     # ####################################
-#     
-#     # Your team or company name
-#     company_name = "Sigil Health" 
-#     
-#     # If you want the roadmap to be public
-#     public = True
-#     
