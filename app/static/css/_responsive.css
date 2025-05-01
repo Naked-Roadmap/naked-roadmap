@@ -1,0 +1,476 @@
+/* 
+ * _responsive.css
+ * Responsive design and media queries
+ */
+
+/* 
+ * Breakpoints:
+ * xs: 0 - 575px (default styles, no media query)
+ * sm: 576px - 767px
+ * md: 768px - 991px
+ * lg: 992px - 1199px
+ * xl: 1200px and up
+ */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+  
+  /* Hide/show responsive elements */
+  .d-sm-none {
+    display: none !important;
+  }
+  
+  .d-sm-block {
+    display: block !important;
+  }
+  
+  .d-sm-flex {
+    display: flex !important;
+  }
+  
+  /* Text alignment */
+  .text-sm-left {
+    text-align: left !important;
+  }
+  
+  .text-sm-center {
+    text-align: center !important;
+  }
+  
+  .text-sm-right {
+    text-align: right !important;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+  
+  /* Layout adjustments */
+  .top-bar {
+    padding: 0 var(--spacing-6);
+  }
+  
+  .content-container {
+    padding: var(--spacing-6);
+  }
+  
+  /* Hide/show responsive elements */
+  .d-md-none {
+    display: none !important;
+  }
+  
+  .d-md-block {
+    display: block !important;
+  }
+  
+  .d-md-flex {
+    display: flex !important;
+  }
+  
+  /* Text alignment */
+  .text-md-left {
+    text-align: left !important;
+  }
+  
+  .text-md-center {
+    text-align: center !important;
+  }
+  
+  .text-md-right {
+    text-align: right !important;
+  }
+  
+  /* Sidebar is expanded by default on medium screens and larger */
+  .sidebar {
+    width: 240px;
+  }
+  
+  .sidebar .logo span,
+  .sidebar .sidebar-nav a span,
+  .sidebar .nav-section-title,
+  .sidebar .user-info span,
+  .sidebar .btn-login span,
+  .sidebar .btn-logout span,
+  .sidebar .theme-switch-text {
+    display: inline-block;
+  }
+  
+  .sidebar .sidebar-nav a {
+    justify-content: flex-start;
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+  
+  .sidebar .sidebar-nav a svg,
+  .sidebar .sidebar-nav a img {
+    margin-right: var(--spacing-3);
+  }
+  
+  .sidebar .sidebar-footer {
+    padding: var(--spacing-4);
+  }
+  
+  .sidebar .user-avatar {
+    margin-right: var(--spacing-2);
+  }
+  
+  .sidebar .theme-switch {
+    justify-content: flex-start;
+  }
+  
+  .sidebar .theme-switch-icon {
+    margin-right: var(--spacing-2);
+  }
+  
+  /* Table adjustments */
+  .table-responsive-md {
+    overflow-x: auto;
+  }
+  
+  .table-responsive-md .table {
+    min-width: 100%;
+  }
+  
+  /* Analytics cards */
+  .three-column-section {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+  
+  /* Hide/show responsive elements */
+  .d-lg-none {
+    display: none !important;
+  }
+  
+  .d-lg-block {
+    display: block !important;
+  }
+  
+  .d-lg-flex {
+    display: flex !important;
+  }
+  
+  /* Text alignment */
+  .text-lg-left {
+    text-align: left !important;
+  }
+  
+  .text-lg-center {
+    text-align: center !important;
+  }
+  
+  .text-lg-right {
+    text-align: right !important;
+  }
+  
+  /* Modal adjustments */
+  .modal-lg {
+    max-width: 800px;
+  }
+  
+  /* Table adjustments */
+  .table-responsive-lg {
+    overflow-x: auto;
+  }
+  
+  .table-responsive-lg .table {
+    min-width: 100%;
+  }
+  
+  /* Layout adjustments for two-column layout */
+  .two-column-section {
+    flex-direction: row;
+  }
+  
+  .two-column-section .column-wide {
+    flex: 2;
+  }
+  
+  .two-column-section .column-narrow {
+    flex: 1;
+  }
+  
+  /* Analytics cards */
+  .three-column-section {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* X-Large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+  
+  /* Hide/show responsive elements */
+  .d-xl-none {
+    display: none !important;
+  }
+  
+  .d-xl-block {
+    display: block !important;
+  }
+  
+  .d-xl-flex {
+    display: flex !important;
+  }
+  
+  /* Text alignment */
+  .text-xl-left {
+    text-align: left !important;
+  }
+  
+  .text-xl-center {
+    text-align: center !important;
+  }
+  
+  .text-xl-right {
+    text-align: right !important;
+  }
+  
+  /* Modal adjustments */
+  .modal-xl {
+    max-width: 1140px;
+  }
+  
+  /* Table adjustments */
+  .table-responsive-xl {
+    overflow-x: auto;
+  }
+  
+  .table-responsive-xl .table {
+    min-width: 100%;
+  }
+}
+
+/* Specific responsive breakpoints */
+
+/* Max-width breakpoints (from larger to smaller screens) */
+@media (max-width: 1199.98px) {
+  /* Adjustments for screens below xl */
+}
+
+@media (max-width: 991.98px) {
+  /* Adjustments for screens below lg */
+  .two-column-section {
+    flex-direction: column;
+  }
+  
+  .column-wide,
+  .column-narrow {
+    flex: 1;
+  }
+  
+  .three-column-section {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  /* Executive insights grid */
+  .executive-insights {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Adjustments for screens below md */
+  .sidebar {
+    width: 60px;
+  }
+  
+  .logo span,
+  .sidebar-nav a span,
+  .sidebar-nav h6,
+  .user-info span,
+  .btn-login span,
+  .btn-logout span {
+    display: none;
+  }
+  
+  .sidebar-nav a {
+    justify-content: center;
+  }
+  
+  .sidebar-nav a svg {
+    margin-right: 0;
+  }
+  
+  .sidebar-footer {
+    padding: var(--spacing-2);
+  }
+  
+  .content-container {
+    padding: var(--spacing-4);
+  }
+  
+  .three-column-section {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Executive insights grid */
+  .executive-insights {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Theme switch adjustments */
+  .theme-switch-text {
+    display: none;
+  }
+  
+  .theme-switch {
+    justify-content: center;
+  }
+  
+  .theme-switch-icon {
+    margin-right: 0;
+  }
+  
+  /* Table adjustments for mobile */
+  .table-responsive-sm tbody tr {
+    display: block;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-3);
+    padding: var(--spacing-3);
+  }
+  
+  .table-responsive-sm tbody td {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    padding: var(--spacing-2) 0;
+  }
+  
+  .table-responsive-sm tbody td:before {
+    content: attr(data-label);
+    font-weight: var(--font-weight-semibold);
+    width: 120px;
+    min-width: 120px;
+  }
+  
+  .table-responsive-sm thead {
+    display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* Adjustments for screens below sm */
+  .content-container {
+    padding: var(--spacing-3);
+  }
+  
+  .section-header {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+  }
+  
+  /* Button adjustments */
+  .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  /* Form adjustments */
+  .form-group {
+    margin-bottom: var(--spacing-3);
+  }
+  
+  /* Welcome banner */
+  .welcome-banner {
+    padding: var(--spacing-4);
+  }
+  
+  /* Executive insights grid */
+  .executive-insights {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+  
+  .sidebar,
+  .top-bar,
+  .app-footer,
+  .quick-actions,
+  .btn,
+  .form-actions {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .section {
+    page-break-inside: avoid;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+  
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+}
+
+/* Orientation-specific styles */
+@media (orientation: portrait) {
+  /* Styles for portrait orientation */
+}
+
+@media (orientation: landscape) {
+  /* Styles for landscape orientation */
+}
+
+/* High-density/retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), 
+       (min-resolution: 192dpi) {
+  /* High-density display adjustments */
+}
+
+/* Dark mode media query - will be applied if user prefers dark mode at OS level */
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) {
+    /* Enable dark mode when OS prefers it unless explicitly set to light */
+    color: var(--color-gray-700);
+    background-color: var(--color-background);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
