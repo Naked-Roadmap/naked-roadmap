@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="static/fonts/Mulish/Mulish-VariableFont_wght.ttf" rel="stylesheet">
   <title>{% block title %} {% endblock %}</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
 </head>
 
 <body>
@@ -25,10 +27,10 @@
         </a>
         <!-- Toggle button for mobile/narrow view -->
         <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle sidebar">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M19 12H5M12 19l-7-7 7-7"/>
-    </svg>
-  </button>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
       </div>
 
       <nav class="sidebar-nav">
@@ -198,19 +200,19 @@
       const sidebar = document.getElementById('sidebar');
       const sidebarToggle = document.getElementById('sidebar-toggle');
       const storedSidebarState = localStorage.getItem('sidebarCollapsed');
-      
+
       // Set initial state based on stored preference or default to expanded
       if (storedSidebarState === 'true') {
         sidebar.classList.add('collapsed');
       }
-      
+
       // Handle sidebar toggle click
       sidebarToggle.addEventListener('click', function() {
         sidebar.classList.toggle('collapsed');
         // Store the preference
         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
       });
-      
+
       // Auto-collapse on smaller screens
       function checkWindowSize() {
         if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
@@ -218,13 +220,13 @@
           localStorage.setItem('sidebarCollapsed', 'true');
         }
       }
-      
+
       // Check on load
       checkWindowSize();
-      
+
       // Check on resize
       window.addEventListener('resize', checkWindowSize);
-      
+
       // Dark Mode Toggle Script
       const themeToggle = document.getElementById('theme-toggle');
       const themeText = document.querySelector('.theme-switch-text');

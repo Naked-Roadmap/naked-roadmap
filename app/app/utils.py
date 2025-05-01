@@ -1,6 +1,7 @@
 import bleach
 from datetime import datetime
 from flask import jsonify, request
+import re
 
 # Define allowed HTML tags and attributes for rich text fields
 ALLOWED_TAGS = [
@@ -147,3 +148,37 @@ def project_edit_required(view_func):
             
         return view_func(project_id, *args, **kwargs)
     return decorated_function
+    
+def is_valid_email(email):
+    """
+    Validate email format using a comprehensive regex pattern.
+    Based on RFC 5322 standards.
+    """
+    if not email:
+        return False
+        
+    # Simple but effective email validation pattern
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email.lower()))
+
+def validate_email_list(email_list_str):
+    """
+    Validate a comma-separated list of email addresses.
+    Returns tuple of (is_valid, valid_emails, invalid_emails)
+    """
+    if not email_list_str:
+        return False, [], []
+        
+    # Split by comma and trim whitespace
+    emails = [email.strip() for email in email_list_str.split(',')]
+    
+    valid_emails = []
+    invalid_emails = []
+    
+    for email in emails:
+        if is_valid_email(email):
+            valid_emails.append(email)
+        else:
+            invalid_emails.append(email)
+    
+    return len(invalid_emails) == 0, valid_emails, invalid_emails

@@ -1,12 +1,12 @@
 from app import app, db, login
 from app.forms import LoginForm, RegistrationForm, CreateProject, CreateGoal, CreateSprint, CommentForm
-from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog, AppConfig, get_config, set_config, Role
+from app.models import User, Project, Goal, Sprint, SprintProjectMap, Comment, Changelog, AppConfig, get_config, set_config, get_secure_config, set_secure_config, Role
 import sqlalchemy as sa
 from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash, check_password_hash
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlparse, urljoin
 from config import Config
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
@@ -64,6 +64,7 @@ def uri_too_long(error):
 @app.context_processor
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
+    
 
 @app.route('/')
 @app.route('/index')
@@ -1394,36 +1395,52 @@ def render_sprint_email_template(sprint, sprint_projects, analytics):
 def send_html_email(subject, recipients, html_content):
     """Send an HTML email with the sprint notification using app configuration"""
     try:
-        # Get email configuration from the database
+        # Get email configuration from the database with decryption
         smtp_server = get_config('smtp_server')
         smtp_port = int(get_config('smtp_port', 587))
         sender_email = get_config('smtp_email')
-        sender_password = get_config('smtp_password')
+        sender_password = get_config('smtp_password')  # This will be decrypted
         email_enabled = get_config('email_enabled') == 'true'
         
         if not all([smtp_server, smtp_port, sender_email, sender_password, email_enabled]):
             print("Email settings are incomplete or email notifications are disabled")
             return False
         
+        # Validate recipient emails
+        validated, valid_emails, invalid_emails = validate_email_list(','.join(recipients))
+        if not validated:
+            print(f"Invalid email addresses found: {invalid_emails}")
+            return False
+            
+        if not valid_emails:
+            print("No valid email addresses provided")
+            return False
+        
         # Create message
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        
         msg = MIMEMultipart('related')
         msg['Subject'] = subject
         msg['From'] = sender_email
-        msg['To'] = ', '.join(recipients)
+        msg['To'] = ', '.join(valid_emails)
+        
+        # Add anti-spoofing headers
+        msg['X-Mailer'] = 'Naked Roadmap Email Service'
+        msg['Message-ID'] = f"<{os.urandom(16).hex()}@{smtp_server.split('.', 1)[0]}>"
         
         # Attach HTML content
         msg_html = MIMEText(html_content, 'html')
         msg.attach(msg_html)
         
-        # No longer trying to attach a logo
-        
         # Send email
+        import smtplib
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(msg)
         
-        print(f"Email sent successfully to {len(recipients)} recipients")
+        print(f"Email sent successfully to {len(valid_emails)} recipients")
         return True
     
     except Exception as e:
@@ -1528,7 +1545,7 @@ def save_email_settings():
             else:
                 configs[config.key] = config.value
         
-        return render_template('settings.html', 
+        return render_template('settings/settings.html', 
                                title='Application Settings', 
                                configs=configs, 
                                error_message=f'Error saving settings: {str(e)}')
@@ -1580,11 +1597,15 @@ def test_email():
         if not recipient_email:
             return jsonify({'success': False, 'message': 'Recipient email is required'})
         
+        # Validate email address
+        if not is_valid_email(recipient_email):
+            return jsonify({'success': False, 'message': 'Invalid email address format'})
+        
         # Get email configuration
         smtp_server = get_config('smtp_server')
         smtp_port = get_config('smtp_port')
         smtp_email = get_config('smtp_email')
-        smtp_password = get_config('smtp_password')
+        smtp_password = get_config('smtp_password')  # This will be decrypted
         email_enabled = get_config('email_enabled') == 'true'
         
         if not all([smtp_server, smtp_port, smtp_email, smtp_password, email_enabled]):
@@ -1602,25 +1623,26 @@ def test_email():
             <h2>Test Email</h2>
             <p>This is a test email from {app_name}.</p>
             <p>If you're receiving this email, your email configuration is working correctly.</p>
+            <p>Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </body>
         </html>
         """
         
-        # Use the send_html_email function from previous artifact
-        success = send_test_html_email(
+        success = send_html_email(
             subject=subject,
-            recipient=recipient_email,
+            recipients=[recipient_email],
             html_content=html_content
         )
         
         if success:
             return jsonify({'success': True, 'message': 'Test email sent successfully'})
         else:
-            return jsonify({'success': False, 'message': 'Failed to send test email'})
+            return jsonify({'success': False, 'message': 'Failed to send test email. Check server logs for details.'})
     
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+        
+        
 def send_test_html_email(subject, recipient, html_content):
     """Send a test HTML email"""
     try:

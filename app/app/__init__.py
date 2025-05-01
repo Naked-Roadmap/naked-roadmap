@@ -3,6 +3,9 @@ from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from app.secure_email import encryptor
+
 
 def add_security_headers(response):
     """Add security headers to all responses"""
@@ -40,5 +43,19 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login' # If you want to toggle someone forced to log in to see roadmap, you can use this. 
 app.after_request(add_security_headers)
+csrf = CSRFProtect()
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Initialize CSRF protection
+    csrf.init_app(app)
+    
+    # Other initialization code...
+    encryptor.init_app(app)
+    
+    return app
 
 from app import routes, models
+

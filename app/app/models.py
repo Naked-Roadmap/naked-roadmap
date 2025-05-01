@@ -290,14 +290,84 @@ class AppConfig(db.Model):
         return f'<AppConfig {self.key}>'
     
 # Helper functions to get and set configuration values
-def get_config(key, default=None):
-    """Get a configuration value by key"""
+def get_secure_config(db, AppConfig, key, default=None):
+    """Get a configuration value by key with decryption support"""
     config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
-    return config.value if config else default
+    
+    if not config:
+        return default
+    
+    # Check if this is a sensitive field that needs decryption
+    sensitive_keys = ['smtp_password', 'smtp_username', 'api_key']
+    if key in sensitive_keys and config.value and config.value.startswith('encrypted:'):
+        # Remove the prefix and decrypt
+        encrypted_value = config.value[10:]  # Skip 'encrypted:' prefix
+        try:
+            return encryptor.decrypt(encrypted_value)
+        except Exception:
+            # If decryption fails, return default
+            return default
+            
+    return config.value
+
+def set_secure_config(db, AppConfig, key, value, description=None):
+    """Set a configuration value with encryption support for sensitive data"""
+    config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
+    
+    # Determine if this key should be encrypted
+    sensitive_keys = ['smtp_password', 'smtp_username', 'api_key']
+    should_encrypt = key in sensitive_keys and value is not None
+    
+    # Encrypt value if needed
+    if should_encrypt:
+        encrypted_value = encryptor.encrypt(value)
+        value = f'encrypted:{encrypted_value}'
+    
+    if config:
+        config.value = value
+        config.updated = datetime.now()
+        if description and not config.description:
+            config.description = description
+    else:
+        config = AppConfig(key=key, value=value, description=description)
+        db.session.add(config)
+        
+    db.session.commit()
+    return config
+    
+def get_config(key, default=None):
+    """Get a configuration value by key with decryption support"""
+    config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
+    
+    if not config:
+        return default
+    
+    # Check if this is a sensitive field that needs decryption
+    sensitive_keys = ['smtp_password', 'smtp_username', 'api_key']
+    if key in sensitive_keys and config.value and config.value.startswith('encrypted:'):
+        # Remove the prefix and decrypt
+        encrypted_value = config.value[10:]  # Skip 'encrypted:' prefix
+        try:
+            return encryptor.decrypt(encrypted_value)
+        except Exception:
+            # If decryption fails, return default
+            return default
+            
+    return config.value
 
 def set_config(key, value, description=None):
-    """Set a configuration value"""
+    """Set a configuration value with encryption support for sensitive data"""
     config = db.session.query(AppConfig).filter(AppConfig.key == key).first()
+    
+    # Determine if this key should be encrypted
+    sensitive_keys = ['smtp_password', 'smtp_username', 'api_key']
+    should_encrypt = key in sensitive_keys and value is not None
+    
+    # Encrypt value if needed
+    if should_encrypt:
+        encrypted_value = encryptor.encrypt(value)
+        value = f'encrypted:{encrypted_value}'
+    
     if config:
         config.value = value
         config.updated = datetime.now(timezone.utc)
@@ -306,5 +376,6 @@ def set_config(key, value, description=None):
     else:
         config = AppConfig(key=key, value=value, description=description)
         db.session.add(config)
+        
     db.session.commit()
     return config
