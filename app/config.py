@@ -4,9 +4,14 @@ from pathlib import Path
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# Ensure instance directory exists
-instance_dir = os.path.join(basedir, 'instance')
-os.makedirs(instance_dir, exist_ok=True)
+# Create data directories if they don't exist
+data_dir = '/data'
+if not os.path.exists(data_dir):
+    try:
+        os.makedirs(data_dir, exist_ok=True)
+        print(f"Created data directory: {data_dir}")
+    except:
+        print(f"Warning: Could not create {data_dir}")
 
 # Create a .env file if it doesn't exist
 env_file = Path(os.path.join(basedir, '.env'))
@@ -18,7 +23,7 @@ if not env_file.exists():
     with open(env_file, 'w') as f:
         f.write(f"SECRET_KEY={generated_key}\n")
         f.write("# Add other environment variables below\n")
-        f.write("# DATABASE_URL=sqlite:///instance/app.db\n")
+        f.write("# DATABASE_URL=sqlite:////data/app.db\n")
         f.write("# SMTP_SERVER=smtp.example.com\n")
         f.write("# SMTP_PORT=587\n")
         f.write("# SMTP_USERNAME=your_username\n")
@@ -60,9 +65,17 @@ class Config:
     # This ensures a new random key is used if env var is not set
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
     
-    # Database configuration - Note the path is now explicitly in the instance folder
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(instance_dir, 'app.db')
+    # Database configuration - Prioritize environment variable
+    # If using absolute path, don't modify it; for relative, join with basedir
+    db_url = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
+    
+    # Print database configuration for debugging
+    print(f"Database URL from env/default: {db_url}")
+    
+    SQLALCHEMY_DATABASE_URI = db_url
+    
+    # Print final database configuration
+    print(f"Final Database URI: {SQLALCHEMY_DATABASE_URI}")
     
     # Company customizations
     company_name = os.environ.get('COMPANY_NAME') or "Naked Roadmap"
