@@ -1,0 +1,168 @@
+/* 
+ * _tables.css
+ * Table styles and related components
+ */
+
+/* Table Container */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Base Table Styles */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Table Headers */
+.table th {
+  padding: var(--spacing-3) var(--spacing-4);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-700);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+/* Table Cells */
+.table td {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  color: var(--color-gray-800);
+}
+
+/* Table Row Hover Effect */
+.table tbody tr:hover {
+  background-color: var(--color-gray-100);
+}
+
+/* Striped Tables */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* Bordered Tables */
+.table-bordered {
+  border: 1px solid var(--color-gray-200);
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--color-gray-200);
+}
+
+/* Compact Tables */
+.table-sm th,
+.table-sm td {
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+/* Contextual Classes */
+.table .table-primary {
+  background-color: rgba(62, 99, 221, 0.1);
+}
+
+.table .table-success {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.table .table-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.table .table-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Action Buttons in Tables */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/* Table Captions */
+.table caption {
+  padding: var(--spacing-3);
+  color: var(--color-gray-600);
+  text-align: left;
+  caption-side: top;
+}
+
+/* Table with Cards */
+.table-cards tbody tr {
+  display: block;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.table-cards tbody td {
+  display: flex;
+  justify-content: space-between;
+  border: none;
+  padding: var(--spacing-2) 0;
+}
+
+.table-cards tbody td:before {
+  content: attr(data-label);
+  font-weight: var(--font-weight-semibold);
+  width: 120px;
+  min-width: 120px;
+}
+
+/* Responsive Behavior */
+@media (max-width: 768px) {
+  .table-responsive-sm tbody tr {
+    display: block;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-3);
+    padding: var(--spacing-3);
+  }
+  
+  .table-responsive-sm tbody td {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    padding: var(--spacing-2) 0;
+  }
+  
+  .table-responsive-sm tbody td:before {
+    content: attr(data-label);
+    font-weight: var(--font-weight-semibold);
+    width: 120px;
+    min-width: 120px;
+  }
+  
+  .table-responsive-sm thead {
+    display: none;
+  }
+}
+
+/* Table Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--spacing-3);
+  gap: var(--spacing-2);
+}
+
+.pagination-btn {
+  padding: var(--spacing-1) var(--spacing-2);
+  border: 1px solid var(--color-gray-300);
+  background-color: var(--color-white);
+  color: var(--color-gray-700);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn:hover:not(.active) {
+  background-color: var(--color-gray-100);
+}

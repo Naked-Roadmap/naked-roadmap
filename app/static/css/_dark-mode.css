@@ -1,0 +1,254 @@
+/* 
+ * _dark-mode.css
+ * Dark mode overrides for all components
+ */
+
+/* Base Dark Mode Styles */
+[data-theme="dark"] body,
+body.dark-mode {
+  color: var(--color-gray-700);
+  background-color: var(--color-background);
+}
+
+/* Layout Components */
+[data-theme="dark"] .section,
+[data-theme="dark"] .top-bar,
+body.dark-mode .section,
+body.dark-mode .top-bar {
+  background-color: var(--color-white);
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .sidebar,
+body.dark-mode .sidebar {
+  background-color: #0a0a0a;
+}
+
+[data-theme="dark"] .section-header,
+[data-theme="dark"] .app-footer,
+body.dark-mode .section-header,
+body.dark-mode .app-footer {
+  border-color: var(--color-gray-700);
+}
+
+/* Welcome Banner */
+[data-theme="dark"] .welcome-banner,
+body.dark-mode .welcome-banner {
+  background-color: #645A0A;
+  color: var(--color-white);
+}
+
+/* Links */
+[data-theme="dark"] a,
+body.dark-mode a {
+  color: var(--color-info);
+}
+
+[data-theme="dark"] a:hover,
+body.dark-mode a:hover {
+  color: var(--color-primary);
+}
+
+/* Tables */
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td,
+body.dark-mode .table th,
+body.dark-mode .table td {
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .table th,
+body.dark-mode .table th {
+  color: var(--color-gray-300);
+}
+
+/* Discussion and Project Items */
+[data-theme="dark"] .discussion-item,
+[data-theme="dark"] .project-item,
+[data-theme="dark"] .goal-item,
+body.dark-mode .discussion-item,
+body.dark-mode .project-item,
+body.dark-mode .goal-item {
+  border-color: var(--color-gray-700);
+}
+
+/* Status Badges */
+[data-theme="dark"] .date-badge,
+body.dark-mode .date-badge {
+  background-color: var(--color-gray-700);
+  color: var(--color-gray-300);
+}
+
+/* Comment Components */
+[data-theme="dark"] .comment-item,
+body.dark-mode .comment-item {
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .comment-author,
+body.dark-mode .comment-author {
+  color: var(--color-gray-300);
+}
+
+[data-theme="dark"] .comment-form-container,
+body.dark-mode .comment-form-container {
+  background-color: var(--color-gray-800);
+}
+
+/* Forms */
+[data-theme="dark"] .form-control,
+body.dark-mode .form-control {
+  background-color: var(--color-gray-700);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-200);
+}
+
+[data-theme="dark"] .form-control:focus,
+body.dark-mode .form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(92, 133, 238, 0.2);
+}
+
+/* Modals */
+[data-theme="dark"] .modal-content,
+body.dark-mode .modal-content {
+  background-color: var(--color-gray-800);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer,
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .close-modal,
+body.dark-mode .close-modal {
+  color: var(--color-gray-400);
+}
+
+[data-theme="dark"] .close-modal:hover,
+body.dark-mode .close-modal:hover {
+  color: var(--color-gray-200);
+}
+
+/* Sprint Goal Container */
+[data-theme="dark"] .sprint-goal-container,
+body.dark-mode .sprint-goal-container {
+  background-color: var(--color-gray-700);
+}
+
+/* Project Item */
+[data-theme="dark"] .project-item,
+body.dark-mode .project-item {
+  background-color: var(--color-gray-800);
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .project-item:hover,
+body.dark-mode .project-item:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Info Groups */
+[data-theme="dark"] .info-group label,
+body.dark-mode .info-group label {
+  color: var(--color-gray-300);
+}
+
+/* Buttons */
+[data-theme="dark"] .btn-secondary,
+body.dark-mode .btn-secondary {
+  background-color: var(--color-gray-600);
+  color: var(--color-white);
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+body.dark-mode .btn-secondary:hover {
+  background-color: var(--color-gray-500);
+}
+
+[data-theme="dark"] .btn-text,
+body.dark-mode .btn-text {
+  color: var(--color-info);
+}
+
+[data-theme="dark"] .btn-text:hover,
+body.dark-mode .btn-text:hover {
+  color: var(--color-primary);
+  background-color: var(--color-gray-700);
+}
+
+/* Analytics Cards */
+[data-theme="dark"] .analytics-card,
+body.dark-mode .analytics-card {
+  background-color: var(--color-gray-800);
+}
+
+[data-theme="dark"] .stat-value,
+body.dark-mode .stat-value {
+  color: var(--color-info);
+}
+
+/* KPI Cards */
+[data-theme="dark"] .kpi-card,
+body.dark-mode .kpi-card {
+  background-color: var(--color-gray-800);
+}
+
+[data-theme="dark"] .kpi-icon,
+body.dark-mode .kpi-icon {
+  background-color: rgba(96, 165, 250, 0.2);
+}
+
+/* Team Tags */
+[data-theme="dark"] .team-tag,
+body.dark-mode .team-tag {
+  background-color: var(--color-gray-700);
+  color: var(--color-gray-300);
+}
+
+/* Alerts */
+[data-theme="dark"] .alert,
+body.dark-mode .alert {
+  background-color: var(--color-gray-800);
+  border-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .alert-info,
+body.dark-mode .alert-info {
+  background-color: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.2);
+}
+
+/* Progress Bars */
+[data-theme="dark"] .container-progress-full, 
+[data-theme="dark"] .timeline-progress-full,
+body.dark-mode .container-progress-full,
+body.dark-mode .timeline-progress-full {
+  background-color: var(--color-gray-700);
+}
+
+[data-theme="dark"] .progress-text, 
+[data-theme="dark"] .timeline-text,
+body.dark-mode .progress-text,
+body.dark-mode .timeline-text {
+  color: var(--color-gray-200);
+}
+
+/* Tabs */
+[data-theme="dark"] .tab-btn,
+body.dark-mode .tab-btn {
+  color: var(--color-gray-400);
+}
+
+[data-theme="dark"] .tab-btn:hover,
+body.dark-mode .tab-btn:hover {
+  color: var(--color-info);
+}
+
+[data-theme="dark"] .tab-btn.active,
+body.dark-mode .tab-btn.active {
+  color: var(--color-info);
+  border-bottom-color: var(--color-info);
+}

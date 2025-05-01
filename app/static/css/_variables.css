@@ -1,0 +1,105 @@
+/* 
+ * _variables.css
+ * CSS Variables and Design Tokens
+ */
+
+:root {
+  /* Color Palette */
+  --color-background: #f6f8fa;
+  --color-white: #ffffff;
+  --color-black: #131415;
+  
+  /* Grayscale */
+  --color-gray-100: #f2f3f5;
+  --color-gray-200: #e4e6eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  /* Brand Colors */
+  --color-primary: #3e63dd;
+  --color-primary-dark: #3451b2;
+  
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #60a5fa;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Typography */
+  --font-family-base: "Mulish", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+  
+  /* Z-index Scale */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-tooltip: 1060;
+}
+
+/* Dark Mode Theme Variables */
+[data-theme="dark"],
+body.dark-mode {
+  --color-background: #121212;
+  --color-white: #1e1e1e;
+  --color-black: #f6f8fa;
+  
+  /* Grayscale - Inverted for Dark Mode */
+  --color-gray-100: #333333;
+  --color-gray-200: #424242;
+  --color-gray-300: #616161;
+  --color-gray-400: #757575;
+  --color-gray-500: #9e9e9e;
+  --color-gray-600: #bdbdbd;
+  --color-gray-700: #e0e0e0;
+  --color-gray-800: #eeeeee;
+  --color-gray-900: #f5f5f5;
+  
+  /* Brand Colors - Adjusted for Dark Mode */
+  --color-primary: #5c85ee;
+  --color-primary-dark: #7393e6;
+}

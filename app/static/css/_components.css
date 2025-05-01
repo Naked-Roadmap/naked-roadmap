@@ -1,0 +1,348 @@
+/* 
+ * _components.css
+ * Reusable UI components
+ */
+
+/* Discussion Items */
+.discussion-section {
+  margin-bottom: var(--spacing-6);
+}
+
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.discussion-list {
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.discussion-item,
+.project-item {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  background-color: var(--color-white);
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.discussion-item:hover,
+.project-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.discussion-item:last-child {
+  border-bottom: none;
+}
+
+.discussion-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.discussion-item h4 {
+  margin-bottom: var(--spacing-2);
+  font-weight: 600;
+}
+
+.discussion-details {
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-3);
+  font-family: 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+.discussion-actions,
+.project-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+/* Project Items */
+.project-details-section {
+  margin: 15px 0px;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 20px 0px;
+}
+
+.project-item {
+  position: relative;
+  padding-left: 1rem;
+  border-left: 3px solid transparent;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 1rem;
+  cursor: grab;
+  border: 1px solid #eaeaea;
+}
+
+.project-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(to bottom, #4f46e5, #3b82f6);
+}
+
+.project-item.sortable-ghost {
+  opacity: 0.5;
+  background-color: #f5f5f5;
+}
+
+.project-item.sortable-chosen {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.project-header h4,
+.project-header h5 {
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.project-header h5 {
+  font-size: 1em;
+}
+
+.project-meta {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  color: var(--color-gray-600);
+  font-size: 12px;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
+.project-meta p {
+  margin-bottom: 0;
+}
+
+.project-owner {
+  font-weight: 500;
+}
+
+.project-team,
+.project-date {
+  color: var(--color-gray-500);
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #ccc;
+  margin-right: 5px;
+  display: inline-block;
+}
+
+/* Sprint Dates and Projects */
+.sprint-dates {
+  color: var(--color-gray-600);
+  font-size: 14px;
+}
+
+.sprint-projects {
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.sortable-projects {
+  padding: 10px;
+}
+
+.sprint-selection-container {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.sprint-selection-option {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cycle-details {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Goal Items */
+.goals-list {
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.goal-item {
+  padding: var(--spacing-4) 0;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.goal-item h4 {
+  margin-bottom: var(--spacing-2);
+  font-weight: 600;
+}
+
+.goal-item p {
+  color: var(--color-gray-600);
+  margin-bottom: 0;
+}
+
+/* Comments Section */
+.comments-list {
+  margin-bottom: var(--spacing-6);
+}
+
+.comment-item {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  margin-bottom: var(--spacing-4);
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.comment-meta {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.comment-date {
+  font-size: 12px;
+  color: var(--color-gray-500);
+}
+
+.comment-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.comment-content {
+  color: var(--color-gray-700);
+  line-height: 1.5;
+}
+
+.comment-form-container {
+  background-color: var(--color-gray-100);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--color-gray-500);
+}
+
+/* Analytics Component Styling */
+.analytics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analytics-card {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-card h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.analytics-section {
+  margin-top: 1.5rem;
+}
+
+.team-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.team-item:last-child {
+  border-bottom: none;
+}
+
+/* KPI Cards */
+.kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-icon {
+  background-color: rgba(62, 99, 221, 0.1);
+  color: var(--color-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.kpi-content h3 {
+  font-size: 28px;
+  margin-bottom: 0.25rem;
+}
+
+.kpi-content p {
+  font-size: 14px;
+  color: var(--color-gray-600);
+  margin: 0;
+}

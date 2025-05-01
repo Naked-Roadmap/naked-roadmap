@@ -1,0 +1,139 @@
+/* 
+ * _base.css
+ * Base styles, resets, and typography
+ */
+
+/* Global Reset & Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body,
+html {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--color-gray-900);
+  background-color: var(--color-background);
+  height: 100%;
+  width: 100%;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-4);
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+}
+
+h4 {
+  font-size: var(--font-size-md);
+}
+
+/* Fix margin for headings inside interactive elements */
+button > h3,
+button > h4 {
+  margin-bottom: 0;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}
+
+/* Paragraphs */
+p {
+  margin-bottom: var(--spacing-4);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+ul, ol {
+  margin-bottom: var(--spacing-4);
+  padding-left: var(--spacing-6);
+}
+
+li {
+  margin-bottom: var(--spacing-2);
+}
+
+/* Inline text elements */
+strong, b {
+  font-weight: var(--font-weight-bold);
+}
+
+em, i {
+  font-style: italic;
+}
+
+small {
+  font-size: 85%;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Focus outlines for accessibility */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Horizontal rule */
+hr {
+  border: 0;
+  border-top: 1px solid var(--color-gray-200);
+  margin: var(--spacing-6) 0;
+}
+
+/* Basic code styling */
+code, pre {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9em;
+  background-color: var(--color-gray-100);
+  border-radius: var(--border-radius-sm);
+}
+
+code {
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+pre {
+  padding: var(--spacing-4);
+  overflow-x: auto;
+  margin-bottom: var(--spacing-4);
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}

@@ -133,6 +133,9 @@ def init_roles():
     """Initialize default roles if they don't exist"""
     print("Initializing default roles...")
     with app.app_context():
+        # First ensure the table exists
+        db.create_all()
+        
         default_roles = [
             {'name': 'admin', 'description': 'Administrator with full access'},
             {'name': 'manager', 'description': 'Manager with project oversight'},
@@ -184,6 +187,11 @@ def init_app():
     """Initialize the application on first run"""
     # Setup the database structure and permissions
     setup_database()
+    
+    with app.app_context():
+        print("Creating database tables directly...")
+        db.create_all()
+        print("Tables created")
     
     # Wait for database to be ready
     max_retries = 30
