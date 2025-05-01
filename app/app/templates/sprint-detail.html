@@ -149,40 +149,126 @@
 <!-- ---------------------------------- -->
 <!-- Recent Activity -->
 <!-- ---------------------------------- -->
-<section class="two-column-section">
-  <div class="column-narrow section">
-    <div class="section-header">
-      <h3>Recent Comments</h3>
+<section class="three-column-section">
+    <div class="column-narrow section">
+        <div class="section-header">
+            <h3>Recent Comments</h3>
+        </div>
+
+        <div class="goals-list">
+            {% for comment in comments %}
+            {% set project = comment.project %}
+            {% set user = comment.user %}
+            <div class="goal-item">
+                <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
+                <p>{{ comment.content }}</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
-    <div class="goals-list">
-      {% for comment in comments %}
-      {% set project = comment.project %}
-      {% set user = comment.user %}
-      <div class="goal-item">
-        <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-        <p>{{ comment.content }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
+    <div class="column-narrow section">
+        <div class="section-header">
+            <h3>Recent Changes</h3>
+        </div>
 
-  <div class="column-narrow section">
-    <div class="section-header">
-      <h3>Recent Changes</h3>
+        <div class="goals-list">
+            {% for change in changes %}
+            {% set project = change.project %}
+            {% set user = change.user %}
+            <div class="goal-item">
+                <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
+                <p>{{ change.content }}</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-
-    <div class="goals-list">
-      {% for change in changes %}
-      {% set project = change.project %}
-      {% set user = change.user %}
-      <div class="goal-item">
-        <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-        <p>{{ change.content }}</p>
-      </div>
-      {% endfor %}
+    
+    <!-- New Analytics Column -->
+    <div class="column-narrow section">
+        <div class="section-header">
+            <h3>Sprint Analytics</h3>
+        </div>
+        
+        <div class="analytics-container" style="padding: 20px;">
+            <div class="analytics-card">
+                <h4>Completion Overview</h4>
+                {% set done_count = sprintlog|selectattr('status', 'eq', 'Done')|list|length %}
+                {% set total_count = sprintlog|length %}
+                {% set percentage_projects = (done_count / total_count * 100) if total_count > 0 else 0 %}
+                <div class="stat-row">
+                    <div class="stat-label">Total Commitments</div>
+                    <div class="stat-value">{{ total_count }}</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value">{{ done_count }}</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Completion Rate</div>
+                    <div class="stat-value">{{ "%.1f"|format(percentage_projects) }}%</div>
+                </div>
+            </div>
+            
+            <div class="analytics-card">
+                <h4>Sprint Activity</h4>
+                {% set comment_count = comments|length %}
+                {% set change_count = changes|length %}
+                <div class="stat-row">
+                    <div class="stat-label">Comments</div>
+                    <div class="stat-value">{{ comment_count }}</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Changes</div>
+                    <div class="stat-value">{{ change_count }}</div>
+                </div>
+                {% set complexity_score = total_count * 0.4 + comment_count * 0.3 + change_count * 0.2 %}
+                <div class="stat-row">
+                    <div class="stat-label">Complexity Score</div>
+                    <div class="stat-value">{{ "%.1f"|format(complexity_score) }}</div>
+                </div>
+            </div>
+            
+            <div class="analytics-card">
+                <h4>Timeline</h4>
+                {% set total_days = (sprint.date_end - sprint.date_start).days if sprint.date_start and sprint.date_end else 0 %}
+                {% set today_date = today.date() %}
+                {% set days_elapsed = (today_date - sprint.date_start).days if sprint.date_start else 0 %}
+                {% set days_remaining = total_days - days_elapsed %}
+                <div class="stat-row">
+                    <div class="stat-label">Total Duration</div>
+                    <div class="stat-value">{{ total_days }} days</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Days Elapsed</div>
+                    <div class="stat-value">{{ days_elapsed }} days</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Days Remaining</div>
+                    <div class="stat-value">{{ days_remaining if days_remaining > 0 else 0 }} days</div>
+                </div>
+            </div>
+            
+            <!-- Team Breakdown -->
+            <div class="analytics-section">
+                <h4>Teams Involved</h4>
+                {% set teams_involved = [] %}
+                {% for entry in sprintlog %}
+                    {% set project = entry.project %}
+                    {% if project.team not in teams_involved %}
+                        {% set _ = teams_involved.append(project.team) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% for team in teams_involved %}
+                <div class="team-item">
+                    <div class="team-name">{{ team }}</div>
+                    <div class="team-count">{{ sprintlog|selectattr('project.team', 'equalto', team)|list|length }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 
 <!-- Status Update Modal -->

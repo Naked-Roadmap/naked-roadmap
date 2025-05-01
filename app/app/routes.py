@@ -1886,12 +1886,12 @@ def sprint_detail(sprint_id):
     )
     
     # Calculate sprint progress
-    total_days = (sprint.date_end - sprint.date_start).days
+    total_days = (sprint.date_end - sprint.date_start).days if sprint.date_start and sprint.date_end else 1
     if total_days <= 0:
         total_days = 1
     
     today_date = datetime.now().date()
-    days_elapsed = (today_date - sprint.date_start).days
+    days_elapsed = (today_date - sprint.date_start).days if sprint.date_start else 0
     percentage_time = (days_elapsed / total_days) * 100
     
     if percentage_time > 100:
@@ -1942,6 +1942,19 @@ def sprint_detail(sprint_id):
         .all()
     )
     
+    # Calculate the teams involved
+    teams_involved = set()
+    dris_involved = set()
+    for entry in sprintlog:
+        project = Project.query.get(entry.project_id)
+        if project:
+            teams_involved.add(project.team)
+            dris_involved.add(project.dri)
+
+    # Calculate complexity for display
+    comment_count = len(comments)
+    change_count = len(changes)
+    
     return render_template(
         'sprint-detail.html',
         title=f'Sprint: {sprint.title}',
@@ -1957,7 +1970,11 @@ def sprint_detail(sprint_id):
         total_count=total_count,
         comments=comments,
         changes=changes,
-        goals=goals
+        goals=goals,
+        teams_involved=teams_involved,
+        dris_involved=dris_involved,
+        comment_count=comment_count,
+        change_count=change_count
     )
 
 # Route to close a sprint
