@@ -11,7 +11,7 @@ from config import Config
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from . import utils
-from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html, sanitize_text 
+from .utils import ALLOWED_TAGS, ALLOWED_ATTRIBUTES, clean_html, sanitize_text , is_valid_email, validate_email_list
 from .auth import admin_required, project_access_required, project_edit_required
 import bleach
 from sqlalchemy import func
@@ -984,9 +984,14 @@ def planningStep2CycleCreation():
             db.session.commit()
 
             flash('Congratulations, sprint created!')
-            return redirect(url_for(planningStep2CycleSelected), sprint_id=new_cycle.id)
+            return redirect(url_for('planningStep2CycleSelected', sprint_id=new_cycle.id))
     except TypeError as e:
         print(f"Error: {e}")
+        flash(f'Error creating sprint: {str(e)}', 'error')
+        return redirect(url_for('plan_sprint'))
+    
+    # This is the missing return statement for GET requests
+    return render_template('plan-cycle-1.html', form=form)
     
     
 ########################################################
