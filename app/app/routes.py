@@ -2152,3 +2152,405 @@ def update_commitment_status(sprint_id, commitment_id):
     
     flash('Commitment status updated successfully!', 'success')
     return redirect(url_for('sprint_detail', sprint_id=sprint_id))
+
+# ########################
+# Closing a Cycle
+# ########################
+@app.route('/sprint/<int:sprint_id>/close-cycle', methods=['GET', 'POST'])
+@login_required
+@admin_required  # Only admins can close a sprint
+def close_cycle(sprint_id):
+    # Get the sprint
+    sprint = Sprint.query.get_or_404(sprint_id)
+    
+    # Make sure it's not already completed
+    if sprint.status == 'Completed':
+        flash('This sprint is already marked as completed.', 'warning')
+        return redirect(url_for('sprint_detail', sprint_id=sprint_id))
+    
+    # Get all sprint commitments
+    sprint_commitments = SprintProjectMap.query.filter_by(sprint_id=sprint_id).all()
+    
+    # For POST handling
+    if request.method == 'POST':
+        # Process the form submission
+        retrospective = sanitize_text(request.form.get('retrospective', ''))
+        
+        # Process email notification settings if applicable
+        send_email = request.form.get('send_email') == 'on'
+        email_addresses = request.form.get('email_addresses', '')
+        
+        # Update each commitment's status
+        for commitment in sprint_commitments:
+            commitment_id = str(commitment.id)
+            status = request.form.get(f'status_{commitment_id}')
+            comment = sanitize_text(request.form.get(f'comment_{commitment_id}', ''))
+            
+            # Only update if the status is valid
+            if status in ['Completed', 'Not Completed', 'Blocked', 'Deferred', 'Cancelled']:
+                old_status = commitment.status
+                commitment.status = status
+                commitment.status_comment = comment
+                commitment.status_updated = datetime.utcnow()
+                commitment.status_updated_by = current_user.id
+                
+                # Create changelog entry for the status change
+                if old_status != status:
+                    changelog = Changelog(
+                        project_id=commitment.project_id,
+                        user_id=current_user.id,
+                        change_type='commitment_status_change',
+                        content=f"Status changed from '{old_status}' to '{status}' with comment: {comment}"
+                    )
+                    db.session.add(changelog)
+                
+                # If marked as completed, check if the project should also be completed
+                if status == 'Completed':
+                    complete_project = request.form.get(f'complete_project_{commitment_id}') == 'yes'
+                    project = Project.query.get(commitment.project_id)
+                    
+                    if complete_project and project:
+                        old_project_status = project.status
+                        old_project_location = project.location
+                        
+                        project.status = 'Completed'
+                        project.location = 'completed'
+                        
+                        # Create changelog for project completion
+                        project_changelog = Changelog(
+                            project_id=project.id,
+                            user_id=current_user.id,
+                            change_type='project_completion',
+                            content=f"Project marked as completed as part of sprint '{sprint.title}' closeout"
+                        )
+                        db.session.add(project_changelog)
+                    elif project:
+                        # Move the project back to discussion
+                        old_project_location = project.location
+                        project.location = 'discussion'
+                        
+                        # Create changelog for location change
+                        if old_project_location != 'discussion':
+                            project_changelog = Changelog(
+                                project_id=project.id,
+                                user_id=current_user.id,
+                                change_type='location_change',
+                                content=f"Project moved from '{old_project_location}' to 'discussion' after sprint completion"
+                            )
+                            db.session.add(project_changelog)
+        
+        # Update sprint status and save retrospective
+        sprint.status = 'Completed'
+        sprint.goals = retrospective  # Using the goals field to store retrospective
+        
+        # Create a changelog entry for sprint completion
+        if sprint_commitments:
+            # Use the first commitment's project for the changelog
+            first_project_id = sprint_commitments[0].project_id
+            sprint_changelog = Changelog(
+                project_id=first_project_id,
+                user_id=current_user.id,
+                change_type='sprint_completion',
+                content=f"Sprint '{sprint.title}' marked as completed with retrospective: {retrospective[:100]}{'...' if len(retrospective) > 100 else ''}"
+            )
+            db.session.add(sprint_changelog)
+        
+        db.session.commit()
+        
+        # Send email notification if enabled
+        if send_email and email_addresses:
+            send_sprint_closeout_notification(sprint_id, email_addresses.split(','))
+        
+        flash(f"Sprint '{sprint.title}' has been successfully closed.", 'success')
+        return redirect(url_for('index'))
+    
+    # For GET request, prepare the template data
+    # Calculate sprint metrics for display
+    total_days = (sprint.date_end - sprint.date_start).days if sprint.date_start and sprint.date_end else 0
+    today_date = datetime.now().date()
+    days_elapsed = (today_date - sprint.date_start).days if sprint.date_start else 0
+    percentage_time = min(100, max(0, (days_elapsed / total_days) * 100)) if total_days > 0 else 0
+    
+    # Count commitments by status
+    status_counts = {}
+    for status in ['Planned', 'In Progress', 'Done', 'Blocked', 'Cancelled']:
+        status_counts[status] = sum(1 for c in sprint_commitments if c.status == status)
+    
+    # Get list of all completed sprints for comparison
+    completed_sprints = Sprint.query.filter_by(status='Completed').all()
+    
+    # Calculate team involvement
+    teams_involved = set()
+    dris_involved = set()
+    for commitment in sprint_commitments:
+        project = Project.query.get(commitment.project_id)
+        if project:
+            teams_involved.add(project.team)
+            dris_involved.add(project.dri)
+    
+    # Calculate sprint complexity based on comments and changes
+    project_ids = [commitment.project_id for commitment in sprint_commitments]
+    comment_count = 0
+    change_count = 0
+    if project_ids:
+        # Get comments made during the sprint
+        if sprint.date_start and sprint.date_end:
+            comment_count = Comment.query.filter(
+                Comment.project_id.in_(project_ids),
+                Comment.created_at >= sprint.date_start,
+                Comment.created_at <= sprint.date_end
+            ).count()
+            
+            change_count = Changelog.query.filter(
+                Changelog.project_id.in_(project_ids),
+                Changelog.timestamp >= sprint.date_start,
+                Changelog.timestamp <= sprint.date_end
+            ).count()
+    
+    # Calculate complexity score (subjective formula, can be adjusted)
+    complexity_score = (
+        len(project_ids) * 0.4 + 
+        comment_count * 0.3 + 
+        change_count * 0.2 + 
+        len(teams_involved) * 0.1
+    )
+    
+    # Check if email configuration is available
+    email_configured = (
+        get_config('smtp_server') and 
+        get_config('smtp_port') and 
+        get_config('smtp_email') and 
+        get_config('smtp_password') and 
+        get_config('email_enabled') == 'true'
+    )
+    
+    # Compare with other completed sprints
+    avg_completion_rate = 0
+    avg_duration = 0
+    if completed_sprints:
+        completion_rates = []
+        durations = []
+        for s in completed_sprints:
+            s_commitments = SprintProjectMap.query.filter_by(sprint_id=s.id).all()
+            done_count = sum(1 for c in s_commitments if c.status in ['Done', 'Completed'])
+            if s_commitments:
+                completion_rates.append(done_count / len(s_commitments) * 100)
+            if s.date_start and s.date_end:
+                durations.append((s.date_end - s.date_start).days)
+        
+        if completion_rates:
+            avg_completion_rate = sum(completion_rates) / len(completion_rates)
+        if durations:
+            avg_duration = sum(durations) / len(durations)
+    
+    # Prepare data for the template
+    return render_template(
+        'close-cycle.html',
+        sprint=sprint,
+        commitments=sprint_commitments,
+        total_days=total_days,
+        days_elapsed=days_elapsed,
+        percentage_time=percentage_time,
+        status_counts=status_counts,
+        teams_involved=teams_involved,
+        dris_involved=dris_involved,
+        complexity_score=complexity_score,
+        completed_sprints=completed_sprints,
+        avg_completion_rate=avg_completion_rate,
+        avg_duration=avg_duration,
+        email_configured=email_configured,
+        comment_count=comment_count,
+        change_count=change_count
+    )
+
+# Helper function to send sprint closeout notification email
+def send_sprint_closeout_notification(sprint_id, recipients):
+    """Send an email notification about the closed sprint"""
+    try:
+        # Get sprint and related data
+        sprint = Sprint.query.get_or_404(sprint_id)
+        sprint_projects = SprintProjectMap.query.filter_by(sprint_id=sprint_id).all()
+        
+        # Calculate completion statistics
+        total_commitments = len(sprint_projects)
+        completed_commitments = sum(1 for c in sprint_projects if c.status in ['Done', 'Completed'])
+        completion_percentage = (completed_commitments / total_commitments * 100) if total_commitments > 0 else 0
+        
+        # Get teams and DRIs involved
+        teams = {}
+        dris = {}
+        for entry in sprint_projects:
+            project = entry.project
+            if project:
+                # Count projects by team
+                team = project.team
+                teams[team] = teams.get(team, 0) + 1
+                
+                # Count projects by DRI
+                dri = project.dri
+                dris[dri] = dris.get(dri, 0) + 1
+        
+        # Create HTML email content using a template
+        html_content = render_sprint_closeout_email_template(sprint, sprint_projects, {
+            'teams': teams,
+            'dris': dris,
+            'completion_percentage': completion_percentage,
+            'completed_commitments': completed_commitments,
+            'total_commitments': total_commitments
+        })
+        
+        # Send the email
+        send_html_email(
+            subject=f"Sprint Completed: {sprint.title}",
+            recipients=recipients,
+            html_content=html_content
+        )
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error sending sprint closeout notification: {str(e)}")
+        return False
+
+def render_sprint_closeout_email_template(sprint, sprint_projects, analytics):
+    """Render the HTML email template for sprint closeout notification"""
+    template_str = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Sprint Completed: {{ sprint.title }}</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
+            .header { padding: 20px 0; border-bottom: 1px solid #eee; }
+            .logo { max-height: 40px; margin-bottom: 20px; }
+            .sprint-details { background-color: #f5f7f9; padding: 20px; border-radius: 6px; margin: 20px 0; }
+            .sprint-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1a56db; }
+            .sprint-meta { margin-bottom: 15px; }
+            .projects-list { margin: 30px 0; }
+            .project-item { padding: 15px 0; border-bottom: 1px solid #eee; }
+            .project-title { font-weight: bold; font-size: 18px; }
+            .project-meta { color: #666; font-size: 14px; }
+            .project-goal { background-color: #f0f4ff; padding: 10px; border-radius: 4px; margin-top: 10px; }
+            .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .status-complete { background-color: #d1fae5; color: #065f46; }
+            .status-not-complete { background-color: #fee2e2; color: #991b1b; }
+            .status-cancelled { background-color: #e5e7eb; color: #4b5563; }
+            .status-blocked { background-color: #fef3c7; color: #92400e; }
+            .status-deferred { background-color: #dbeafe; color: #1e40af; }
+            .analytics { margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 6px; }
+            .analytics-title { font-size: 20px; margin-bottom: 15px; }
+            .analytics-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
+            .analytics-card { flex: 1; min-width: 120px; background: white; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .analytics-value { font-size: 24px; font-weight: bold; color: #1a56db; }
+            .analytics-label { font-size: 14px; color: #666; }
+            .breakdown-section { margin-top: 20px; }
+            .breakdown-title { font-size: 16px; margin-bottom: 10px; }
+            .breakdown-item { display: flex; align-items: center; margin-bottom: 5px; }
+            .breakdown-label { flex: 1; }
+            .breakdown-value { font-weight: bold; margin-left: 10px; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <img src="cid:logo" alt="Company Logo" class="logo">
+            <h1>Sprint Completed: {{ sprint.title }}</h1>
+        </div>
+        
+        <div class="sprint-details">
+            <div class="sprint-title">{{ sprint.title }}</div>
+            <div class="sprint-meta">
+                <strong>Timeline:</strong> {{ sprint.date_start.strftime('%b %d, %Y') }} - {{ sprint.date_end.strftime('%b %d, %Y') }}<br>
+                <strong>Duration:</strong> {{ (sprint.date_end - sprint.date_start).days }} days<br>
+                <strong>Completion Rate:</strong> {{ "%.1f"|format(analytics.completion_percentage) }}% ({{ analytics.completed_commitments }} of {{ analytics.total_commitments }})
+            </div>
+            {% if sprint.goals %}
+            <div class="sprint-retrospective">
+                <h3>Sprint Retrospective</h3>
+                <p>{{ sprint.goals }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <h2>Sprint Commitments</h2>
+        <div class="projects-list">
+            {% for entry in sprint_projects %}
+            {% set project = entry.project %}
+            {% if project %}
+            <div class="project-item">
+                <div class="project-title">
+                    {{ project.name }}
+                    <span class="status-badge {% if entry.status == 'Completed' %}status-complete
+                       {% elif entry.status == 'Not Completed' %}status-not-complete
+                       {% elif entry.status == 'Cancelled' %}status-cancelled
+                       {% elif entry.status == 'Blocked' %}status-blocked
+                       {% elif entry.status == 'Deferred' %}status-deferred{% endif %}">
+                        {{ entry.status }}
+                    </span>
+                </div>
+                <div class="project-meta">
+                    <strong>Owner:</strong> {{ project.dri }} | <strong>Team:</strong> {{ project.team }}
+                    {% if project.objective %}
+                    | <strong>Objective:</strong> {{ project.objective.title }}
+                    {% endif %}
+                </div>
+                <div class="project-goal">
+                    <strong>Goal:</strong> {{ entry.goal }}
+                    {% if entry.status_comment %}
+                    <br><strong>Final Status:</strong> {{ entry.status_comment }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        
+        <div class="analytics">
+            <div class="analytics-title">Sprint Analytics</div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ analytics.total_commitments }}</div>
+                    <div class="analytics-label">Total Commitments</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ analytics.completed_commitments }}</div>
+                    <div class="analytics-label">Completed</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value">{{ "%.1f"|format(analytics.completion_percentage) }}%</div>
+                    <div class="analytics-label">Completion Rate</div>
+                </div>
+            </div>
+            
+            <div class="breakdown-section">
+                <div class="breakdown-title">Projects by Team</div>
+                {% for team, count in analytics.teams.items() %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ team }}</div>
+                    <div class="breakdown-value">{{ count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="breakdown-section">
+                <div class="breakdown-title">Projects by DRI</div>
+                {% for dri, count in analytics.dris.items() %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ dri }}</div>
+                    <div class="breakdown-value">{{ count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from the Roadmap Planning Tool. Please do not reply to this email.</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    template = Template(template_str)
+    return template.render(sprint=sprint, sprint_projects=sprint_projects, analytics=analytics)

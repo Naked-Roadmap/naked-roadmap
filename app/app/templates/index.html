@@ -15,10 +15,9 @@
     <h3 style="margin:0px; color: #374151; ">{#⚡#} Quick Actions:</h3>
   </div>
   <div style="display:flex; flex-flow:row; align-content: vertical; justify-content: space-between; align-items: center; padding:10px; margin-bottom:0px;">
-    <div><span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px; margin-right:10px;">New Project</span></div>
-    <div><span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px; margin-right:10px;">New Objective</span></div>
-    <div><span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px; margin-right:10px;">Commit Work to a Cycle</span></div>
-    {# <div><span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px;">asdf</span></div> #}
+    <div><a href="{{ url_for('createProject') }}" title="Create a New Project"><span class="quick-action-button">New Project</span></a></div>
+    <div><a href="{{ url_for('createGoal') }}" title="Add new Goal"><span class="quick-action-button">New Objective</span></a></div>
+    <div><a href="{{url_for('plan_sprint') }}"><span class="quick-action-button">Commit Work to a Cycle</span></a></div>
   </div>
 </section>
 
@@ -124,65 +123,37 @@
       <div class="timeline-title">📌 Commitments ({{ sprintlog|count }})</div>
       {% for entry in sprintlog %}
       {% set project = entry.project %}
-      <div style="margin:10px 0px 10px 15px;">
-        <p><strong><a href="{{ url_for('project', project_id=project.id) }}">{{entry.order}}. {{ project.name }}</a></strong><br>
-        <span class="status-badge 
-          {% if entry.status == 'In Progress' %}status-in-progress
-          {% elif entry.status == 'Done' %}status-complete
-          {% elif entry.status == 'Blocked' %}status-blocked
-          {% else %}status-planned{% endif %}">
-          {{ entry.status|default('Planned') }}
-        </span>
-        <span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px;">{{ project.dri }} / {{ project.team }}</span>
-        {% if entry.critical %}
-        <span class="critical-badge">CRITICAL</span>
-        {% endif %}<br>
-        <strong>Goal:</strong> {{ entry.goal }}
-      </p>
-      </div>
-      {% endfor %}
-    </div>
-
-    {# <div style="padding:0px 20px;">
-      <div class="timeline-title">📌 Commitments ({{ sprintlog|count }})</div>
-
-      {% for entry in sprintlog %}
-      {% set project = entry.project %}
-      <div class="project-item">
-        <div class="project-header">
-          <h5><a href="{{ url_for('project', project_id=project.id) }}">{{entry.order}}. {{ project.name }}</a></h5>
+      <div style="margin:10px 0px 10px 15px; display:flex; flex-flow:row; justify-content: space-between;">
+        <div>
+        <p><strong><a href="{{ url_for('project', project_id=project.id) }}">{{entry.order}}. {{ project.name }}</a></strong> {% if entry.critical %}
+          <span class="critical-badge">CRITICAL</span>
+          {% endif %}<br>
+          <span style="font-size:12px; color:gray;"><strong>Goal:</strong> {{ entry.goal }}</span>
+        </p>
+        </div>
+        <div>
+          <span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px;">{{ project.dri }} / {{ project.team }}</span>
           <span class="status-badge 
           {% if entry.status == 'In Progress' %}status-in-progress
           {% elif entry.status == 'Done' %}status-complete
           {% elif entry.status == 'Blocked' %}status-blocked
           {% else %}status-planned{% endif %}">
             {{ entry.status|default('Planned') }}
-          </span>
-        </div>
-        <div class="project-meta">
-          <p>
-            <strong>Goal:</strong> {{ entry.goal }}
-            <br><strong>Lead:</strong> <span class="project-team">{{ project.dri }} / {{ project.team }}</span>
-          </p>
+          </span><br>
         </div>
       </div>
       {% endfor %}
-    </div> #}
+    </div>
 
   </div>
 
   <div class="column-narrow section" style="background-color: #f7f8fa;border: #f7f8fa;box-shadow: none;">
     <div class="section-header">
       <div style="display:flex;flex-flow:row; align-content: vertical;"><a href="{{ url_for('createGoal') }}" class="{{ 'active' if request.endpoint == 'createGoal' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
-              <span style="font-size: 16px; font-weight:600;">Objectives</span>
-</a></div>
-      {# <a href="{{ url_for('createGoal') }}" class="btn-icon" title="Add new Goal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </a> #}
+          <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
+          <span style="font-size: 16px; font-weight:600;">Objectives</span>
+        </a>
+      </div>
     </div>
 
     <div class="goals-list">

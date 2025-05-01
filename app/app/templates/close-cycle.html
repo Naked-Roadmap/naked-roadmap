@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Close Sprint: {{ sprint.title }}{% endblock %}
+
+{% block content %}
+{% include './js/toast-notifications.html' %}
+
+<div class="welcome-banner">
+    <h2>Close Sprint: {{ sprint.title }}</h2>
+    <p>Provide final status updates for each commitment and complete the sprint cycle.</p>
+</div>
+
+<form id="close-sprint-form" method="POST" action="{{ url_for('close_cycle', sprint_id=sprint.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <!-- ---------------------------------- -->
+    <!-- Sprint Progress and Stats -->
+    <!-- ---------------------------------- -->
+    <section class="section">
+        <div class="section-header">
+            <h3>Sprint Progress</h3>
+            <span class="sprint-dates">
+                {{ sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ sprint.date_end.strftime('%b %d, %Y') }}
+        ({{ total_days }} days)
+            </span>
+        </div>
+
+        <div class="dual-timelines" style="padding: 20px;">
+            <!-- Project Progress Timeline -->
+            <div class="timeline-box">
+                <div class="timeline-title">✔ Commitments Completed</div>
+                {% set done_count = status_counts.get('Done', 0) %}
+                {% set total_count = commitments|length %}
+                {% set percentage_projects = (done_count / total_count * 100) if total_count > 0 else 0 %}
+                <div class="container-progress-full">
+                    <div class="container-progress" style="width: {{ percentage_projects }}%;"></div>
+                    <span class="progress-text">
+                        {{ done_count }} out of {{ total_count }} Commitments
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sprint Time Progress Timeline -->
+            <div class="timeline-box">
+                <div class="timeline-title">⏲ Cycle Time</div>
+                <div class="timeline-progress-full">
+                    <div class="timeline-progress" style="width: {{ percentage_time }}%;"></div>
+                    <span class="timeline-text">
+                        {% set days_remaining = total_days - days_elapsed %}
+                        {% if days_remaining > 0 %}
+                        {{ days_remaining }} days remaining
+            {% elif days_remaining == 0 %}
+              Last day of sprint
+            {% else %}
+              Sprint ended {{ -days_remaining }} days ago
+            {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ---------------------------------- -->
+    <!-- Main Content -->
+    <!-- ---------------------------------- -->
+    <section class="two-column-section">
+        <div class="column-wide section">
+            <div class="section-header">
+                <h3>Update Commitment Statuses</h3>
+            </div>
+
+            <div class="commitments-list">
+                {% for commitment in commitments %}
+                {% set project = commitment.project %}
+                <div class="commitment-item" id="commitment-{{ commitment.id }}">
+                    <h4>{{ project.name }}</h4>
+                    <div class="commitment-details">
+                        <strong>Team:</strong> {{ project.team }} |
+                        <strong>DRI:</strong> {{ project.dri }} |
+                        <strong>Current Status:</strong> {{ commitment.status|default('Planned') }}
+                    </div>
+                    <div class="commitment-goal">
+                        <strong>Goal:</strong> {{ commitment.goal }}
+                    </div>
+
+                    <div class="status-update-form">
+                        <div class="form-group">
+                            <label for="status_{{ commitment.id }}">Final Status:</label>
+                            <select name="status_{{ commitment.id }}" id="status_{{ commitment.id }}" class="form-control status-select" data-commitment-id="{{ commitment.id }}" onchange="handleStatusChange(this)">
+                                <option value="Planned" {% if commitment.status == 'Planned' %}selected{% endif %}>Planned</option>
+                                <option value="In Progress" {% if commitment.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Completed" {% if commitment.status == 'Completed' or commitment.status == 'Done' %}selected{% endif %}>Completed</option>
+                                <option value="Not Completed" {% if commitment.status == 'Not Completed' %}selected{% endif %}>Not Completed</option>
+                                <option value="Blocked" {% if commitment.status == 'Blocked' %}selected{% endif %}>Blocked</option>
+                                <option value="Deferred" {% if commitment.status == 'Deferred' %}selected{% endif %}>Deferred</option>
+                                <option value="Cancelled" {% if commitment.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comment_{{ commitment.id }}">Final Update:</label>
+                            <textarea name="comment_{{ commitment.id }}" id="comment_{{ commitment.id }}" class="form-control" rows="3" placeholder="Provide a final status update...">{{ commitment.status_comment }}</textarea>
+                        </div>
+
+                        <!-- Complete Project Question (initially hidden) -->
+                        <div class="form-group complete-project-question" id="complete-project-{{ commitment.id }}" style="display: none;">
+                            <p>Does completing this commitment also complete the project?</p>
+                            <div class="radio-options">
+                                <label>
+                                    <input type="radio" name="complete_project_{{ commitment.id }}" value="yes" {% if project.status == 'Completed' %}checked{% endif %}>
+                                    Yes, mark project as completed
+                                </label>
+                                <label>
+                                    <input type="radio" name="complete_project_{{ commitment.id }}" value="no" {% if project.status != 'Completed' %}checked{% endif %}>
+                                    No, return to discussion
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Retrospective Section -->
+            <div class="section-header">
+                <h3>Sprint Retrospective</h3>
+            </div>
+            <div class="form-group" style="padding: 20px;">
+                <label for="retrospective">What went well? What could be improved? (Optional)</label>
+                <textarea name="retrospective" id="retrospective" class="form-control" rows="5" placeholder="Add notes about this sprint cycle...">{{ sprint.goals }}</textarea>
+            </div>
+
+            <!-- Email Notification Section -->
+            <div class="form-group" style="padding: 0 20px 20px;">
+                <div class="checkbox-wrapper" style="margin-bottom: 16px;">
+                    <input type="checkbox" id="emailNotification" name="send_email" style="margin-right: 8px;" {% if not email_configured %}disabled{% endif %}>
+                    <label for="emailNotification">Send sprint closeout email notification</label>
+                    {% if not email_configured %}
+                    <small style="color: #dc3545; display: block; margin-top: 4px;">
+                        Email notifications are disabled. Configure email settings in the Settings page.
+                    </small>
+                    {% endif %}
+                </div>
+
+                <div id="emailFormGroup" style="display: none; margin-bottom: 16px;">
+                    <label for="emailAddresses">Email Recipients (comma-separated)</label>
+                    <input type="text" id="emailAddresses" name="email_addresses" class="form-control" placeholder="example@company.com, team@company.com">
+                    <small>Enter comma-separated email addresses to notify about this sprint closeout</small>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions" style="padding: 20px; display: flex; justify-content: space-between;">
+                <a href="{{ url_for('sprint_detail', sprint_id=sprint.id) }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save & Close Sprint</button>
+            </div>
+        </div>
+
+        <div class="column-narrow section">
+            <div class="section-header">
+                <h3>Sprint Analytics</h3>
+            </div>
+
+            <!-- Sprint Stats -->
+            <div class="analytics-container" style="padding: 20px;">
+                <div class="analytics-card">
+                    <h4>Completion Overview</h4>
+                    <div class="stat-row">
+                        <div class="stat-label">Total Commitments</div>
+                        <div class="stat-value">{{ commitments|length }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-value">{{ status_counts.get('Done', 0) }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Completion Rate</div>
+                        <div class="stat-value">{{ "%.1f"|format(percentage_projects) }}%</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Sprint Activity</h4>
+                    <div class="stat-row">
+                        <div class="stat-label">Comments</div>
+                        <div class="stat-value">{{ comment_count }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Changes</div>
+                        <div class="stat-value">{{ change_count }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Complexity Score</div>
+                        <div class="stat-value">{{ "%.1f"|format(complexity_score) }}</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Team Involvement</h4>
+                    <div class="stat-row">
+                        <div class="stat-label">Teams</div>
+                        <div class="stat-value">{{ teams_involved|length }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">DRIs</div>
+                        <div class="stat-value">{{ dris_involved|length }}</div>
+                    </div>
+                </div>
+
+                {% if completed_sprints %}
+                <div class="analytics-card">
+                    <h4>Historical Comparison</h4>
+                    <div class="stat-row">
+                        <div class="stat-label">Avg Duration</div>
+                        <div class="stat-value">{{ "%.1f"|format(avg_duration) }} days</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Avg Completion</div>
+                        <div class="stat-value">{{ "%.1f"|format(avg_completion_rate) }}%</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">Total Completed Sprints</div>
+                        <div class="stat-value">{{ completed_sprints|length }}</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Team Breakdown -->
+                <div class="analytics-section">
+                    <h4>Teams Distribution</h4>
+                    {% for team in teams_involved %}
+                    <div class="team-item">
+                        <div class="team-name">{{ team }}</div>
+                        <div class="team-count">{{ commitments|selectattr('project.team', 'equalto', team)|list|length }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Email checkbox toggle
+        const emailCheckbox = document.getElementById('emailNotification');
+        const emailFormGroup = document.getElementById('emailFormGroup');
+
+        if (emailCheckbox) {
+            emailCheckbox.addEventListener('change', function() {
+                emailFormGroup.style.display = this.checked ?
+                    'block' : 'none';
+            });
+        }
+
+        // Handle status change to show/hide complete project question
+        initializeStatusSelects();
+    });
+
+    // Initialize all status selects on page load
+    function initializeStatusSelects() {
+        document.querySelectorAll('.status-select').forEach(select => {
+            // Check current value and show/hide complete project question
+            if (select.value === 'Completed') {
+                const commitmentId = select.getAttribute('data-commitment-id');
+                document.getElementById(`complete-project-${commitmentId}`).style.display = 'block';
+            }
+        });
+    }
+
+    // Handle status change
+    function handleStatusChange(selectElement) {
+        const commitmentId = selectElement.getAttribute('data-commitment-id');
+        const completeProjectDiv = document.getElementById(`complete-project-${commitmentId}`);
+
+        if (selectElement.value === 'Completed') {
+            completeProjectDiv.style.display = 'block';
+
+            // Ensure at least one radio button is selected
+            const radioButtons = completeProjectDiv.querySelectorAll('input[type="radio"]');
+            if (!Array.from(radioButtons).some(rb => rb.checked)) {
+                radioButtons[1].checked = true; // Default to "No"
+            }
+        } else {
+            completeProjectDiv.style.display = 'none';
+        }
+    }
+</script>
+
+<!-- Add some specific styles for this page -->
+<style>
+    .commitment-item {
+        background-color: var(--color-white);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .commitment-item h4 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .commitment-details {
+        margin-bottom: 0.75rem;
+        color: var(--color-gray-600);
+    }
+
+    .commitment-goal {
+        background-color: var(--color-gray-100);
+        padding: 0.75rem;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1rem;
+    }
+
+    .status-update-form {
+        margin-top: 1rem;
+    }
+
+    .complete-project-question {
+        background-color: #f0f7ff;
+        padding: 0.75rem;
+        border-radius: var(--border-radius-sm);
+        margin-top: 0.5rem;
+    }
+
+    .radio-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .radio-options label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .analytics-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .analytics-card {
+        background-color: var(--color-white);
+        border-radius: var(--border-radius-md);
+        padding: 1rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .analytics-card h4 {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .analytics-section {
+        margin-top: 1.5rem;
+    }
+
+    .team-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .team-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
