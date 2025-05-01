@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, abort, flash, redirect, url_for
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -28,6 +28,9 @@ def add_security_headers(response):
     # Enable the XSS filter built into most recent web browsers
     response.headers['X-XSS-Protection'] = '1; mode=block'
     
+    # Add Referrer Policy header
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
     return response
 
 app = Flask(__name__)
@@ -39,4 +42,3 @@ login.login_view = 'login' # If you want to toggle someone forced to log in to s
 app.after_request(add_security_headers)
 
 from app import routes, models
-

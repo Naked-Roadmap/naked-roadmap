@@ -51,3 +51,32 @@ Regular security audits of database code
 - [ ] No string formatting or concatenation in SQL statements
 - [ ] Input validation for all user-supplied data
 - [ ] Error handling that doesn't expose database details
+
+
+# SECRET MANAGEMENT INSTRUCTIONS
+
+1. Environment Variables:
+   - All secrets are now managed through environment variables
+   - For development, create a .env file in the app directory
+   - For production, set environment variables on the server
+
+2. .env File:
+   - NEVER commit the .env file to version control
+   - The application generates a .env file with a secure SECRET_KEY
+   - Add additional secrets to this file
+
+3. Production Deployment:
+   - In production, set environment variables directly
+   - Use a secure secret management service when possible
+   - Set FLASK_ENV=production to disable .env file loading
+
+Example .env format:
+SECRET_KEY=your_secret_key
+DATABASE_URL=sqlite:///app.db
+SMTP_SERVER=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your_username
+SMTP_PASSWORD=your_secure_password
+COMPANY_NAME=Your Company Name
+PUBLIC_ROADMAP=true
+"""

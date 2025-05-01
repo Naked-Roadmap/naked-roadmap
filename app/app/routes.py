@@ -43,6 +43,23 @@ Notes on Route Decorators:
         return redirect(url_for('project', project_id=project_id))
 """
 
+@app.before_request
+def validate_request_size():
+    """
+    Validates the request URL length to prevent DoS attacks.
+    """
+    # Most web servers limit URLs to around 2000 characters
+    # Setting a reasonable limit for our application
+    max_url_length = 2000
+    
+    if request.url and len(request.url) > max_url_length:
+        abort(414)  # HTTP 414 URI Too Long
+        
+@app.errorhandler(414)
+def uri_too_long(error):
+    """Handle URI Too Long errors"""
+    flash('The requested URL was too long. Please try again with a shorter URL.', 'error')
+    return redirect(url_for('index')), 414
 
 @app.context_processor
 def inject_csrf_token():
@@ -405,10 +422,10 @@ def delete(project_id):
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
-@login_required
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+        
     form = LoginForm()
     if form.validate_on_submit():
         user = db.session.scalar(
@@ -416,18 +433,55 @@ def login():
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
             return redirect(url_for('login'))
+            
         login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or urlsplit(next_page).netloc != '':
-            next_page = url_for('index')
+        
+        # Use the safe redirect function instead of directly using 'next'
+        next_page = get_safe_redirect()
         return redirect(next_page)
+        
     return render_template('login.html', title='Sign In', form=form)
+
+def is_safe_url(target):
+    """
+    Validates if a URL is safe to redirect to by checking if it's relative
+    or matches the current host.
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    
+    # Only allow redirects to the same host or relative URLs
+    return test_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc and \
+           test_url.path != '/login'  # Prevent redirect loops to login
+           
+def get_safe_redirect():
+    """
+    Gets the 'next' parameter and validates it's safe.
+    Returns a safe URL, defaulting to the index page.
+    """
+    next_url = request.args.get('next')
+    
+    # Basic checks for potential redirect loops or excessive length
+    if not next_url:
+        return url_for('index')
+    
+    # Check for redirect loops by limiting the number of 'next=' occurrences
+    if next_url.count('next=') > 1 or len(next_url) > 2000:
+        return url_for('index')
+    
+    # Validate that the URL is safe
+    if not is_safe_url(next_url):
+        return url_for('index')
+        
+    return next_url
     
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    
+    next_page = get_safe_redirect()
+    return redirect(next_page or url_for('index'))
     
 @app.route('/register', methods=['GET', 'POST'])
 def register():

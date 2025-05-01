@@ -9,4 +9,4 @@ def make_shell_context():
     return {'sa': sa, 'so': so, 'db': db, 'User': User, 'Post': Post, 'Project':Project, 'Goal':Goal, 'Sprint':Sprint, 'Comment':Comment, 'Changelog':Changelog}
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'test123'
+app.config.from_object(Config)

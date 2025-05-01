@@ -46,12 +46,49 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
     
+    # def set_password(self, password):
+    #     self.password_hash = generate_password_hash(password)
+    
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        """
+        Hash the user's password with PBKDF2, SHA-256, 50,000 iterations, and 16-byte salt
+        """
+        self.password_hash = generate_password_hash(
+            password,
+            method='pbkdf2:sha256:50000',  # PBKDF2 with SHA-256 and 50,000 iterations
+            salt_length=16  # 16-byte salt
+        )
+    def validate_password_strength(password):
+        """
+        Validate password meets security requirements:
+        - At least 10 characters long
+        - Contains at least one uppercase letter
+        - Contains at least one lowercase letter
+        - Contains at least one digit
+        - Contains at least one special character
+        """
+        import re
+        
+        if len(password) < 10:
+            return False, "Password must be at least 10 characters long"
+            
+        if not re.search(r'[A-Z]', password):
+            return False, "Password must contain at least one uppercase letter"
+            
+        if not re.search(r'[a-z]', password):
+            return False, "Password must contain at least one lowercase letter"
+            
+        if not re.search(r'\d', password):
+            return False, "Password must contain at least one digit"
+            
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            return False, "Password must contain at least one special character"
+            
+        return True, "Password meets requirements"
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+        
     # Role-based authorization methods
     def has_role(self, role_name):
         """Check if user has a specific role"""
