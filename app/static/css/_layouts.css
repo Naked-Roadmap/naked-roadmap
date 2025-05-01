@@ -256,12 +256,12 @@
   .three-column-section {
     grid-template-columns: 1fr;
   }
-}banner {
+}
+
+.welcome-banner {
   background-color: #F3D501;
   color: black;
   padding: var(--spacing-6);
   border-radius: var(--border-radius-lg);
   margin-bottom: var(--spacing-6);
 }
-
-.welcome-

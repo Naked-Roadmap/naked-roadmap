@@ -1,12 +1,13 @@
 @import '_variables.css';
 @import '_base.css';
-@import '_layout.css';
+@import '_buttons.css';
+@import '_layouts.css';
 @import '_navigation.css';
 @import '_components.css';
 @import '_forms.css';
 @import '_tables.css';
 @import '_modals.css';
-@import '_status.css';
+@import '_status-badges.css';
 @import '_utilities.css';
 @import '_responsive.css';
 @import '_dark-mode.css';
