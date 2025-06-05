@@ -4,14 +4,27 @@ from pathlib import Path
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# Create data directories if they don't exist
-data_dir = '/data'
-if not os.path.exists(data_dir):
-    try:
-        os.makedirs(data_dir, exist_ok=True)
-        print(f"Created data directory: {data_dir}")
-    except:
-        print(f"Warning: Could not create {data_dir}")
+def setup_data_directory():
+    """Setup data directory based on environment"""
+    # Check if we're running in Docker
+    if os.path.exists('/.dockerenv') or os.environ.get('RUNNING_IN_DOCKER'):
+        data_dir = '/data'
+    else:
+        # Local development - use a local data directory
+        data_dir = os.path.join(basedir, 'instance')
+    
+    # Create data directory if it doesn't exist
+    if not os.path.exists(data_dir):
+        try:
+            os.makedirs(data_dir, exist_ok=True)
+            print(f"Created data directory: {data_dir}")
+        except Exception as e:
+            print(f"Warning: Could not create {data_dir}: {e}")
+    
+    return data_dir
+
+# Setup data directory
+data_dir = setup_data_directory()
 
 # Create a .env file if it doesn't exist
 env_file = Path(os.path.join(basedir, '.env'))
@@ -23,7 +36,10 @@ if not env_file.exists():
     with open(env_file, 'w') as f:
         f.write(f"SECRET_KEY={generated_key}\n")
         f.write("# Add other environment variables below\n")
-        f.write("# DATABASE_URL=sqlite:////data/app.db\n")
+        f.write("# For local development, database will be in instance/ directory\n")
+        f.write("# For Docker, database will be in /data/ directory\n")
+        f.write("# DATABASE_URL=sqlite:////data/app.db  # Docker\n")
+        f.write("# DATABASE_URL=sqlite:///instance/app.db  # Local\n")
         f.write("# SMTP_SERVER=smtp.example.com\n")
         f.write("# SMTP_PORT=587\n")
         f.write("# SMTP_USERNAME=your_username\n")
@@ -62,20 +78,27 @@ if 'FLASK_ENV' not in os.environ or os.environ['FLASK_ENV'] != 'production':
     
 class Config:
     # Use environment variable with a fallback to a randomly generated key
-    # This ensures a new random key is used if env var is not set
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
     
-    # Database configuration - Prioritize environment variable
-    # If using absolute path, don't modify it; for relative, join with basedir
-    db_url = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
+    # Database configuration - Smart path selection
+    db_url = os.environ.get('DATABASE_URL')
     
-    # Print database configuration for debugging
-    print(f"Database URL from env/default: {db_url}")
+    if not db_url:
+        # Auto-detect environment and set appropriate database path
+        if os.path.exists('/.dockerenv') or os.environ.get('RUNNING_IN_DOCKER'):
+            # Running in Docker container
+            db_url = 'sqlite:////data/app.db'
+        else:
+            # Running locally
+            db_url = f'sqlite:///{os.path.join(data_dir, "app.db")}'
+    
+    print(f"Environment detection:")
+    print(f"  Docker environment: {os.path.exists('/.dockerenv') or bool(os.environ.get('RUNNING_IN_DOCKER'))}")
+    print(f"  Data directory: {data_dir}")
+    print(f"  Database URL: {db_url}")
     
     SQLALCHEMY_DATABASE_URI = db_url
-    
-    # Print final database configuration
-    print(f"Final Database URI: {SQLALCHEMY_DATABASE_URI}")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Company customizations
     company_name = os.environ.get('COMPANY_NAME') or "Naked Roadmap"

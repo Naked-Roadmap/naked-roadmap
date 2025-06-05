@@ -8,7 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     FLASK_APP=app.py \
     FLASK_ENV=production \
-    DATABASE_URL=sqlite:////data/app.db
+    DATABASE_URL=sqlite:////data/app.db \
+    RUNNING_IN_DOCKER=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
