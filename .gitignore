@@ -30,3 +30,4 @@ app.db
 /app/__pycache__
 /app/__pycache__
 app/app.db
+/app/__pycache__

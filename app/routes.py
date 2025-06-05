@@ -222,24 +222,53 @@ def index():
         .order_by(Comment.created_at.desc())
         .limit(5)
     )
-    changes = (
+    
+    # Get recent changes grouped by project (last 10 changes)
+    recent_changes_raw = (
         Changelog.query
         .order_by(Changelog.timestamp.desc())
-        .limit(5)
+        .limit(10)
+        .all()
     )
     
-    # Recent projects
-    projects = (
-        Project.query
-        .order_by(Project.created.desc())
-        .limit(5)
+    # Group changes by project
+    changes_by_project = {}
+    for change in recent_changes_raw:
+        project_id = change.project_id
+        if project_id not in changes_by_project:
+            changes_by_project[project_id] = {
+                'project': change.project,
+                'changes': [],
+                'latest_timestamp': change.timestamp
+            }
+        changes_by_project[project_id]['changes'].append(change)
+    
+    # Sort projects by most recent change timestamp
+    changes = sorted(
+        changes_by_project.values(),
+        key=lambda x: x['latest_timestamp'],
+        reverse=True
     )
+    
+    # Get active projects with counts for different statuses
+    active_projects = (
+        Project.query
+        .filter(Project.status == 'Active')
+        .order_by(Project.created.desc())
+        .all()
+    )
+    
+    # Count projects by location
+    backlog_count = Project.query.filter(Project.location == 'backlog').count()
+    discussion_count = Project.query.filter(Project.location == 'discussion').count()
     
     today = datetime.now()
     return render_template(
         'index.html', 
         title='Home', 
-        projects=projects, 
+        active_projects=active_projects,
+        backlog_count=backlog_count,
+        discussion_count=discussion_count,
         goals=goals, 
         config=Config, 
         sprints=sprints,

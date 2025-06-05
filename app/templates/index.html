@@ -11,14 +11,6 @@
 </div>
 
 <!-- ---------------------------------- -->
-<!-- Break -->
-<!-- ---------------------------------- -->
-
-{# <div style="width:100%;margin-bottom:20px;padding: 0px 20px;">
-  <h2>Current Cycle:</h2>
-</div> #}
-
-<!-- ---------------------------------- -->
 <!-- Current Sprint and Goals -->
 <!-- ---------------------------------- -->
 <section class="two-column-section">
@@ -30,7 +22,6 @@
         <img src=" {{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;">
         {% if active_sprint %}
         {{ active_sprint.title }}
-        {# <br><a href="{{ url_for('sprint_detail', sprint_id=active_sprint.id) }}" style="font-size: 12px;">Update Cycle</a> #}
         {% if active_sprint_count > 1 %}
         <a href="{{ url_for('show_cycles') }}" style="font-size: 12px;">
           | See other active cycles ({{ active_sprint_count - 1 }})
@@ -174,27 +165,29 @@
     <div class="section">
       <div class="section-header">
         <div style="display:flex;flex-flow:row; align-content: vertical;">
-          <h3><a href="{{ url_for('createGoal') }}">
+          <h3><a href="{{ url_for('projectspage') }}">
               <img src="{{ url_for('static', filename='./icons/flag.svg')}}" style="max-height:20px; max-width:20px; margin-right:10px;">
-              <span style="font-size: 16px; font-weight:600;">Active Roadmap</span>
+              <span style="font-size: 16px; font-weight:600;">Active Projects</span>
             </a>
+            <span class="status-badge status-planned" style="margin-left: 10px;">
+              {{ backlog_count }} backlogged
+            </span>
+            <span class="status-badge status-planned" style="margin-left: 5px;">
+              {{ discussion_count }} in discussion
+            </span>
           </h3>
         </div>
       </div>
 
       <div class="goals-list">
-        {% for goal_data in goals %}
+        {% for project in active_projects %}
         <div class="goal-item">
-          <h4>{{ goal_data.Goal.title }}
-            <span class="project-count-badge">{{ goal_data.active_project_count }} supporting project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
-          </h4>
-          <p>{{ goal_data.Goal.details }}</p>
+          <h4><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h4>
+          <p>{{ project.context|truncate(200,true,'...') }}</p>
         </div>
         {% endfor %}
       </div>
     </div>
-
-
 
   </div>
 
@@ -210,7 +203,6 @@
         <div><a href="{{url_for('plan_sprint') }}"><span class="quick-action-button glass">Commit Work to a Cycle</span></a></div>
       </div>
     </div>
-
 
     <div class="section-glass">
       <div class="section-header">
@@ -238,121 +230,25 @@
 
     <div class="section-glass">
       <div class="section-header">
-        <h3>New Projects</h3>
-      </div>
-
-      <div class="goals-list">
-        {% for project in projects %}
-        <div class="goal-item">
-          <h4>{{ project.name }}</h4>
-          <p>{{ project.context|truncate(200,true,'...') }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="section-glass">
-      <div class="section-header">
         <h3>Recent Changes</h3>
       </div>
 
       <div class="goals-list">
-        {% for change in changes %}
-        {% set project = change.project %}
-        {% set user = change.user %}
+        {% for project_changes in changes %}
+        {% set project = project_changes.project %}
         <div class="goal-item">
-          <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-          <p>{{ change.content }}</p>
+          <h4><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></h4>
+          {% for change in project_changes.changes %}
+          {% set user = change.user %}
+          <p style="font-size:12px; margin-bottom:5px;"><em>{{ user.username }}:</em> {{ change.content }}</p>
+          {% endfor %}
         </div>
         {% endfor %}
       </div>
     </div>
 
-
-
-
-
-
-
-
-
-
   </div>
 </section>
-{# 
-<!-- ---------------------------------- -->
-<!-- Break -->
-<!-- ---------------------------------- -->
-
-<div style="width:100%; border-bottom:1px solid #e4e6eb;margin-bottom:20px;padding: 0px 20px;">
-  <h2>⚡ Activity</h2>
-</div>
-
-<!-- ---------------------------------- -->
-<!-- Three Column Section -->
-<!-- ---------------------------------- -->
-<section class="two-column-section">
-  <div class="column-narrow section">
-    <div class="section-header">
-      <h3>Recent Comments</h3>
-    </div>
-
-    <div class="goals-list">
-      {% for comment in comments %}
-      {% set project = comment.project %}
-      {% set user = comment.user %}
-      <div class="goal-item">
-        <p style="font-size:12px;"><em>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</em></p>
-        <p style="color:black;">{{ comment.content }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="column-narrow section">
-    <div class="section-header">
-      <h3>Recently Added Projects</h3>
-      <a href="{{ url_for('createProject') }}" class="btn-icon" title="Add New Project">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </a>
-    </div>
-
-    <div class="goals-list">
-      {% for project in projects %}
-      <div class="goal-item">
-        <h4>{{ project.name }}</h4>
-        <p>{{ project.context|truncate(200,true,'...') }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-
-  <div class="column-narrow section">
-    <div class="section-header">
-      <h3>Recent Changes</h3>
-    </div>
-
-    <div class="goals-list">
-      {% for change in changes %}
-      {% set project = change.project %}
-      {% set user = change.user %}
-      <div class="goal-item">
-        <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-        <p>{{ change.content }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section> #}
-
-
-
-
-
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -373,11 +269,6 @@
       });
     });
 
-    // Initialize dark mode from localStorage
-    if (localStorage.getItem('darkMode') === 'enabled') {
-      document.body.classList.add('dark-mode');
-    }
-
     // Modal functionality
     const modal = document.getElementById('projectModal');
     const closeModalBtn = document.querySelector('.close-modal');
@@ -396,9 +287,11 @@
     });
 
     // Close modal when clicking the × button
-    closeModalBtn.addEventListener('click', function() {
-      closeModal();
-    });
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', function() {
+        closeModal();
+      });
+    }
 
     // Close modal when clicking outside the modal
     window.addEventListener('click', function(event) {
@@ -413,45 +306,58 @@
     const cancelBtn = document.getElementById('btn-cancel');
     const sprintGoalContainer = document.getElementById('sprint-goal-container');
 
-    moveToSprintBtn.addEventListener('click', function() {
-      // Show sprint goal input and confirm/cancel buttons
-      sprintGoalContainer.style.display = 'block';
-      confirmSprintBtn.style.display = 'inline-block';
-      cancelBtn.style.display = 'inline-block';
-      // Hide action buttons
-      moveToSprintBtn.style.display = 'none';
-      document.getElementById('btn-edit').style.display = 'none';
-      document.getElementById('btn-move-backlog').style.display = 'none';
-    });
+    if (moveToSprintBtn) {
+      moveToSprintBtn.addEventListener('click', function() {
+        // Show sprint goal input and confirm/cancel buttons
+        sprintGoalContainer.style.display = 'block';
+        confirmSprintBtn.style.display = 'inline-block';
+        cancelBtn.style.display = 'inline-block';
+        // Hide action buttons
+        moveToSprintBtn.style.display = 'none';
+        document.getElementById('btn-edit').style.display = 'none';
+        document.getElementById('btn-move-backlog').style.display = 'none';
+      });
+    }
 
-    cancelBtn.addEventListener('click', function() {
-      // Reset modal to normal state
-      resetModalButtons();
-    });
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        // Reset modal to normal state
+        resetModalButtons();
+      });
+    }
 
-    confirmSprintBtn.addEventListener('click', function() {
-      const projectId = modal.dataset.projectId;
-      const sprintGoal = document.getElementById('sprint-goal').value;
+    if (confirmSprintBtn) {
+      confirmSprintBtn.addEventListener('click', function() {
+        const projectId = modal.dataset.projectId;
+        const sprintGoal = document.getElementById('sprint-goal').value;
 
-      if (!sprintGoal.trim()) {
-        alert('Please enter a sprint goal before confirming.');
-        return;
-      }
+        if (!sprintGoal.trim()) {
+          alert('Please enter a sprint goal before confirming.');
+          return;
+        }
 
-      // Submit the data to move the project to sprint
-      moveProjectToSprint(projectId, sprintGoal);
-    });
+        // Submit the data to move the project to sprint
+        moveProjectToSprint(projectId, sprintGoal);
+      });
+    }
 
     // Set up event listeners for other action buttons
-    document.getElementById('btn-edit').addEventListener('click', function() {
-      const projectId = modal.dataset.projectId;
-      window.location.href = `project/${projectId}/edit/`;
-    });
+    const editBtn = document.getElementById('btn-edit');
+    const moveBacklogBtn = document.getElementById('btn-move-backlog');
 
-    document.getElementById('btn-move-backlog').addEventListener('click', function() {
-      const projectId = modal.dataset.projectId;
-      moveProjectToBacklog(projectId);
-    });
+    if (editBtn) {
+      editBtn.addEventListener('click', function() {
+        const projectId = modal.dataset.projectId;
+        window.location.href = `project/${projectId}/edit/`;
+      });
+    }
+
+    if (moveBacklogBtn) {
+      moveBacklogBtn.addEventListener('click', function() {
+        const projectId = modal.dataset.projectId;
+        moveProjectToBacklog(projectId);
+      });
+    }
   });
 
   // Function to open the modal and load project details
@@ -473,18 +379,28 @@
     resetModalButtons();
 
     // Clear the sprint goal input
-    document.getElementById('sprint-goal').value = '';
+    const sprintGoalInput = document.getElementById('sprint-goal');
+    if (sprintGoalInput) {
+      sprintGoalInput.value = '';
+    }
   }
 
   // Reset modal buttons to their default state
   function resetModalButtons() {
-    document.getElementById('sprint-goal-container').style.display = 'none';
-    document.getElementById('btn-confirm-sprint').style.display = 'none';
-    document.getElementById('btn-cancel').style.display = 'none';
+    const sprintGoalContainer = document.getElementById('sprint-goal-container');
+    const confirmSprintBtn = document.getElementById('btn-confirm-sprint');
+    const cancelBtn = document.getElementById('btn-cancel');
+    const moveSprintBtn = document.getElementById('btn-move-sprint');
+    const editBtn = document.getElementById('btn-edit');
+    const moveBacklogBtn = document.getElementById('btn-move-backlog');
 
-    document.getElementById('btn-move-sprint').style.display = 'inline-block';
-    document.getElementById('btn-edit').style.display = 'inline-block';
-    document.getElementById('btn-move-backlog').style.display = 'inline-block';
+    if (sprintGoalContainer) sprintGoalContainer.style.display = 'none';
+    if (confirmSprintBtn) confirmSprintBtn.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
+    if (moveSprintBtn) moveSprintBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'inline-block';
+    if (moveBacklogBtn) moveBacklogBtn.style.display = 'inline-block';
   }
 
   // Function to fetch project details from server
@@ -597,20 +513,6 @@
       content.style.display = 'block';
     }
   }
-
-  // Toggle dark mode
-  function toggleDarkMode() {
-    const body = document.body;
-
-    body.classList.toggle('dark-mode');
-
-    // Save preference to localStorage
-    if (body.classList.contains('dark-mode')) {
-      localStorage.setItem('darkMode', 'enabled');
-    } else {
-      localStorage.setItem('darkMode', 'disabled');
-    }
-  }
 </script>
 
 <!-- Project Details Modal -->
@@ -663,6 +565,5 @@
     </div>
   </div>
 </div>
-
 
 {% endblock %}
