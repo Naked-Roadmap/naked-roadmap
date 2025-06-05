@@ -6,31 +6,34 @@
 
 {% block content %}
 
-<div style="margin-bottom:30px; height:30px; margin-top:5px;">
-  <h2><span style="font-size:25px; background: #000000; background: linear-gradient(to right, #000000 0%, #A8468D 50%, #5F4CD9 95%); -webkit-background-clip: text;-webkit-text-fill-color: transparent;">Hello, {{ current_user.username }}. Here's what's going on today:</span></h2>
+<div style="margin-bottom:30px;">
+  <h2><span style="font-size:25px; background: #000000; background: linear-gradient(to right, #000000 0%, #A8468D 50%, #5F4CD9 95%); -webkit-background-clip: text;-webkit-text-fill-color: transparent;">Here's what's going on today:</span></h2>
 </div>
 
-<!-- ---------------------------------- -->
-<!-- Break -->
-<!-- ---------------------------------- -->
+<section class="two-column-section" style="display:flex; flex-flow:row; align-content: vertical; align-items: center; padding:10px;">
+  <div>
+    <h3 style="margin:0px; color: #374151; ">{#⚡#} Quick Actions:</h3>
+  </div>
+  <div style="display:flex; flex-flow:row; align-content: vertical; justify-content: space-between; align-items: center; padding:10px; margin-bottom:0px;">
+    <div><a href="{{ url_for('createProject') }}" title="Create a New Project"><span class="quick-action-button glass">New Project</span></a></div>
+    <div><a href="{{ url_for('createGoal') }}" title="Add new Goal"><span class="quick-action-button glass">New Objective</span></a></div>
+    <div><a href="{{url_for('plan_sprint') }}"><span class="quick-action-button glass">Commit Work to a Cycle</span></a></div>
+  </div>
+</section>
 
-{# <div style="width:100%;margin-bottom:20px;padding: 0px 20px;">
-  <h2>Current Cycle:</h2>
-</div> #}
+
 
 <!-- ---------------------------------- -->
 <!-- Current Sprint and Goals -->
 <!-- ---------------------------------- -->
 <section class="two-column-section">
-  <div class="column-wide">
-
-    <div class="section">
-      <div class="section-header"">
+  <div class="column-wide section">
+    <div class="section-header">
       <h3>
-        <img src=" {{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;">
+        <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;"> Current Cycle:
         {% if active_sprint %}
         {{ active_sprint.title }}
-        {# <br><a href="{{ url_for('sprint_detail', sprint_id=active_sprint.id) }}" style="font-size: 12px;">Update Cycle</a> #}
+        <br><a href="{{ url_for('sprint_detail', sprint_id=active_sprint.id) }}" style="font-size: 12px;">Update Cycle</a>
         {% if active_sprint_count > 1 %}
         <a href="{{ url_for('show_cycles') }}" style="font-size: 12px;">
           | See other active cycles ({{ active_sprint_count - 1 }})
@@ -39,247 +42,133 @@
         {% else %}
         No Active Cycle
         {% endif %}
-        </h3>
-        <span class="status-badge status-planned">
-          {% if active_sprint %}
-          {{ active_sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ active_sprint.date_end.strftime('%b %d, %Y') }}
+      </h3>
+      <span class="status-badge status-planned">
+        {% if active_sprint %}
+        {{ active_sprint.date_start.strftime('%b %d, %Y') }} &rarr; {{ active_sprint.date_end.strftime('%b %d, %Y') }}
     {% endif %}
-        </span>
-      </div>
+      </span>
+    </div>
 
-      <div class="sprint-projects">
-        <div class="dual-timelines">
-          <!-- Project Progress Timeline -->
-          <div class="timeline-box" style="flex:4;">
-            <div class="timeline-title">✔ Commitments Completed</div>
 
-            {% set done_count = sprintlog|selectattr('status', '==', "Done")|list|length %}
-            {% set total_count = sprintlog|count %}
-            {% if total_count > 0 %}
-            {% set percentage_projects = (done_count / total_count) * 100 %}
-            {% else %}
-            {% set percentage_projects = 0 %}
-            {% endif %}
 
-            <div class="container-progress-full">
-              <div class="container-progress" style="width: {{ percentage_projects }}%;"></div>
-              <span class="progress-text">
-                {{ done_count }} out of {{ total_count }} Projects
-              </span>
-            </div>
+    <div class="sprint-projects">
+      <div class="dual-timelines">
+        <!-- Project Progress Timeline -->
+        <div class="timeline-box">
+          <div class="timeline-title">✔ Commitments Completed</div>
+
+          {% set done_count = sprintlog|selectattr('status', '==', "Done")|list|length %}
+          {% set total_count = sprintlog|count %}
+          {% if total_count > 0 %}
+          {% set percentage_projects = (done_count / total_count) * 100 %}
+          {% else %}
+          {% set percentage_projects = 0 %}
+          {% endif %}
+
+          <div class="container-progress-full">
+            <div class="container-progress" style="width: {{ percentage_projects }}%;"></div>
+            <span class="progress-text">
+              {{ done_count }} out of {{ total_count }} Projects
+            </span>
           </div>
+        </div>
 
-          <!-- Sprint Time Progress Timeline -->
-          <div class="timeline-box" style="flex:4;">
-            <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
+        <!-- Sprint Time Progress Timeline -->
+        <div class="timeline-box">
+          <div class="timeline-title"> ⏲ Cycle Time Remaining</div>
 
-            {% if active_sprint %}
-            {% set start_date = active_sprint.date_start %}
-            {% set end_date = active_sprint.date_end %}
-            {% set today_date = today.date() %}
+          {% if active_sprint %}
+          {% set start_date = active_sprint.date_start %}
+          {% set end_date = active_sprint.date_end %}
+          {% set today_date = today.date() %}
 
-            {% set total_days = (end_date - start_date).days %}
-            {% if total_days <= 0 %}{% set total_days = 1 %}{% endif %}
+          {% set total_days = (end_date - start_date).days %}
+          {% if total_days <= 0 %}{% set total_days = 1 %}{% endif %}
 
-            {% set days_elapsed = (today_date - start_date).days %}
-            {% set percentage_time = (days_elapsed / total_days) * 100 %}
-            {% if percentage_time > 100 %}
-            {% set percentage_time = 100 %}
-            {% elif percentage_time < 0 %}
-            {% set percentage_time = 0 %}
-            {% endif %}
+          {% set days_elapsed = (today_date - start_date).days %}
+          {% set percentage_time = (days_elapsed / total_days) * 100 %}
+          {% if percentage_time > 100 %}
+          {% set percentage_time = 100 %}
+          {% elif percentage_time < 0 %}
+          {% set percentage_time = 0 %}
+          {% endif %}
 
-            <div class="timeline-progress-full">
-              <div class="timeline-progress" style="width: {{ percentage_time }}%;"></div>
-              <span class="timeline-text">
-                {% set days_remaining = total_days - days_elapsed %}
-                {% if days_remaining > 0 %}
-                {{ days_remaining }} days remaining
+          <div class="timeline-progress-full">
+            <div class="timeline-progress" style="width: {{ percentage_time }}%;"></div>
+            <span class="timeline-text">
+              {% set days_remaining = total_days - days_elapsed %}
+              {% if days_remaining > 0 %}
+              {{ days_remaining }} days remaining
           {% elif days_remaining == 0 %}
           Last day of sprint
           {% else %}
           Sprint ended
           {% endif %}
-              </span>
-            </div>
-            {% else %}
-            <div class="timeline-progress-full">
-              <div class="timeline-progress" style="width: 0%;"></div>
-              <span class="timeline-text">No active sprint</span>
-            </div>
-            {% endif %}
+            </span>
           </div>
-
-          <div class="timeline-box" style="flex:1;">
-            <div class="timeline-title">Provide an Update</div>
-            <a class="quick-action-button glass" href="{{ url_for('sprint_detail', sprint_id=active_sprint.id) }}">Update Cycle</a>
+          {% else %}
+          <div class="timeline-progress-full">
+            <div class="timeline-progress" style="width: 0%;"></div>
+            <span class="timeline-text">No active sprint</span>
           </div>
+          {% endif %}
         </div>
-
       </div>
+    </div>
 
-      <hr>
+    <hr>
 
-      <div style="padding:0px 20px 20px 20px;">
-        <div class="timeline-title">📌 Commitments ({{ sprintlog|count }})</div>
-        {% for entry in sprintlog %}
-        {% set project = entry.project %}
-        <div style="margin:10px 0px 10px 15px; display:flex; flex-flow:row; justify-content: space-between;">
-          <div>
-            <p><strong><a href="{{ url_for('project', project_id=project.id) }}">{{entry.order}}. {{ project.name }}</a></strong> {% if entry.critical %}
-              <span class="critical-badge">CRITICAL</span>
-              {% endif %}<br>
-              <span style="font-size:12px; color:gray;"><strong>Goal:</strong> {{ entry.goal }}</span>
-            </p>
-          </div>
-          <div>
-            <span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px;">{{ project.dri }} / {{ project.team }}</span>
-            <span class="status-badge 
+    <div style="padding:0px 20px;">
+      <div class="timeline-title">📌 Commitments ({{ sprintlog|count }})</div>
+      {% for entry in sprintlog %}
+      {% set project = entry.project %}
+      <div style="margin:10px 0px 10px 15px; display:flex; flex-flow:row; justify-content: space-between;">
+        <div>
+        <p><strong><a href="{{ url_for('project', project_id=project.id) }}">{{entry.order}}. {{ project.name }}</a></strong> {% if entry.critical %}
+          <span class="critical-badge">CRITICAL</span>
+          {% endif %}<br>
+          <span style="font-size:12px; color:gray;"><strong>Goal:</strong> {{ entry.goal }}</span>
+        </p>
+        </div>
+        <div>
+          <span class="status-badge" style="color: #374151;border:solid #e4e6ea 1px;">{{ project.dri }} / {{ project.team }}</span>
+          <span class="status-badge 
           {% if entry.status == 'In Progress' %}status-in-progress
           {% elif entry.status == 'Done' %}status-complete
           {% elif entry.status == 'Blocked' %}status-blocked
           {% else %}status-planned{% endif %}">
-              {{ entry.status|default('Planned') }}
-            </span><br>
-          </div>
+            {{ entry.status|default('Planned') }}
+          </span><br>
         </div>
-        {% endfor %}
       </div>
-
+      {% endfor %}
     </div>
-
-    <div class="section">
-      <div class="section-header">
-        <div style="display:flex;flex-flow:row; align-content: vertical;">
-          <h3><a href="{{ url_for('createGoal') }}" class="{{ 'active' if request.endpoint == 'createGoal' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
-              <span style="font-size: 16px; font-weight:600;">Active Objectives</span>
-            </a>
-          </h3>
-        </div>
-      </div>
-
-      <div class="goals-list">
-        {% for goal_data in goals %}
-        <div class="goal-item">
-          <h4>{{ goal_data.Goal.title }}
-            <span class="project-count-badge">{% if goal_data.active_project_count > 1 %}{{ goal_data.active_project_count }} supporting projects{% elif goal_data.active_project_count == 1 %}{{ goal_data.active_project_count }} supporting project{% else %}<span style="color:red;">{{ goal_data.active_project_count }} supporting projects</span>{% endif %}</span>
-          </h4>
-          <p>{{ goal_data.Goal.details }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">
-        <div style="display:flex;flex-flow:row; align-content: vertical;">
-          <h3><a href="{{ url_for('createGoal') }}">
-              <img src="{{ url_for('static', filename='./icons/flag.svg')}}" style="max-height:20px; max-width:20px; margin-right:10px;">
-              <span style="font-size: 16px; font-weight:600;">Active Roadmap</span>
-            </a>
-          </h3>
-        </div>
-      </div>
-
-      <div class="goals-list">
-        {% for goal_data in goals %}
-        <div class="goal-item">
-          <h4>{{ goal_data.Goal.title }}
-            <span class="project-count-badge">{{ goal_data.active_project_count }} supporting project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
-          </h4>
-          <p>{{ goal_data.Goal.details }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-
 
   </div>
 
-  <div class="column-narrow">
-
-    <div class="section-glass">
-      <div class="section-header">
-        <h3>⚡ Quick Actions</h3>
-      </div>
-      <div style="display:flex; flex-flow:row; align-content: vertical; justify-content: left; align-items: center; padding:0px 20px 20px 20px; margin-bottom:0px;">
-        <div><a href="{{ url_for('createProject') }}" title="Create a New Project"><span class="quick-action-button glass">New Project</span></a></div>
-        <div><a href="{{ url_for('createGoal') }}" title="Add new Goal"><span class="quick-action-button glass">New Objective</span></a></div>
-        <div><a href="{{url_for('plan_sprint') }}"><span class="quick-action-button glass">Commit Work to a Cycle</span></a></div>
+  <div class="column-narrow section" style="background-color: #f7f8fa;border: #f7f8fa;box-shadow: none;">
+    <div class="section-header">
+      <div style="display:flex;flex-flow:row; align-content: vertical;"><a href="{{ url_for('createGoal') }}" class="{{ 'active' if request.endpoint == 'createGoal' else '' }}">
+          <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
+          <span style="font-size: 16px; font-weight:600;">Objectives</span>
+        </a>
       </div>
     </div>
 
-
-    <div class="section-glass">
-      <div class="section-header">
-        <h3>Recent Comments</h3>
+    <div class="goals-list">
+      {% for goal_data in goals %}
+      <div class="goal-item">
+        <h4>{{ goal_data.Goal.title }}
+          <span class="project-count-badge">{{ goal_data.active_project_count }} project{% if goal_data.active_project_count != 1 %}s{% endif %}</span>
+        </h4>
+        <p>{{ goal_data.Goal.details }}</p>
       </div>
-
-      <div class="goals-list">
-        {% for comment in comments %}
-        {% set project = comment.project %}
-        {% set user = comment.user %}
-        <div style="margin-bottom:20px;">
-        <div style="border-radius: 5px 5px 5px 0px; background-color:rgba(255,255,255, 0.25); padding:10px 10px 10px 27px;"> 
-          {{ comment.content }}
-        </div>
-        <div style="display:flex;flex-flow:row;">
-          <div style="width:16px;height:22px;bo;border-top: 12px solid rgba(255,255,255,0.25);border-left: 12px solid rgba(255,255,255,0.25);border-right: 12px solid transparent;border-bottom: 11px solid transparent;"></div>
-          <div style="margin-left:10px; height:22px; padding-top:4px; text-overflow: elipsises;"> <p style="font-size:12px; color: rgba(0,0,0, 0.3) !important;"><em>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></em></p>
-          </div>
-        </div>
-        </div>
-        
-        {% endfor %}
-      </div>
+      {% endfor %}
     </div>
-
-    <div class="section-glass">
-      <div class="section-header">
-        <h3>New Projects</h3>
-      </div>
-
-      <div class="goals-list">
-        {% for project in projects %}
-        <div class="goal-item">
-          <h4>{{ project.name }}</h4>
-          <p>{{ project.context|truncate(200,true,'...') }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="section-glass">
-      <div class="section-header">
-        <h3>Recent Changes</h3>
-      </div>
-
-      <div class="goals-list">
-        {% for change in changes %}
-        {% set project = change.project %}
-        {% set user = change.user %}
-        <div class="goal-item">
-          <h4>{{ user.username }} on <a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a>:</h4>
-          <p>{{ change.content }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-
-
-
-
-
-
-
-
-
   </div>
 </section>
-{# 
+
 <!-- ---------------------------------- -->
 <!-- Break -->
 <!-- ---------------------------------- -->
@@ -347,7 +236,7 @@
       {% endfor %}
     </div>
   </div>
-</section> #}
+</section>
 
 
 

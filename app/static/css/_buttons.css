@@ -90,23 +90,6 @@
   border: 1px solid var(--color-gray-200);
 }
 
-/* Quick Action Button */
-.quick-action-button {
-  color: var(--color-gray-700);
-  border: solid var(--color-gray-200) 1px; 
-  margin-right: 10px;
-  padding: var(--spacing-1) var(--spacing-2);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  display: inline-block;
-}
-
-.quick-action-button:hover {
-  background-color: var(--color-white);
-  box-shadow: 0px 0px 1px rgb(185, 185, 185);
-}
-
 /* Button with Pulse Animation */
 .btn-pulse {
   animation: pulse 2s infinite;
@@ -116,9 +99,11 @@
   0% {
     box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.5);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(74, 108, 247, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(74, 108, 247, 0);
   }
@@ -150,4 +135,39 @@
 .btn-lg {
   padding: 12px 20px;
   font-size: 16px;
+}
+
+.glass {
+  backdrop-filter: blur(16px);
+  background-color:rgba(255, 255, 255, 0.7);
+  transition: background-color 0.5s ease-in-out;
+  /* background: hsl(0deg 0% 100% / 0.1);
+  backdrop-filter: blur(16px);
+  mask-image: linear-gradient(to bottom,
+      black 0,
+      black 50%,
+      transparent 50%); */
+}
+.glass:hover {
+  background-color:rgba(255, 255, 255, 1);
+  transition: background-color 0.5s ease-in-out;
+}
+
+/* Quick Action Button */
+.quick-action-button {
+  color: var(--color-gray-700);
+  border: solid var(--color-gray-200) 1px;
+  margin-right: 10px;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  display: inline-block;
+  transition: border 0.5s ease-in-out;
+}
+
+.quick-action-button:hover {
+  /* background-color: var(--color-white); */
+  box-shadow: 0px 0px 1px rgb(185, 185, 185);
+  transition: border 0.5s ease-in-out;
 }

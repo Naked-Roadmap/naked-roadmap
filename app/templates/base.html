@@ -17,58 +17,60 @@
 </head>
 
 <body>
+  
+  {# <div style="display:flex; width:100%; padding:30px; flex-flow:row; align-content:center;">
+     <a href="{{ url_for('index')}}" class="logo">
+          <img src="{{ url_for('static', filename='fig-icon.svg')}}" style="max-height:40px; margin-right:20px;">
+        </a>
+     <h2><span style="font-size:25px; background: #000000; background: linear-gradient(to right, #000000 0%, #A8468D 50%, #5F4CD9 95%); -webkit-background-clip: text;-webkit-text-fill-color: transparent;">Hello, {{ current_user.username }}. Here's what's going on today:</span></h2>
+    </div> #}
+  
   <div class="app-container">
+    
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-      <div class="sidebar-header">
+      <div class="sidebar-header2">
         <a href="{{ url_for('index')}}" class="logo">
           <img src="{{ url_for('static', filename='fig-icon.svg')}}" style="max-height:40px; margin-right:10px;">
-          <span>Naked Roadmap</span>
         </a>
-        <!-- Toggle button for mobile/narrow view -->
-        <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle sidebar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
       </div>
 
-      <nav class="sidebar-nav">
-        <h6 style="margin:0px 20px; padding-bottom:10px;" class="nav-section-title">View</h6>
+      <nav class="sidebar-nav sidebar-glass">
+        <h6 style="margin:0px 20px; padding-bottom:10px;" class="nav-section-title">Your Roadmap</h6>
         <ul>
           <li>
             <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/dashboard.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/dashboard.svg')}}" class="nav-icon">
               <span>Dashboard</span>
             </a>
           </li>
           <li>
             <a href="{{ url_for('projectspage') }}" class="{{ 'active' if request.endpoint == 'projectspage' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/flag.svg')}}" style="max-height:20px; margin-right:10px;">
-              <span>Roadmap</span>
+              <img src="{{ url_for('static', filename='./icons/flag.svg')}}" class="nav-icon">
+              <span>Projects</span>
             </a>
           </li>
           <li>
             <a href="{{ url_for('createGoal') }}" class="{{ 'active' if request.endpoint == 'createGoal' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/objective.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/objective.svg')}}" class="nav-icon">
               <span>Objectives</span>
             </a>
           </li>
           <li>
             <a href="{{ url_for('show_cycles') }}" class="{{ 'active' if request.endpoint == 'show_cycles' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/cycle.svg')}}" class="nav-icon">
               <span>Cycles</span>
             </a>
           </li>
           <li>
             <a href="#" class="{{ 'active' if request.endpoint == 'retrospectives' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/retrospectives.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/retrospectives.svg')}}" class="nav-icon">
               <span>Retrospectives</span>
             </a>
           </li>
           <li>
             <a href="{{ url_for('analytics') }}" class="{{ 'active' if request.endpoint == 'analytics' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/analytics.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/analytics.svg')}}" class="nav-icon">
               <span>Analytics</span>
             </a>
           </li>
@@ -77,13 +79,13 @@
         <ul>
           <li>
             <a href="{{url_for('plan_sprint') }}" class="{{ 'active' if request.endpoint == 'plan_sprint' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/circle-dotted.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/circle-dotted.svg')}}" class="nav-icon">
               <span>Plan a Cycle</span>
             </a>
           </li>
           <li>
             <a href="#" class="{{ 'active' if request.endpoint == 'close_cycle' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/circle.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/circle.svg')}}" class="nav-icon">
               <span>Close a Cycle</span>
             </a>
           </li>
@@ -93,13 +95,13 @@
         <ul>
           <li>
             <a href="{{ url_for('admin_users') }}" class="{{ 'active' if request.endpoint == 'admin_users' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/teams.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/teams.svg')}}" class="nav-icon">
               <span>Users</span>
             </a>
           </li>
           <li>
             <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
-              <img src="{{ url_for('static', filename='./icons/settings.svg')}}" style="max-height:20px; margin-right:10px;">
+              <img src="{{ url_for('static', filename='./icons/settings.svg')}}" class="nav-icon">
               <span>Settings</span>
             </a>
           </li>
@@ -107,7 +109,7 @@
         {% endif %}
       </nav>
 
-      <div class="sidebar-footer">
+      <div class="sidebar-footer sidebar-glass">
         {% if current_user.is_anonymous %}
         <a href="{{ url_for('login') }}" class="btn-login">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -137,6 +139,14 @@
         <div class="user-info">
           <div class="user-avatar">{{ current_user.username[0] }}</div>
           <span>{{ current_user.username }}</span>
+        </div>
+        <div class="theme-switch"> 
+          <!-- Toggle button for mobile/narrow view -->
+        <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
         </div>
         <div class="theme-switch">
           <svg class="theme-switch-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
